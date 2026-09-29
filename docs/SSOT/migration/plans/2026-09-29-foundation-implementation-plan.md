@@ -6,7 +6,7 @@
 
 **Architecture:** `kordoc-ir` owns serializable document and error contracts, `kordoc-core` owns byte-oriented detection and security limits, and `kordoc-python` exposes the Rust core as `kordoc._native`. The pure-Python facade normalizes path/bytes/file-like inputs and exposes typed objects without duplicating parsing logic. Checked-in synthetic golden cases are independent of the ignored local TypeScript oracle.
 
-**Tech Stack:** Rust 1.97, Cargo workspace, serde 1.0, serde_json 1.0, thiserror 2.0, zip 8.x with minimal features, cfb 0.15, PyO3 0.29 with `abi3-py310`, maturin 1.15, CPython 3.10-3.14, pytest 8.4, Ruff 0.16, mypy 1.19, GitHub Actions.
+**Tech Stack:** Rust 1.97, Cargo workspace, serde 1.0, serde_json 1.0, thiserror 2.0, zip 8.x with minimal features, cfb 0.15, PyO3 0.29 with `abi3-py310`, maturin 1.15, CPython 3.10-3.14, pytest 9.0.3, Ruff 0.16, mypy 1.19, GitHub Actions.
 
 ---
 
@@ -97,7 +97,7 @@ def test_mcp_protocol_covers_every_tool_and_shared_limit() -> None:
 
 - [ ] **Step 2: Run the tests and verify the files are missing**
 
-Run: `uv run --python 3.10 --with pytest==8.4.2 --with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py -q`
+Run: `uv run --python 3.10 --with pytest==9.0.3 --with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py -q`
 
 Expected: failures for the three missing contract files.
 
@@ -136,7 +136,7 @@ Document in `errors.md` that codes are stable protocol values and that unimpleme
 
 - [ ] **Step 4: Run the inventory tests**
 
-Run: `uv run --python 3.10 --with pytest==8.4.2 --with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py -q`
+Run: `uv run --python 3.10 --with pytest==9.0.3 --with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py -q`
 
 Expected: `all Task 1 inventory tests pass`.
 
@@ -189,7 +189,7 @@ def test_every_api_entry_has_a_disposition() -> None:
 
 - [ ] **Step 2: Verify the test fails**
 
-Run: `uv run --python 3.10 --with pytest==8.4.2 --with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py::test_every_api_entry_has_a_disposition -q`
+Run: `uv run --python 3.10 --with pytest==9.0.3 --with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py::test_every_api_entry_has_a_disposition -q`
 
 Expected: failure because `contracts/public-api.json` does not exist.
 
@@ -209,7 +209,7 @@ input := path-like | bytes | bytearray | memoryview | BinaryIO
 
 - [ ] **Step 4: Run the complete contract test**
 
-Run: `uv run --python 3.10 --with pytest==8.4.2 --with jsonschema==4.25.1 pytest tests/contracts -q`
+Run: `uv run --python 3.10 --with pytest==9.0.3 --with jsonschema==4.25.1 pytest tests/contracts -q`
 
 Expected: all contract tests pass. The `jsonschema` dependency validates the Draft 2020-12 IR schema and representative valid/invalid wire instances.
 
@@ -256,7 +256,7 @@ def test_package_imports_native_version() -> None:
 
 - [ ] **Step 2: Verify the package is absent**
 
-Run: `uv run --python 3.10 --with pytest==8.4.2 pytest tests/python/test_import.py -q`
+Run: `uv run --python 3.10 --with pytest==9.0.3 pytest tests/python/test_import.py -q`
 
 Expected: collection error `ModuleNotFoundError: No module named 'kordoc'`.
 
@@ -288,7 +288,7 @@ proptest = "1.11.0"
 
 `rust-toolchain.toml` pins `1.97.0` with `rustfmt` and `clippy`; this is also the declared and tested Rust minimum. Each crate inherits workspace package fields. `kordoc-core` uses workspace `proptest` only as a dev-dependency. `kordoc-python` uses `cdylib` and `rlib`, depends on both internal crates, enables `abi3-py310` on its PyO3 dependency, and declares a crate feature `extension-module = ["pyo3/extension-module"]` with no default. `[tool.maturin]` selects that feature for extension builds; ordinary `cargo test --workspace` does not, preventing macOS libpython link failures.
 
-`LICENSE` contains the MIT license for the project. `pyproject.toml` uses `maturin==1.15.0`, declares `requires-python = ">=3.10"`, module name `kordoc._native`, Python source `python`, and `license-files = ["LICENSE"]`. Define `[dependency-groups].dev` with exact versions `maturin==1.15.0`, `pytest==8.4.2`, `jsonschema==4.25.1`, `ruff==0.16.9`, and `mypy==1.19.1` so every documented `uv sync --all-groups` and `uv run` command is reproducible.
+`LICENSE` contains the MIT license for the project. `pyproject.toml` uses `maturin==1.15.0`, declares `requires-python = ">=3.10"`, module name `kordoc._native`, Python source `python`, and `license-files = ["LICENSE"]`. Define `[dependency-groups].dev` with exact versions `maturin==1.15.0`, `pytest==9.0.3`, `jsonschema==4.25.1`, `ruff==0.16.9`, and `mypy==1.19.1` so every documented `uv sync --all-groups` and `uv run` command is reproducible.
 
 - [ ] **Step 4: Add the minimal native version function and facade**
 

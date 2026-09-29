@@ -69,3 +69,7 @@ The hosted Native wheels run succeeded across all six wheel jobs.
 Local release-candidate rebuild artifacts were `kordoc-0.1.0-cp310-abi3-macosx_11_0_arm64.whl` (SHA256 `e6a3117454deea9acf70ee86d2f20404d1ee04a37ee0707045f0f37d7226f35c`) and `kordoc-0.1.0.tar.gz` (SHA256 `23922328ce71ff671c3c83e145b08f1c781a9c32e35013a905d40f446aff7e1a`). These are local rebuild checksums; the hosted Native wheels run is reported separately above.
 
 These URLs document the validation cycle for the implementation head above. This docs-only evidence commit needs its own hosted pass; the linked runs do not establish checks for a commit that includes this update. The stacked PR's dependency-review result was a scope-message only; it is not main-target proof. Main-target dependency-review proof and required-check enforcement remain pending PR #4. Product parity also remains pending as recorded in the live migration status.
+
+## Security follow-up — 2026-09-30
+
+The PR #4 main-target dependency review identified [GHSA-6w46-j5rx-g56g (CVE-2025-71176)](https://github.com/advisories/GHSA-6w46-j5rx-g56g) in pytest. Versions before 9.0.3 are affected. The active project and CI, wheel, and release installation pins are being upgraded from 8.4.2 to the patched exact version 9.0.3; this remediation is in progress pending required checks. Dependabot security updates and the dependency graph were enabled in the repository settings.
