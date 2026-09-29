@@ -28,6 +28,193 @@ where
     }
 }
 
+fn assert_u32_wire_number_field<T>(base: T, field: &str)
+where
+    T: DeserializeOwned + Serialize,
+{
+    let base = serde_json::to_value(base).unwrap();
+    for (number, expected) in [
+        (serde_json::json!(1.0), 1),
+        (serde_json::json!(1e0), 1),
+        (serde_json::json!(u32::MAX as f64), u32::MAX as u64),
+    ] {
+        let mut candidate = base.clone();
+        candidate[field] = number;
+        let decoded = serde_json::from_value::<T>(candidate)
+            .unwrap_or_else(|error| panic!("{field} rejected integral JSON number: {error}"));
+        let serialized = serde_json::to_value(decoded).unwrap();
+        assert_eq!(serialized[field].as_u64(), Some(expected));
+    }
+}
+
+fn assert_u32_wire_number_rejected<T>(base: T, field: &str)
+where
+    T: DeserializeOwned + Serialize,
+{
+    let base = serde_json::to_value(base).unwrap();
+    for number in [
+        serde_json::json!(1.5),
+        serde_json::json!(-1),
+        serde_json::json!(u32::MAX as u64 + 1),
+    ] {
+        let mut candidate = base.clone();
+        candidate[field] = number;
+        assert!(
+            serde_json::from_value::<T>(candidate).is_err(),
+            "{field} accepted invalid integer value"
+        );
+    }
+}
+
+#[test]
+fn all_u32_wire_locations_accept_integral_json_numbers_and_reject_invalid_values() {
+    let bbox = BoundingBox {
+        page: 0,
+        x: 0.0,
+        y: 0.0,
+        width: 0.0,
+        height: 0.0,
+    };
+    assert_u32_wire_number_field(bbox, "page");
+    assert_u32_wire_number_field(IrCell::default(), "colSpan");
+    assert_u32_wire_number_field(IrCell::default(), "rowSpan");
+    assert_u32_wire_number_field(IrTable::default(), "rows");
+    assert_u32_wire_number_field(IrTable::default(), "cols");
+    assert_u32_wire_number_field(IrBlock::default(), "level");
+    assert_u32_wire_number_field(IrBlock::default(), "pageNumber");
+    assert_u32_wire_number_field(IrBlock::default(), "listDepth");
+    assert_u32_wire_number_field(DocumentMetadata::default(), "pageCount");
+    assert_u32_wire_number_field(
+        ParseWarning {
+            page: None,
+            message: "warning".into(),
+            code: WarningCode::PartialParse,
+        },
+        "page",
+    );
+    assert_u32_wire_number_field(
+        OutlineItem {
+            level: 0,
+            text: "heading".into(),
+            page_number: None,
+        },
+        "level",
+    );
+    assert_u32_wire_number_field(
+        OutlineItem {
+            level: 0,
+            text: "heading".into(),
+            page_number: None,
+        },
+        "pageNumber",
+    );
+    assert_u32_wire_number_field(
+        PageMarkdown {
+            page_number: 0,
+            markdown: String::new(),
+        },
+        "pageNumber",
+    );
+    assert_u32_wire_number_field(PageQuality::default(), "page");
+    assert_u32_wire_number_field(PageQuality::default(), "textChars");
+    assert_u32_wire_number_field(DocumentQualitySummary::default(), "totalPages");
+    assert_u32_wire_number_field(DocumentQualitySummary::default(), "totalTextChars");
+    assert_u32_wire_number_field(DocumentQualitySummary::default(), "lowTextPageCount");
+    assert_u32_wire_number_field(DocumentQualitySummary::default(), "highPuaPageCount");
+    assert_u32_wire_number_field(ParseSuccess::default(), "pageCount");
+    assert_u32_wire_number_field(ParseFailure::default(), "pageCount");
+
+    let exponent: BoundingBox =
+        serde_json::from_str(r#"{"page":1e0,"x":0,"y":0,"width":0,"height":0}"#).unwrap();
+    assert_eq!(exponent.page, 1);
+    assert_eq!(
+        serde_json::to_value(exponent).unwrap()["page"].as_u64(),
+        Some(1)
+    );
+
+    for (numbers, expected) in [
+        (serde_json::json!([1.0]), 1),
+        (serde_json::json!([1e0]), 1),
+        (serde_json::json!([u32::MAX as f64]), u32::MAX as u64),
+    ] {
+        let mut candidate = serde_json::to_value(DocumentQualitySummary::default()).unwrap();
+        candidate["ocrCandidatePages"] = numbers;
+        let decoded = serde_json::from_value::<DocumentQualitySummary>(candidate).unwrap();
+        assert_eq!(
+            serde_json::to_value(decoded).unwrap()["ocrCandidatePages"][0].as_u64(),
+            Some(expected)
+        );
+    }
+
+    assert_u32_wire_number_rejected(
+        BoundingBox {
+            page: 0,
+            x: 0.0,
+            y: 0.0,
+            width: 0.0,
+            height: 0.0,
+        },
+        "page",
+    );
+    assert_u32_wire_number_rejected(IrCell::default(), "colSpan");
+    assert_u32_wire_number_rejected(IrCell::default(), "rowSpan");
+    assert_u32_wire_number_rejected(IrTable::default(), "rows");
+    assert_u32_wire_number_rejected(IrTable::default(), "cols");
+    assert_u32_wire_number_rejected(IrBlock::default(), "level");
+    assert_u32_wire_number_rejected(IrBlock::default(), "pageNumber");
+    assert_u32_wire_number_rejected(IrBlock::default(), "listDepth");
+    assert_u32_wire_number_rejected(DocumentMetadata::default(), "pageCount");
+    assert_u32_wire_number_rejected(
+        ParseWarning {
+            page: None,
+            message: "warning".into(),
+            code: WarningCode::PartialParse,
+        },
+        "page",
+    );
+    assert_u32_wire_number_rejected(
+        OutlineItem {
+            level: 0,
+            text: "heading".into(),
+            page_number: None,
+        },
+        "level",
+    );
+    assert_u32_wire_number_rejected(
+        OutlineItem {
+            level: 0,
+            text: "heading".into(),
+            page_number: None,
+        },
+        "pageNumber",
+    );
+    assert_u32_wire_number_rejected(
+        PageMarkdown {
+            page_number: 0,
+            markdown: String::new(),
+        },
+        "pageNumber",
+    );
+    assert_u32_wire_number_rejected(PageQuality::default(), "page");
+    assert_u32_wire_number_rejected(PageQuality::default(), "textChars");
+    assert_u32_wire_number_rejected(DocumentQualitySummary::default(), "totalPages");
+    assert_u32_wire_number_rejected(DocumentQualitySummary::default(), "totalTextChars");
+    assert_u32_wire_number_rejected(DocumentQualitySummary::default(), "lowTextPageCount");
+    assert_u32_wire_number_rejected(DocumentQualitySummary::default(), "highPuaPageCount");
+    assert_u32_wire_number_rejected(ParseSuccess::default(), "pageCount");
+    assert_u32_wire_number_rejected(ParseFailure::default(), "pageCount");
+
+    for numbers in [
+        serde_json::json!([1.5]),
+        serde_json::json!([-1]),
+        serde_json::json!([u32::MAX as u64 + 1]),
+    ] {
+        let mut candidate = serde_json::to_value(DocumentQualitySummary::default()).unwrap();
+        candidate["ocrCandidatePages"] = numbers;
+        assert!(serde_json::from_value::<DocumentQualitySummary>(candidate).is_err());
+    }
+}
+
 #[test]
 fn every_optional_wire_field_rejects_null_but_allows_omission() {
     assert_optional_fields_reject_null(

@@ -1,4 +1,6 @@
+use serde::de::{Error as DeError, Unexpected, Visitor};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 fn no_null<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
 where
@@ -10,6 +12,76 @@ where
 
 fn is_none<T>(value: &Option<T>) -> bool {
     value.is_none()
+}
+
+fn deserialize_u32<'de, D>(deserializer: D) -> Result<u32, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    struct U32Visitor;
+
+    impl Visitor<'_> for U32Visitor {
+        type Value = u32;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            formatter.write_str("an unsigned 32-bit integer or an integral JSON number in range")
+        }
+
+        fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+        where
+            E: DeError,
+        {
+            u32::try_from(value).map_err(|_| E::invalid_value(Unexpected::Unsigned(value), &self))
+        }
+
+        fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+        where
+            E: DeError,
+        {
+            u32::try_from(value).map_err(|_| E::invalid_value(Unexpected::Signed(value), &self))
+        }
+
+        fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E>
+        where
+            E: DeError,
+        {
+            if value.is_finite() && value.fract() == 0.0 && (0.0..=u32::MAX as f64).contains(&value)
+            {
+                Ok(value as u32)
+            } else {
+                Err(E::invalid_value(Unexpected::Float(value), &self))
+            }
+        }
+    }
+
+    deserializer.deserialize_any(U32Visitor)
+}
+
+fn deserialize_optional_u32<'de, D>(deserializer: D) -> Result<Option<u32>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    deserialize_u32(deserializer).map(Some)
+}
+
+#[derive(Debug)]
+struct U32Element(u32);
+
+impl<'de> Deserialize<'de> for U32Element {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserialize_u32(deserializer).map(Self)
+    }
+}
+
+fn deserialize_u32_vec<'de, D>(deserializer: D) -> Result<Vec<u32>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Vec::<U32Element>::deserialize(deserializer)
+        .map(|values| values.into_iter().map(|value| value.0).collect())
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -207,6 +279,7 @@ pub struct ImageData {
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BoundingBox {
+    #[serde(deserialize_with = "deserialize_u32")]
     pub page: u32,
     pub x: f64,
     pub y: f64,
@@ -245,7 +318,9 @@ pub struct TableClassificationSummary {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct IrCell {
     pub text: String,
+    #[serde(deserialize_with = "deserialize_u32")]
     pub col_span: u32,
+    #[serde(deserialize_with = "deserialize_u32")]
     pub row_span: u32,
     #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub blocks: Option<Vec<IrBlock>>,
@@ -256,7 +331,9 @@ pub struct IrCell {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct IrTable {
+    #[serde(deserialize_with = "deserialize_u32")]
     pub rows: u32,
+    #[serde(deserialize_with = "deserialize_u32")]
     pub cols: u32,
     pub cells: Vec<Vec<IrCell>>,
     #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
@@ -283,9 +360,17 @@ pub struct IrBlock {
     pub text: Option<String>,
     #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub table: Option<IrTable>,
-    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_u32",
+        skip_serializing_if = "is_none"
+    )]
     pub level: Option<u32>,
-    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_u32",
+        skip_serializing_if = "is_none"
+    )]
     pub page_number: Option<u32>,
     #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub bbox: Option<BoundingBox>,
@@ -307,7 +392,11 @@ pub struct IrBlock {
     pub quote: Option<bool>,
     #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub indent: Option<f64>,
-    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_u32",
+        skip_serializing_if = "is_none"
+    )]
     pub list_depth: Option<u32>,
 }
 
@@ -334,7 +423,11 @@ pub struct DocumentMetadata {
     pub created_at: Option<String>,
     #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub modified_at: Option<String>,
-    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_u32",
+        skip_serializing_if = "is_none"
+    )]
     pub page_count: Option<u32>,
     #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub page_mode: Option<PageMode>,
@@ -349,7 +442,11 @@ pub struct DocumentMetadata {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ParseWarning {
-    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_u32",
+        skip_serializing_if = "is_none"
+    )]
     pub page: Option<u32>,
     pub message: String,
     pub code: WarningCode,
@@ -358,15 +455,21 @@ pub struct ParseWarning {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct OutlineItem {
+    #[serde(deserialize_with = "deserialize_u32")]
     pub level: u32,
     pub text: String,
-    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_u32",
+        skip_serializing_if = "is_none"
+    )]
     pub page_number: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PageMarkdown {
+    #[serde(deserialize_with = "deserialize_u32")]
     pub page_number: u32,
     pub markdown: String,
 }
@@ -384,7 +487,9 @@ pub struct ExtractedImage {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PageQuality {
+    #[serde(deserialize_with = "deserialize_u32")]
     pub page: u32,
+    #[serde(deserialize_with = "deserialize_u32")]
     pub text_chars: u32,
     pub hangul_ratio: f64,
     pub control_char_ratio: f64,
@@ -398,15 +503,20 @@ pub struct PageQuality {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentQualitySummary {
+    #[serde(deserialize_with = "deserialize_u32")]
     pub total_pages: u32,
+    #[serde(deserialize_with = "deserialize_u32")]
     pub total_text_chars: u32,
     pub avg_hangul_ratio: f64,
     pub avg_control_char_ratio: f64,
     pub avg_replacement_char_ratio: f64,
     pub avg_pua_ratio: f64,
+    #[serde(deserialize_with = "deserialize_u32")]
     pub low_text_page_count: u32,
+    #[serde(deserialize_with = "deserialize_u32")]
     pub high_pua_page_count: u32,
     pub needs_ocr: bool,
+    #[serde(deserialize_with = "deserialize_u32_vec")]
     pub ocr_candidate_pages: Vec<u32>,
 }
 
@@ -414,7 +524,11 @@ pub struct DocumentQualitySummary {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ParseSuccess {
     pub file_type: FileType,
-    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_u32",
+        skip_serializing_if = "is_none"
+    )]
     pub page_count: Option<u32>,
     #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub is_image_based: Option<bool>,
@@ -496,7 +610,11 @@ impl ParseSuccess {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ParseFailure {
     pub file_type: FileType,
-    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_u32",
+        skip_serializing_if = "is_none"
+    )]
     pub page_count: Option<u32>,
     #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub is_image_based: Option<bool>,
