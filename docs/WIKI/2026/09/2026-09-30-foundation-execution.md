@@ -52,3 +52,20 @@ The foundation now has local quality, security, artifact, and non-publishing can
 
 - Append the final hosted workflow conclusions to this historical record before merge; do not revise this entry silently after it is merged.
 - Keep release publication disabled until the compatibility inventory has no `planned` entries, all 17 MCP runtime tools are implemented and verified, and two consecutive release-candidate workflows pass for the same immutable commit.
+
+## Hosted run update
+
+This dated addendum records hosted validation evidence without changing the historical snapshot above. Subsequent evidence and corrective commits were `d7fb6bd`, `1a74688`, `6c3a0d2`, `d13b0ac`, `485ceed`, and `a9df485`. Commit `a9df485` (`a9df4851e8fc1c8b2cd889fdec09e1f3fc111c1d`) is the last fully validated implementation head.
+
+Timing correction: At the time of the historical snapshot, CI, bounded fuzzing, and native wheels had already succeeded; only Security was still in progress. The historical paragraph said all four hosted checks were in progress. That statement was inaccurate for the other three runs. The initial Security run subsequently failed for four workflow issues: ShellCheck checksum redirection, a zizmor installer artifact, non-default stacked dependency review, and a CodeQL dynamic release ref. The corrective commits fixed those workflow issues. The linked validation cycle against the last fully validated implementation head succeeded in all four hosted runs:
+
+- [CI](https://github.com/Han-taz/paruster/actions/runs/36600464167)
+- [Security](https://github.com/Han-taz/paruster/actions/runs/36600464228)
+- [Native wheels](https://github.com/Han-taz/paruster/actions/runs/36600464274)
+- [Bounded fuzzing](https://github.com/Han-taz/paruster/actions/runs/36600464235)
+
+The hosted Native wheels run succeeded across all six wheel jobs.
+
+Local release-candidate rebuild artifacts were `kordoc-0.1.0-cp310-abi3-macosx_11_0_arm64.whl` (SHA256 `e6a3117454deea9acf70ee86d2f20404d1ee04a37ee0707045f0f37d7226f35c`) and `kordoc-0.1.0.tar.gz` (SHA256 `23922328ce71ff671c3c83e145b08f1c781a9c32e35013a905d40f446aff7e1a`). These are local rebuild checksums; the hosted Native wheels run is reported separately above.
+
+These URLs document the validation cycle for the implementation head above. This docs-only evidence commit needs its own hosted pass; the linked runs do not establish checks for a commit that includes this update. The stacked PR's dependency-review result was a scope-message only; it is not main-target proof. Main-target dependency-review proof and required-check enforcement remain pending PR #4. Product parity also remains pending as recorded in the live migration status.

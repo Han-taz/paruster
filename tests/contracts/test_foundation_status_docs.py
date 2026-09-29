@@ -55,11 +55,15 @@ def test_status_separates_verified_local_gates_from_pending_work() -> None:
         "88.63% line coverage",
         "two 30-second fuzz campaigns",
         "without crashes",
-        "Hosted workflows and required-check enforcement remain pending until PR #5 has run",
+        "PR #5 implementation head",
+        "a9df485` passed",
+        "Required checks on this evidence update remain pending",
+        "required-check enforcement and main-target dependency-review also remain pending PR #4",
         "parsers",
         "OCR",
         "transformations",
         "renderers",
         "17 MCP tools",
+        "Product parity remains pending",
     ):
         assert fact in status
