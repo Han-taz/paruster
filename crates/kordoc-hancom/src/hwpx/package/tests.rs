@@ -333,3 +333,18 @@ fn orders_sections_by_manifest_spine_then_numeric_fallback() {
     let mut package = Package::open(&malformed_manifest).unwrap();
     assert_eq!(error_code(package.section_paths()), ErrorCode::Corrupted);
 }
+
+#[test]
+fn rejects_content_manifest_depth_201() {
+    let mut manifest = String::from("<package>");
+    manifest.push_str(&"<wrapper>".repeat(200));
+    manifest.push_str(&"</wrapper>".repeat(200));
+    manifest.push_str("</package>");
+    let bytes = archive(&[
+        ("Contents/content.hpf", manifest.as_bytes()),
+        ("Contents/section0.xml", b"zero"),
+    ]);
+    let mut package = Package::open(&bytes).unwrap();
+
+    assert_eq!(error_code(package.section_paths()), ErrorCode::Corrupted);
+}

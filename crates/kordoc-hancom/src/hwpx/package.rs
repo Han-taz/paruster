@@ -1,7 +1,10 @@
 //! Validated, bounded access to HWPX ZIP package members.
 
 // The manager wires this private substrate into consumers at the H3 integration join.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "H1a package substrate remains private until the H3 integration join"
+)]
 
 use kordoc_ir::{ErrorCode, KordocError, ParseWarning, WarningCode};
 use quick_xml::Reader;
@@ -14,6 +17,7 @@ const MAX_RECORDS: usize = 500;
 const MAX_PLAINTEXT: u64 = 256 * 1024 * 1024;
 const MAX_CIPHERTEXT: u64 = 256 * 1024 * 1024;
 const MAX_DECLARED_ZIP_BYTES: u64 = 1024 * 1024 * 1024;
+const MAX_XML_DEPTH: usize = 200;
 const EOCD: u32 = 0x0605_4b50;
 const ZIP64_EOCD: u32 = 0x0606_4b50;
 const ZIP64_LOCATOR: u32 = 0x0706_4b50;
@@ -332,6 +336,11 @@ fn parse_spine(bytes: &[u8]) -> Result<Option<Vec<String>>, KordocError> {
     loop {
         match reader.read_event_into(&mut buffer) {
             Ok(Event::Start(element)) => {
+                if open_elements.len() >= MAX_XML_DEPTH {
+                    return Err(corrupted(
+                        "HWPX content manifest exceeds the XML depth limit",
+                    ));
+                }
                 if open_elements.is_empty() {
                     roots += 1;
                     if roots > 1 {
