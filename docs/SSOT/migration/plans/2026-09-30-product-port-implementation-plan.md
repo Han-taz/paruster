@@ -59,15 +59,15 @@ Type ownership follows behavior ownership: P0 owns common parse/result/options/d
 **Branch:** `feature/parser-seam`  
 **Files:** Create `crates/kordoc-ir/src/parsed.rs`, `crates/kordoc-core/src/{parse,options}.rs`, `tests/parity/test_document_goldens.py`, `tests/python/test_parse_success.py`, and a synthetic parser fixture builder; modify IR/core/PyO3/Python facade and model files, golden manifest, architecture, Python contract, parity policy, status, and WIKI.
 
-- [ ] Write failing Rust tests for registered parser dispatch, exact option translation, successful recursive `ParseResult` JSON roundtrip, unsupported option rejection, and panic containment.
-- [ ] Write failing Python tests for immutable successful `Document`, bytes/path/file-like equivalence, exception versus `try_parse` result semantics, binary images as `bytes`, omitted-versus-null fields, and GIL-released native calls.
-- [ ] Add coordinator-reviewed `Document` and successful result entries to the Python-only manifest, because the approved API requires `result.document` but the foundation manifest currently inventories only failure-shell models. Update contract tests and Python API SSOT in the same commit before exposing the class.
-- [ ] Define and roundtrip-test internal `kordoc_ir::ParsedDocument`, containing blocks plus source metadata/assets/page evidence but no projected Markdown. It is the acyclic return DTO for every format crate and is not a new public wire type.
-- [ ] Add a `Parser`/registry seam accepting `&[u8]`, detected `FileType`, bounded `ParseOptions`, and returning `ParsedDocument`; `kordoc-core` alone projects it into the frozen public `ParseSuccess`. Include an optional bounded metadata-only operation: HWPX, HWP5, and PDF implement it; other formats may use the oracle-compatible full-parse fallback only after the MCP layer enforces its 50 MiB limit. A test-only parser proves the success path without claiming a real format.
-- [ ] Extend the golden harness to compare full recursive IR, markdown, pages, metadata, outline, images, warnings, quality, errors, and option behavior; emit an RFC 6901 first-difference path.
-- [ ] Keep every real parser and all MCP tools `planned`; do not edit frozen schema content.
-- [ ] Assign and test shared detector helper exports here: `detect_ole2_format`, `detect_zip_format`, `is_hwpx_file`, `is_old_hwp_file`, `is_pdf_file`, and `is_zip_file`.
-- [ ] Focused commands: `cargo +1.97.0 test -p kordoc-core --locked parse` and `uv run --python 3.10 pytest tests/parity/test_document_goldens.py tests/python/test_parse_success.py -q`.
+- [x] Write failing Rust tests for registered parser dispatch, exact option translation, successful recursive `ParseResult` JSON roundtrip, unsupported option rejection, and panic containment.
+- [x] Write failing Python tests for immutable successful `Document`, bytes/path/file-like equivalence, exception versus `try_parse` result semantics, binary images as `bytes`, omitted-versus-null fields, and GIL-released native calls.
+- [x] Add coordinator-reviewed `Document` and successful result entries to the Python-only manifest, because the approved API requires `result.document` but the foundation manifest currently inventories only failure-shell models. Update contract tests and Python API SSOT in the same commit before exposing the class.
+- [x] Define and roundtrip-test internal `kordoc_ir::ParsedDocument`, containing blocks plus source metadata/assets/page evidence but no projected Markdown. It is the acyclic return DTO for every format crate and is not a new public wire type.
+- [x] Add a `Parser`/registry seam accepting `&[u8]`, detected `FileType`, bounded `ParseOptions`, and returning `ParsedDocument`; `kordoc-core` alone projects it into the frozen public `ParseSuccess`. Include an optional bounded metadata-only operation: HWPX, HWP5, and PDF implement it; other formats may use the oracle-compatible full-parse fallback only after the MCP layer enforces its 50 MiB limit. A test-only parser proves the success path without claiming a real format.
+- [x] Extend the golden harness to compare full recursive IR, markdown, pages, metadata, outline, images, warnings, quality, errors, and option behavior; emit an RFC 6901 first-difference path.
+- [x] Keep every real parser and all MCP tools `planned`; do not edit frozen schema content.
+- [x] Assign and test shared detector helper exports here: `detect_ole2_format`, `detect_zip_format`, `is_hwpx_file`, `is_old_hwp_file`, `is_pdf_file`, and `is_zip_file`.
+- [x] Focused commands: `cargo +1.97.0 test -p kordoc-core --locked parse` and `uv run --python 3.10 pytest tests/parity/test_document_goldens.py tests/python/test_parse_success.py -q`.
 
 ### Task P1: HWPX parser
 
