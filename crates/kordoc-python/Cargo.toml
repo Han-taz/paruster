@@ -10,8 +10,8 @@ name = "_native"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-kordoc-core = { path = "../kordoc-core" }
-kordoc-ir = { path = "../kordoc-ir" }
+kordoc-core = { path = "../kordoc-core", version = "=0.1.0" }
+kordoc-ir = { path = "../kordoc-ir", version = "=0.1.0" }
 pyo3 = { workspace = true, features = ["abi3-py310"] }
 serde_json.workspace = true
 
