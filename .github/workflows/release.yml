@@ -11,24 +11,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  resolve:
+  guard:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-    outputs:
-      commit: ${{ steps.commit.outputs.sha }}
     steps:
       - name: Require dispatch from the main branch
         run: test "$GITHUB_REF" = refs/heads/main
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-      - name: Freeze requested ref to one immutable commit
-        id: commit
-        run: |
-          sha=$(git rev-parse HEAD)
-          test "${#sha}" = 40
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
   build-wheels:
     name: candidate wheel (${{ matrix.target }})
@@ -62,11 +50,10 @@ jobs:
             manylinux: "off"
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
-    needs: [resolve]
+    needs: [guard]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.resolve.outputs.commit }}
           persist-credentials: false
       - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
@@ -91,18 +78,17 @@ jobs:
           subprocess.check_call([str(exe), '-m', 'pytest', 'tests/python/test_import.py', 'tests/python/test_error_mapping.py', 'tests/parity/test_golden.py', '-q'])"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: rc-wheel-${{ matrix.id }}-${{ needs.resolve.outputs.commit }}
+          name: rc-wheel-${{ matrix.id }}-${{ github.sha }}
           path: dist/*.whl
           if-no-files-found: error
 
   build-sdist:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
-    needs: [resolve]
+    needs: [guard]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.resolve.outputs.commit }}
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -120,12 +106,12 @@ jobs:
           .venv-sdist/bin/python -c "import kordoc; assert kordoc.detect_format(bytes.fromhex('255044462d')) == 'pdf'"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: rc-sdist-${{ needs.resolve.outputs.commit }}
+          name: rc-sdist-${{ github.sha }}
           path: dist/*.tar.gz
           if-no-files-found: error
 
   sboms:
-    needs: [resolve, build-wheels, build-sdist]
+    needs: [guard, build-wheels, build-sdist]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
@@ -142,11 +128,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.resolve.outputs.commit }}
           persist-credentials: false
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: ${{ matrix.artifact }}-${{ needs.resolve.outputs.commit }}
+          name: ${{ matrix.artifact }}-${{ github.sha }}
           path: subject
       - name: Resolve immutable subject
         id: subject
@@ -175,12 +160,12 @@ jobs:
           upload-release-assets: false
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: sbom-${{ matrix.artifact }}-${{ needs.resolve.outputs.commit }}
+          name: sbom-${{ matrix.artifact }}-${{ github.sha }}
           path: sbom/*.json
           if-no-files-found: error
 
   checksums:
-    needs: [resolve, build-wheels, build-sdist, sboms]
+    needs: [guard, build-wheels, build-sdist, sboms]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -197,7 +182,7 @@ jobs:
       - name: Generate deterministic SHA-256 manifest
         working-directory: bundle
         env:
-          SOURCE_COMMIT: ${{ needs.resolve.outputs.commit }}
+          SOURCE_COMMIT: ${{ github.sha }}
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -227,14 +212,14 @@ jobs:
           mv "$manifest" SHA256SUMS
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: rc-checksums-${{ needs.resolve.outputs.commit }}
+          name: rc-checksums-${{ github.sha }}
           path: |
             bundle/SHA256SUMS
             bundle/SOURCE_COMMIT
           if-no-files-found: error
 
   attest:
-    needs: [resolve, build-wheels, build-sdist, sboms, checksums]
+    needs: [guard, build-wheels, build-sdist, sboms, checksums]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:

@@ -20,12 +20,25 @@ def test_release_candidate_is_manual_non_publishing_and_reproducible() -> None:
     assert "contents: read" in text
     assert "maturin-version: v1.15.0" in text
     assert "syft-version: v1.52.0" in text
-    assert "resolve:" in text
-    assert "git rev-parse HEAD" in text
+    assert "guard:" in text
+    assert "outputs:" not in text.split("  guard:", maxsplit=1)[1].split(
+        "  build-wheels:", maxsplit=1
+    )[0]
     assert "github.event.inputs.ref" not in text
-    assert "ref: ${{ github.sha }}" in text
     assert 'test "$GITHUB_REF" = refs/heads/main' in text
-    assert text.count("ref: ${{ needs.resolve.outputs.commit }}") >= 3
+    assert "needs.resolve.outputs.commit" not in text
+    assert "outputs.commit" not in text
+    assert not re.search(r"(?m)^\s+ref:", text)
+    assert text.count("uses: actions/checkout@") >= 3
+    for immutable_commit_use in (
+        "name: rc-wheel-${{ matrix.id }}-${{ github.sha }}",
+        "name: rc-sdist-${{ github.sha }}",
+        "name: ${{ matrix.artifact }}-${{ github.sha }}",
+        "name: sbom-${{ matrix.artifact }}-${{ github.sha }}",
+        "SOURCE_COMMIT: ${{ github.sha }}",
+        "name: rc-checksums-${{ github.sha }}",
+    ):
+        assert immutable_commit_use in text
     assert "publish" not in "\n".join(
         line for line in text.splitlines() if re.match(r"^  [a-z].*:$", line)
     )
@@ -84,7 +97,7 @@ def test_release_actions_and_elevated_permissions_are_hardened() -> None:
     assert "attestations: write" not in before_attestation
     assert "id-token: write" not in before_attestation
     assert "artifact-metadata: write" not in before_attestation
-    assert "needs: [resolve, build-wheels, build-sdist, sboms, checksums]" in (
+    assert "needs: [guard, build-wheels, build-sdist, sboms, checksums]" in (
         attestation_job
     )
     assert "actions/attest@" in attestation_job
