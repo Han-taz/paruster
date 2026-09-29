@@ -1,8 +1,8 @@
 # Migration status
 
-This page is the live capability ledger. A capability is complete only after its implementation, contract/parity evidence, and required quality gates have merged. Contract inventory alone never counts as implementation.
+This page is the live capability ledger. A capability is complete only after its implementation, contract/parity evidence, and required quality gates have merged. Contract inventory alone never counts as implementation. Local verification is recorded separately from hosted CI results and repository branch-protection enforcement.
 
-## Verified foundation
+## Locally verified foundation
 
 - Rust workspace and Python 3.10+ abi3 packaging scaffold
 - recursive foundation IR and the 13 stable error codes
@@ -10,13 +10,15 @@ This page is the live capability ledger. A capability is complete only after its
 - checked single-disk ZIP/ZIP64 preflight with input, entry-count, uncompressed-size, and local-extent bounds
 - foundation dispatch that reports empty, oversized, security-rejected, and unsupported inputs without claiming parser completion
 
-The Python facade and deterministic detector golden harness are verified foundation capabilities. The CI matrix, fuzzing, coverage, wheels, and release automation remain in progress until their own tasks and gates pass.
+The Python facade and deterministic detector golden harness are verified foundation capabilities. The checked-in quality workflows and dependency/security policy are present and their local policy checks have passed. Locally, `kordoc-ir` and `kordoc-core` have 88.63% line coverage, and two 30-second fuzz campaigns completed without crashes. These are local evidence only; synthetic detector goldens and bounded fuzz runs do not demonstrate document-output parity.
+
+PR #5 implementation head `a9df485` passed the hosted foundation gates: [CI](https://github.com/Han-taz/paruster/actions/runs/36600464167), [Security](https://github.com/Han-taz/paruster/actions/runs/36600464228), [Native wheels](https://github.com/Han-taz/paruster/actions/runs/36600464274), and [Bounded fuzzing](https://github.com/Han-taz/paruster/actions/runs/36600464235). Required checks on this evidence update remain pending; required-check enforcement and main-target dependency-review also remain pending PR #4. Dependency review on the stacked PR is only a scope message, not main-target proof. Product parity remains pending as detailed below.
 
 ## Pending product parity
 
-Full oracle parity is pending. No real document parser, OCR pipeline, transformation, comparison, redaction, form operation, patching/generation flow, renderer, or MCP handler is complete merely because its contract has been frozen. Each stays pending until representative and adversarial oracle/golden fixtures pass in Rust/Python.
+Full oracle parity is pending. All document parsers, OCR pipelines, transformations, comparisons, redaction, form operations, patching/generation flows, renderers, and MCP handlers remain pending. None is complete merely because its contract has been frozen; each stays pending until representative and adversarial oracle/golden fixtures pass in Rust/Python.
 
-The 17 MCP tools remain planned and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
+All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy
 
