@@ -4,4 +4,6 @@
 
 All 13 entries in the inventory are reserved protocol values for the migration. Their presence is not a claim that the corresponding failure path is implemented or reachable today. Runtime status belongs in implementation and migration status documentation, not in this frozen identifier list.
 
+`OUTPUT_TOO_LARGE` is the stable bounded-payload code for either side of an operation: it covers an input rejected before parsing because it exceeds the configured byte limit and a generated output rejected because it exceeds its configured limit. Container expansion limits remain `DECOMPRESSION_BOMB` or `ZIP_BOMB`; this clarification does not repurpose those codes.
+
 Error text crossing Python or MCP boundaries must not expose secrets, native stack traces, or internal implementation details. MCP error responses use text content and mark the result with `isError: true`.
