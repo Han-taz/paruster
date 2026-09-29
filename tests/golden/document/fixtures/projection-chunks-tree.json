@@ -1,0 +1,76 @@
+{
+  "operation": "chunks",
+  "options": {
+    "granularity": "section",
+    "includeTableCells": true
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "계획"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "1. 개요"
+    },
+    {
+      "type": "paragraph",
+      "text": "도입"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 항목",
+      "listDepth": 0
+    },
+    {
+      "type": "paragraph",
+      "text": "○ 하위",
+      "listDepth": 1
+    },
+    {
+      "type": "table",
+      "table": {
+        "rows": 2,
+        "cols": 2,
+        "cells": [
+          [
+            {
+              "text": "항목",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "값",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "예산",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "100",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ]
+        ],
+        "hasHeader": true
+      }
+    },
+    {
+      "type": "paragraph",
+      "text": ""
+    },
+    {
+      "type": "paragraph",
+      "text": "마지막",
+      "pageNumber": 4
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+"**병합 표**\n\n<table>\n<tr><th colspan=\"2\">통합 제목</th></tr>\n<tr><td rowspan=\"2\">왼쪽</td><td><table>\n<tr><th>내부 항목</th><th>내부 값</th></tr>\n<tr><td>A</td><td>1</td></tr>\n</table></td></tr>\n<tr><td>아래</td></tr>\n</table>"

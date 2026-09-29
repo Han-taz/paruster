@@ -1,0 +1,390 @@
+{
+  "operation": "classify_table_tree",
+  "blocks": [
+    {
+      "type": "table",
+      "table": {
+        "rows": 5,
+        "cols": 3,
+        "cells": [
+          [
+            {
+              "text": "이름",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "부서",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "인원",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "홍길동",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "개발",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "10",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "김철수",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "기획",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "7",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "이영희",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "영업",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "12",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "박민수",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "총무",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "3",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ]
+        ],
+        "hasHeader": true
+      }
+    },
+    {
+      "type": "paragraph",
+      "text": "조직도"
+    },
+    {
+      "type": "table",
+      "table": {
+        "rows": 7,
+        "cols": 5,
+        "cells": [
+          [
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "기관장",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "기획본부",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "사업본부",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "기획팀",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "총무팀",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "사업팀",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ]
+        ],
+        "hasHeader": true
+      }
+    },
+    {
+      "type": "table",
+      "table": {
+        "rows": 1,
+        "cols": 1,
+        "cells": [
+          [
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1,
+              "blocks": [
+                {
+                  "type": "table",
+                  "table": {
+                    "rows": 2,
+                    "cols": 2,
+                    "cells": [
+                      [
+                        {
+                          "text": "내부 항목",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        },
+                        {
+                          "text": "내부 값",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        }
+                      ],
+                      [
+                        {
+                          "text": "A",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        },
+                        {
+                          "text": "1",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        }
+                      ]
+                    ],
+                    "hasHeader": true
+                  }
+                }
+              ]
+            }
+          ]
+        ],
+        "hasHeader": false
+      }
+    },
+    {
+      "type": "table",
+      "table": {
+        "rows": 2,
+        "cols": 2,
+        "cells": [
+          [
+            {
+              "text": "a",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "b",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "c",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "d",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ]
+        ],
+        "hasHeader": true
+      }
+    }
+  ]
+}

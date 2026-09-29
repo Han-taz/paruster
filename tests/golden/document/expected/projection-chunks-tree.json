@@ -1,0 +1,50 @@
+[
+  {
+    "id": "c0001",
+    "type": "heading",
+    "breadcrumb": [],
+    "text": "# 계획",
+    "blockRange": [0, 0]
+  },
+  {
+    "id": "c0002",
+    "type": "heading",
+    "breadcrumb": ["계획"],
+    "text": "## 1. 개요",
+    "blockRange": [1, 1]
+  },
+  {
+    "id": "c0003",
+    "type": "text",
+    "breadcrumb": ["계획", "1. 개요"],
+    "text": "도입\n\n□ 항목",
+    "blockRange": [2, 3]
+  },
+  {
+    "id": "c0004",
+    "type": "text",
+    "breadcrumb": ["계획", "1. 개요", "□ 항목"],
+    "text": "○ 하위",
+    "blockRange": [4, 4]
+  },
+  {
+    "id": "c0005",
+    "type": "table",
+    "breadcrumb": ["계획", "1. 개요", "□ 항목", "○ 하위"],
+    "text": "| 항목 | 값 |\n| --- | --- |\n| 예산 | 100 |",
+    "blockRange": [5, 5],
+    "table": {
+      "rows": 2,
+      "cols": 2,
+      "cells": [["항목", "값"], ["예산", "100"]]
+    }
+  },
+  {
+    "id": "c0006",
+    "type": "text",
+    "breadcrumb": ["계획", "1. 개요", "□ 항목", "○ 하위"],
+    "text": "마지막",
+    "blockRange": [7, 7],
+    "page": 4
+  }
+]

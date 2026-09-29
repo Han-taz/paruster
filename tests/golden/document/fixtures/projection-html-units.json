@@ -1,0 +1,80 @@
+{
+  "operation": "markdown",
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "GFM A | B"
+    },
+    {
+      "type": "table",
+      "table": {
+        "rows": 2,
+        "cols": 2,
+        "cells": [
+          [
+            {
+              "text": "바깥 | 셀",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "설명",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "부모",
+              "colSpan": 1,
+              "rowSpan": 1,
+              "blocks": [
+                {
+                  "type": "table",
+                  "table": {
+                    "rows": 2,
+                    "cols": 2,
+                    "cells": [
+                      [
+                        {
+                          "text": "내부 항목",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        },
+                        {
+                          "text": "내부 값",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        }
+                      ],
+                      [
+                        {
+                          "text": "A",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        },
+                        {
+                          "text": "1",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        }
+                      ]
+                    ],
+                    "hasHeader": true
+                  }
+                }
+              ]
+            },
+            {
+              "text": "끝",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ]
+        ],
+        "hasHeader": true,
+        "renderAsTable": true
+      }
+    }
+  ]
+}
