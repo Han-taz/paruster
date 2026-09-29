@@ -5,6 +5,7 @@ This directory contains the current, normative description of paruster. A code c
 ## Current documents
 
 - [`migration/2026-09-29-rust-python-port-design.md`](migration/2026-09-29-rust-python-port-design.md): approved product and migration design
+- [`migration/plans/2026-09-29-foundation-implementation-plan.md`](migration/plans/2026-09-29-foundation-implementation-plan.md): executable contract, workspace, binding, parity, and CI foundation plan
 
 ## Planned sections
 
