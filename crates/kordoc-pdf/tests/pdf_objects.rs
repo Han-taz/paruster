@@ -153,6 +153,26 @@ fn detects_encrypt_key_after_dictionary_close_text_in_a_literal_string() {
 }
 
 #[test]
+fn detects_encrypt_key_after_comment_between_trailer_and_dictionary() {
+    let mut pdf =
+        single_object_pdf_with_trailer(b"<< /Type /Catalog >>", b"/Encrypt 2 0 R /Root 1 0 R");
+    let marker = b"trailer\n<<";
+    let at = pdf
+        .windows(marker.len())
+        .position(|window| window == marker)
+        .unwrap();
+    pdf.splice(
+        at..at + marker.len(),
+        b"trailer\n% << >>\n<<".iter().copied(),
+    );
+
+    assert!(matches!(
+        PdfObjectReader::new(&pdf),
+        Err(PdfReadError::Encrypted)
+    ));
+}
+
+#[test]
 fn does_not_scan_stream_payload_for_object_references() {
     let pdf = single_object_pdf(b"<< /Length 5 >>\nstream\n1 0 R\nendstream");
     let mut reader = PdfObjectReader::new(&pdf).unwrap();

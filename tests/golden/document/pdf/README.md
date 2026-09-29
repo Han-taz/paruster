@@ -48,6 +48,7 @@ the named test; `Ok` means the deliberately supported path completed.
 | `pdf_security::ignores_long_unrecognized_classic_xref_line_without_token_vec` | `Ok` | 44,400,640 | 22,643,144 |
 | `pdf_objects::rejects_malformed_stream_length_and_reports_encryption_without_secret_data` | `Corrupted`; `Encrypted` | 44,400,640 | 22,561,296 |
 | `pdf_objects::detects_encrypt_key_after_dictionary_close_text_in_a_literal_string` | `Encrypted` | 47,579,136 | 25,903,680 |
+| `pdf_objects::detects_encrypt_key_after_comment_between_trailer_and_dictionary` | `Encrypted` | 44,695,552 | 23,003,664 |
 | `pdf_objects::does_not_scan_stream_payload_for_object_references` | `Ok` | 47,235,072 | 25,526,824 |
 | `pdf_objects::rejects_xref_stream_field_widths_that_do_not_fit_machine_integer` | `Corrupted` | 47,890,432 | 26,165,800 |
 | `pdf_objects::rejects_generation_mismatch_and_reference_cycles` | `GenerationMismatch`; `ReferenceCycle` | 47,415,296 | 25,838,120 |

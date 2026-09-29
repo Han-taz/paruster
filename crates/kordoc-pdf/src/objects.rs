@@ -821,7 +821,21 @@ fn trailer_contains_dictionary(dictionary: &[u8], key: &[u8]) -> bool {
 fn trailer_dictionary(section: &[u8]) -> Option<&[u8]> {
     let trailer = find_pdf_keyword(section, b"trailer")? + 7;
     let tail = &section[trailer..];
-    let start = find(tail, b"<<")?;
+    let mut start = 0usize;
+    loop {
+        while tail.get(start).is_some_and(u8::is_ascii_whitespace) {
+            start += 1;
+        }
+        if tail.get(start) != Some(&b'%') {
+            break;
+        }
+        while start < tail.len() && !matches!(tail[start], b'\n' | b'\r') {
+            start += 1;
+        }
+    }
+    if tail.get(start..start.checked_add(2)?) != Some(b"<<") {
+        return None;
+    }
     let end = dictionary_end(tail, start)?;
     Some(&tail[start..end])
 }
