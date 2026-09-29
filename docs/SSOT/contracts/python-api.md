@@ -14,7 +14,7 @@ input := path-like | bytes | bytearray | memoryview | BinaryIO
 
 The TypeScript value exports retain a single explicit disposition and Python mapping in `public-api.json`. `parse` is `foundation`; its format-specific siblings map to snake_case Python names and remain `planned`. Other library behavior also remains `planned`; classification as `planned` is not evidence of runtime availability.
 
-Type exports each map to a Python model, enum, union, or callable adaptation. The IR wire types are specified in `ir.md` and `ir-schema.json`. `Uint8Array`/`ArrayBuffer` payloads map to Python `bytes`, with JSON arrays of byte integers at serialization boundaries. TypeScript `onProgress` and `OcrProvider` functions map to Python callables. `filePath` remains internal and is not a public Python option.
+All 112 TypeScript type exports have an explicit category and mapping in `ir-schema.json`: 111 serializable input/model/result/enum/union types and the `OcrProvider` callable adapter. The schema records exact fields, requiredness, enums, recursive references, and serialization adapters. `Uint8Array`/`ArrayBuffer` payloads map to Python `bytes`, with JSON arrays of byte integers at serialization boundaries. TypeScript `onProgress`, `OcrProvider`, `ParseOptions.ocr`, and `ExtractRegionOptions.filter` map to Python callables. `filePath` remains internal and is not a public Python option.
 
 The Node CLI and Node package entry machinery are classified as `removed-node-surface` in `public-api.json`. That disposition applies only to those product surfaces; it does not remove the remaining document library behaviors, which stay planned for the Python port.
 

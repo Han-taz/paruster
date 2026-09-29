@@ -543,18 +543,57 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
     assert evidence["source_sha256"] == oracle["source_sha256"]
     assert evidence["source_path"] == oracle["source_evidence"]["path"]
     assert contract["wire_types"]
-    assert set(contract["wire_types"]) <= set(oracle["type_exports"])
-    assert set(contract["wire_types"]) <= set(schema)
-    assert set(contract["wire_types"]) == {
-        "CellContext", "IRBlockType", "IRBlock", "IRTable", "IRCell", "ImageData", "BoundingBox", "InlineStyle",
-        "DocumentMetadata", "ParseWarning", "WarningCode", "OutlineItem", "ErrorCode", "FileType", "ParseResult",
-        "ParseSuccess", "ParseFailure", "PageMarkdown", "PageQuality", "DocumentQualitySummary", "ExtractedImage",
-        "DiffChangeType", "BlockDiff", "CellDiff", "DiffResult", "PatchSkip", "PatchOptions", "PatchResult",
-        "FormField", "FormResult", "FillOutputFormat", "FillFormOutput", "ParseOptions",
+    type_classes = contract["type_classifications"]
+    assert {item["source_name"] for item in type_classes} == set(oracle["type_exports"])
+    assert len(type_classes) == len({item["source_name"] for item in type_classes})
+    assert {item["category"] for item in type_classes} <= {
+        "serializable-object", "serializable-enum", "serializable-union", "input-options", "callable-adapter",
     }
-    assert contract["supporting_types"] == [
-        "IRSpan", "TableClassificationKind", "TableClassificationReason", "TableClassificationSummary", "ParseResultBase",
-    ]
+    classes_by_name = {item["source_name"]: item for item in type_classes}
+    assert all(item["mapping"] == "#/$defs/" + item["source_name"] for item in type_classes)
+    serializable = {
+        name for name, item in classes_by_name.items()
+        if item["category"] in {"serializable-object", "serializable-enum", "serializable-union", "input-options"}
+    }
+    assert set(contract["wire_types"]) == serializable
+    assert set(contract["root_types"]) == serializable
+    assert serializable <= set(schema)
+    assert set(contract["anyOf"][index]["$ref"].removeprefix("#/$defs/") for index in range(len(contract["anyOf"]))) == serializable
+    for name in serializable:
+        kind = schema[name].get("type")
+        assert kind in {"object", "string"} or "oneOf" in schema[name] or "anyOf" in schema[name], name
+        fields = classes_by_name[name].get("fields")
+        if fields is not None:
+            assert set(fields) - set(classes_by_name[name].get("excluded_fields", [])) == set(schema[name].get("properties", {})), name
+            assert set(classes_by_name[name]["required_fields"]) == set(schema[name].get("required", [])), name
+        if "excluded_fields" in classes_by_name[name]:
+            assert classes_by_name[name]["excluded_fields"] == schema[name]["x-internal-fields"]
+        if "enum" in schema[name]:
+            assert classes_by_name[name]["enum_values"] == schema[name]["enum"], name
+        assert classes_by_name[name]["mapping"]
+    assert set(classes_by_name["OcrProvider"]["python_adapter_fields"]) == {"ocr"}
+    expected_adapters = {
+        "ExtractRegionOptions": {"filter"}, "ExtractedImage": {"data"}, "ExtractedTableCrop": {"data"},
+        "FillFormOutput": {"output"}, "HwpxFillResult": {"buffer"}, "ImageData": {"data"},
+        "MarkdownToHwpxOptions": {"images"}, "ParseOptions": {"ocr", "onProgress"},
+        "PatchResult": {"data"}, "PlaceSealResult": {"buffer"}, "RegionAsset": {"data"},
+        "RenderAsset": {"data"}, "ScanTable": {"cellByAnchor"}, "SceneRenderResult": {"pageSvgs"},
+        "SealOp": {"image"},
+    }
+    for name, definition in schema.items():
+        if definition.get("type") != "object":
+            continue
+        expected = expected_adapters.get(name, set())
+        classified = set(classes_by_name[name].get("adapter_fields", [])) if name in classes_by_name else set()
+        assert classified == expected, name
+        assert expected <= set(definition.get("properties", {})), name
+    assert schema["SceneRenderResult"]["properties"]["pageSvgs"]["type"] == "object"
+    assert schema["ScanTable"]["properties"]["cellByAnchor"]["type"] == "object"
+    assert schema["ExtractRegionOptions"]["properties"]["filter"]["not"] == {}
+    assert set(contract["supporting_types"]) == set(schema) - set(oracle["type_exports"])
+    assert set(schema) == set(oracle["type_exports"]) | set(contract["supporting_types"])
+    assert contract["$schema"] == "https://json-schema.org/draft/2020-12/schema"
+    assert contract["anyOf"] == [{"$ref": "#/$defs/" + name} for name in contract["root_types"]]
     assert evidence["type_source_sha256"] == "5b1e4b5793a04bd059600b6daf3b14b1b299958ee9f22633d9027c9d9956110c"
     assert contract["roots"] == {
         "parse_result": {"$ref": "#/$defs/ParseResult"},
@@ -582,6 +621,28 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
     collect_refs(contract["roots"], "roots")
     collect_refs(schema, "$defs")
     assert "IRBlock" in references
+    reachable = set()
+    pending = list(contract["root_types"])
+    while pending:
+        name = pending.pop()
+        if name in reachable:
+            continue
+        reachable.add(name)
+        nested: list[str] = []
+        collect_refs(schema[name], name)
+        def gather(value: object) -> None:
+            if isinstance(value, dict):
+                ref = value.get("$ref")
+                if isinstance(ref, str) and ref.startswith("#/$defs/"):
+                    nested.append(ref.removeprefix("#/$defs/"))
+                for child in value.values():
+                    gather(child)
+            elif isinstance(value, list):
+                for child in value:
+                    gather(child)
+        gather(schema[name])
+        pending.extend(nested)
+    assert set(contract["supporting_types"]) <= reachable
     for name, definition in schema.items():
         validate_schema(definition, name)
         if definition.get("type") == "object":
@@ -597,8 +658,8 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
         "images", "pages", "pageQuality", "qualitySummary", "pageCount", "isImageBased",
     }
     assert set(schema["ParseFailure"]["properties"]) == {"success", "fileType", "error", "code", "pageCount", "isImageBased"}
-    assert schema["ParseSuccess"]["required"] == ["success", "fileType", "markdown", "blocks"]
-    assert schema["ParseFailure"]["required"] == ["success", "fileType", "error"]
+    assert set(schema["ParseSuccess"]["required"]) == {"success", "fileType", "markdown", "blocks"}
+    assert set(schema["ParseFailure"]["required"]) == {"success", "fileType", "error"}
     assert schema["ErrorCode"]["enum"] == [item["code"] for item in load("errors.json")["codes"]]
     assert schema["WarningCode"]["enum"] == contract["warning_codes"]
     assert schema["IRBlock"]["properties"]["pageNumber"]["type"] == "number"
@@ -619,11 +680,20 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
         "title", "author", "creator", "createdAt", "modifiedAt", "pageCount", "pageMode", "version", "description", "keywords",
     }
     assert set(schema["ParseOptions"]["properties"]) == {
-        "pages", "ocr", "removeHeaderFooter", "scriptTags", "plain", "htmlTables", "keepTrailingEmptyCols", "classifyTables",
+        "pages", "ocr", "onProgress", "removeHeaderFooter", "scriptTags", "plain", "htmlTables", "keepTrailingEmptyCols", "classifyTables",
         "keepEmptyParagraphs", "includeFieldPlaceholders", "password", "formulaOcr", "dedupeRunningHeaders", "inlineImages", "images", "tables",
     }
     assert "filePath" not in schema["ParseOptions"]["properties"]
-    assert "onProgress" not in schema["ParseOptions"]["properties"]
+    assert schema["ParseOptions"]["properties"]["onProgress"]["not"] == {}
+    assert schema["ParseOptions"]["properties"]["onProgress"]["x-typescript-callable"] is True
+    assert schema["ParseOptions"]["properties"]["onProgress"]["x-python-translation"] == "callable (current, total)"
+    assert schema["ParseOptions"]["properties"]["ocr"]["oneOf"] == [
+        {"type": "boolean"}, {"const": "force"},
+    ]
+    assert schema["ParseOptions"]["properties"]["ocr"]["x-python-callable-adapter"] is True
+    assert schema["ParseOptions"]["x-internal-fields"] == ["filePath"]
+    assert schema["ParseOptions"]["x-python-callable-fields"] == ["onProgress", "ocr"]
+    assert schema["ParseOptions"]["x-node-only-fields"] == ["filePath"]
     assert "code" not in schema["ParseFailure"]["required"]
     assert schema["ParseFailure"]["properties"]["code"] == {"$ref": "#/$defs/ErrorCode"}
     assert schema["WarningCode"]["enum"] == [
@@ -642,6 +712,5 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
         "vector_text", "low_text", "high_pua", "high_control", "high_replacement", "garbled_hangul",
     ]
     assert contract["source_evidence"]["source_sha256"] == "85943942619d9c2b7ed0855bdb58eb0360fec028e84efdd0f719589ba6ce4e01"
-    assert "x-python-translation" in schema["ImageData"]
-    assert schema["ImageData"]["x-python-translation"]["data"].startswith("bytes;")
+    assert schema["ImageData"]["properties"]["data"]["x-python-translation"] == "bytes"
     assert all(item.get("type") != "null" for item in schema.values())
