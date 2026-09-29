@@ -128,6 +128,14 @@ All projection inputs may be untrusted even when IR came from a parser. Use chec
 
 `PageEvidence` can describe an empty source page that `blocksToPages` alone cannot see; the coordinator must decide precedence when evidence conflicts with block page numbers. `flattenLayoutTables` needs an internal parser flag to replace the oracle's `WeakSet` and must run only on the intended HWP3/HWP5 layout boxes. HWPX flattening is disabled: preserving table topology keeps roundtrip source ordinals stable. These decisions stay out of public wire schema unless coordinator explicitly approves a contract change.
 
+### Coordinator resolutions before Task 0
+
+- P7 may complete with runtime-captured oracle projection answers over generated IR while the real-document success numerator remains zero. This proves the pure projections only; P1-P6 still must add successful source-document parity.
+- Rust returns typed `OUTPUT_TOO_LARGE` before the oracle's silent row truncation would occur. The generated matrix covers shared in-budget behavior, and the component SSOT records this intentional security/no-loss divergence.
+- Observed block page numbers are authoritative for content grouping. Internal `PageEvidence` contributes only known empty page numbers to the bounded output union; it never reassigns blocks. The public blocks-only call retains the oracle rule and returns `None` when no block has a page number.
+- Python `blocks_to_pages(blocks, render=None)` preserves the optional renderer. The callback runs synchronously with a tuple of immutable block mappings for each page and must return `str`; the default path stays native and GIL-detached. Callback exceptions propagate unchanged, and callback mode never runs after native detach.
+- Layout flattening uses an internal `LegacyLayoutFlattening` policy selected only by future HWP3/HWP5 adapters. HWPX and generic projections always select `Never`; no internal marker becomes a wire field.
+
 ## Verification and merge gate
 
 Run focused red/green commands above after each task. Before claiming P7 complete, run:
