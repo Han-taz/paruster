@@ -21,9 +21,12 @@ def test_release_candidate_is_manual_non_publishing_and_reproducible() -> None:
     assert "maturin-version: v1.15.0" in text
     assert "syft-version: v1.52.0" in text
     assert "guard:" in text
-    assert "outputs:" not in text.split("  guard:", maxsplit=1)[1].split(
-        "  build-wheels:", maxsplit=1
-    )[0]
+    assert (
+        "outputs:"
+        not in text.split("  guard:", maxsplit=1)[1].split(
+            "  build-wheels:", maxsplit=1
+        )[0]
+    )
     assert "github.event.inputs.ref" not in text
     assert 'test "$GITHUB_REF" = refs/heads/main' in text
     assert "needs.resolve.outputs.commit" not in text
