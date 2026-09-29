@@ -94,11 +94,40 @@ def test_every_input_schema_is_a_unique_described_json_schema() -> None:
     assert len(serialized) == len(set(serialized))
 
 
+def test_generated_levels_schema_rejects_keys_outside_zero_to_seven() -> None:
+    levels = load("mcp-protocol.json")["input_schemas"]["generate_document"]["properties"]["levels"]
+    assert levels["patternProperties"] == {
+        "^[0-7]$": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "font": {"type": "string"},
+                "pt": {"type": "number", "minimum": 6, "maximum": 60},
+                "bold": {"type": "boolean"},
+            },
+        }
+    }
+    assert levels["additionalProperties"] is False
+
+
+def test_nested_generation_objects_reject_unrecognized_keys() -> None:
+    fields = load("mcp-protocol.json")["input_schemas"]["generate_document"]["properties"]
+    for name in ("doc_info", "fonts", "sizes", "doc_head", "doc_foot", "notice_head"):
+        assert fields[name]["additionalProperties"] is False, name
+    assert fields["press"]["additionalProperties"] is False
+    assert fields["press"]["properties"]["contact"]["additionalProperties"] is False
+    checklist_object = fields["checklist"]["oneOf"][1]
+    assert checklist_object["additionalProperties"] is False
+
+
 def test_output_envelopes_capture_success_and_error_shapes_for_every_tool() -> None:
     envelopes = load("mcp-protocol.json")["output_envelopes"]
     for name, envelope in envelopes.items():
-        assert envelope["success"]["content"], name
-        assert all(item["type"] in {"text", "image"} for item in envelope["success"]["content"]), name
+        variants = envelope["success"]["variants"]
+        assert variants, name
+        for variant in variants:
+            assert variant["content"], name
+            assert all(item["type"] in {"text", "image"} for item in variant["content"]), name
         assert envelope["error"] == {
             "content": [{"type": "text", "text": "operation-specific error message"}],
             "isError": True,
@@ -119,6 +148,7 @@ def test_source_hash_evidence_is_complete_and_reproducible() -> None:
         "src/utils.ts",
         "src/hwpx/gongmun-surface.ts",
         "src/hwpx/gongmun.ts",
+        "src/shared/generate-images.ts",
     }
     assert {item["path"] for item in evidence["files"]} == expected
     assert all(re.fullmatch(r"[0-9a-f]{64}", item["sha256"]) for item in evidence["files"])
@@ -136,6 +166,7 @@ def test_source_hash_evidence_is_complete_and_reproducible() -> None:
         "src/utils.ts": "b5e59e707826cd7aad771de63a09d1d397f0c58a5f7eebb9abd2c0cd534d54ca",
         "src/hwpx/gongmun-surface.ts": "cfd3c05933cd735d7a5dc09b8c0967185272d19db71daf5368676e41edc18970",
         "src/hwpx/gongmun.ts": "3a3fb6a24167f613530d44b069c57fcfb681866d31b8ceaaedda6d8d7ec5af1c",
+        "src/shared/generate-images.ts": "b8a25ab961c06013d3b4f5f28b0de38a40a3d683873da767aae064856033b33a",
     }
     assert {item["path"]: item["sha256"] for item in evidence["files"]} == expected_hashes
 
@@ -161,8 +192,55 @@ def test_response_caps_and_image_limits_match_per_tool_behavior() -> None:
     assert capped == {"parse_document", "parse_chunks", "redact_document"}
     assert "up to 8 image items" in envelopes["render_document"]["response_behavior"]
     assert "up to 8 image content items" in envelopes["extract_tables"]["response_behavior"].lower()
-    assert "image" in {item["type"] for item in envelopes["render_document"]["success"]["content"]}
-    assert "image" in {item["type"] for item in envelopes["extract_tables"]["success"]["content"]}
+    render = envelopes["render_document"]["success"]["variants"]
+    assert render[0]["when"] == {"format": ["png", "jpeg"]}
+    assert [item["type"] for item in render[0]["content"]] == ["image", "text"]
+    assert render[0]["max_image_items"] == 8
+    assert render[1]["when"] == {"format": ["svg", "html", "pdf"]}
+    assert [item["type"] for item in render[1]["content"]] == ["text"]
+    tables = envelopes["extract_tables"]["success"]["variants"]
+    assert tables[0]["when"] == {"visual": ["none"]}
+    assert [item["type"] for item in tables[0]["content"]] == ["text"]
+    assert tables[1]["when"] == {"visual": ["non-tabular", "non-tabular-and-uncertain", "all"]}
+    assert [item["type"] for item in tables[1]["content"]] == ["image", "text"]
+    assert tables[1]["max_image_items"] == 8
+
+
+def test_each_tool_freezes_file_extensions_and_conditional_output_paths() -> None:
+    files = load("mcp-protocol.json")["file_behavior"]
+    document = [".hwp", ".hwpx", ".hml", ".pdf", ".xls", ".xlsx", ".docx"]
+    parse = document + [".png", ".jpg", ".jpeg", ".webp"]
+    for name in ("parse_document", "detect_format", "parse_metadata", "parse_pages", "parse_table", "parse_chunks"):
+        assert files[name]["input_extensions"] == parse
+    for name in ("compare_documents", "parse_form", "fill_form", "place_seal", "redact_document", "extract_profile"):
+        assert files[name]["input_extensions"] == document
+    assert files["compare_documents"]["input_extensions"] == document
+    assert files["place_seal"]["image_extensions"] == [".png", ".jpg", ".jpeg", ".gif", ".bmp"]
+    assert files["fill_form"]["output_by_format"] == {
+        "markdown": [".md", ".markdown", ".txt"],
+        "hwpx": [".hwpx"],
+        "hwpx-preserve": [".hwpx"],
+    }
+    assert files["fill_form"]["output_path_required"] is False
+    assert files["fill_form"]["input_source_precedence"] == "template wins when truthy; otherwise file_path is read; absence of both returns an error"
+    assert files["place_seal"]["output_extensions"] == [".hwpx"]
+    assert files["patch_document"]["input_extensions"] == [".hwpx", ".hwp"]
+    assert files["patch_document"]["output_extensions"] == [".hwpx", ".hwp"]
+    assert files["patch_document"]["same_extension_as_input_enforced"] is False
+    assert files["redact_document"]["output_extensions_by_detected_format"] == {
+        "hwpx": [".hwpx"], "hwp": [".hwp"], "other": [".md", ".markdown", ".txt"]
+    }
+    assert files["redact_document"]["output_path_required_when_dry_run_false"] is True
+    assert files["render_document"]["output_extensions_by_format"] == {
+        "png": [".png"], "jpeg": [".jpg", ".jpeg"], "svg": [".svg"], "html": [".html", ".htm"], "pdf": [".pdf"]
+    }
+    assert files["crop_regions"]["manifest"] == "regions.json"
+    assert files["extract_tables"]["manifest"] == "tables.json"
+    assert files["extract_tables"]["output_dir_required_when_visual_not_none"] is True
+    assert files["extract_profile"]["output_extensions"] == [".json"]
+    assert files["generate_document"]["output_extensions"] == [".hwpx"]
+    assert files["generate_document"]["image_dir_confined_to_root"] is True
+    assert files["generate_document"]["image_extension_filter_enforced"] is False
 
 
 def test_dynamic_generation_schema_preserves_source_enums_ranges_and_key_sets() -> None:
@@ -185,6 +263,36 @@ def test_dynamic_generation_schema_preserves_source_enums_ranges_and_key_sets() 
         "dae", "cham", "chapter", "coverTitle", "coverSub", "tocLabel", "tocRoman", "tocItem", "table", "bodyTitle"
     }
     assert fields["approval"]["maxItems"] == 6
+    assert "today" in fields["date"]["description"]
+    assert "gaejosik" in fields["toc"]["description"] and "press" in fields["toc"]["description"]
+    assert "gaejosik" in fields["cover"]["description"]
+    assert "org, date" in fields["cover"]["description"]
+    assert "report" in fields["page_numbers"]["description"] and "plan" in fields["page_numbers"]["description"]
+    assert "heading" in fields["fonts"]["description"] and "body only" in fields["fonts"]["description"]
+    assert "all four roles" in fields["fonts"]["description"]
+    behavior = load("mcp-protocol.json")["generation_behavior"]
+    assert behavior["preset_defaults"]["official"] == {
+        "body_pt": 12, "line_spacing": 160, "cover": False, "toc": False,
+        "page_numbers": False, "end_mark": True, "body_title_box": False,
+        "h2_marker": "none", "bullet2": "ㅇ",
+    }
+    assert behavior["preset_defaults"]["gaejosik"]["cover"] is True
+    assert behavior["preset_defaults"]["gaejosik"]["body_title_box"] is True
+    assert behavior["preset_defaults"]["ministry"]["toc"] is True
+    assert behavior["preset_defaults"]["bangchim"]["page_numbers"] is True
+    assert behavior["preset_defaults"]["press"]["toc"] is False
+    assert behavior["font_override_applicability"]["all_roles_presets"] == ["gaejosik", "report", "plan", "bangchim"]
+    assert behavior["font_override_applicability"]["body_only_for_other_presets"] is True
+
+
+def test_detect_format_records_header_probe_and_conditional_full_read() -> None:
+    detect = load("mcp-protocol.json")["file_behavior"]["detect_format"]
+    assert detect["initial_read_bytes"] == 512
+    assert detect["full_file_read_only_for_header_formats"] == ["hwpx", "hwp"]
+    assert detect["full_file_read_limit_bytes"] == 524288000
+    mcp_doc = (ROOT / "docs/SSOT/contracts/mcp.md").read_text(encoding="utf-8")
+    assert "512-byte header" in mcp_doc
+    assert "ZIP or OLE" in mcp_doc
 
 
 def test_contract_pages_and_pull_request_template_cover_review_evidence() -> None:
