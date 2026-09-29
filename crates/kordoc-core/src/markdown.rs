@@ -732,7 +732,7 @@ fn table_markdown(table: &IrTable, depth: usize) -> Result<String, KordocError> 
                         block
                             .text
                             .as_deref()
-                            .map(|src| format!("![image]({})", src.replace(')', "%29")))
+                            .map(|src| format!("![image]({src})"))
                             .unwrap_or_default(),
                     );
                 } else if let Some(spans) = block.spans.as_deref() {
@@ -897,13 +897,16 @@ fn render_blocks(blocks: &[IrBlock], depth: usize, out: &mut String) -> Result<(
             }
             IrBlockType::Image => {
                 if let Some(src) = block.text.as_deref() {
+                    if !out.is_empty() {
+                        append_limited(out, "\n")?;
+                    }
                     append_limited(out, "![image](")?;
-                    append_limited(out, &src.replace(')', "%29"))?;
+                    append_limited(out, src)?;
                     append_limited(out, ")\n\n")?;
                 }
             }
             IrBlockType::Separator => {
-                if !out.ends_with("\n\n") {
+                if !out.is_empty() {
                     append_limited(out, "\n")?;
                 }
                 append_limited(out, "---\n\n")?;
@@ -1070,6 +1073,20 @@ mod tests {
             block(r#"{"type":"separator"}"#),
         ];
         assert_eq!(blocks_to_markdown(&blocks).unwrap(), "- item\n\n---");
+    }
+
+    #[test]
+    fn image_and_separator_spacing_matches_oracle_block_lines() {
+        let blocks = [
+            block(r#"{"type":"list","listType":"unordered","text":"item"}"#),
+            block(r#"{"type":"image","text":"asset(image).png"}"#),
+            block(r#"{"type":"paragraph","text":"content"}"#),
+            block(r#"{"type":"separator"}"#),
+        ];
+        assert_eq!(
+            blocks_to_markdown(&blocks).unwrap(),
+            "- item\n\n![image](asset(image).png)\n\ncontent\n\n\n---"
+        );
     }
 
     #[test]
