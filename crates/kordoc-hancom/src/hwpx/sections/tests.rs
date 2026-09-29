@@ -164,6 +164,69 @@ fn lowers_inline_notes_in_source_order_and_attaches_them_to_host() {
 }
 
 #[test]
+fn carries_page_evidence_through_a_spanning_final_paragraph_and_next_section() {
+    let inputs = [
+        section(
+            "Contents/section0.xml",
+            "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"3000\"/><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>spanning final paragraph</hp:t></hp:run></hp:p>",
+        ),
+        section(
+            "Contents/section1.xml",
+            "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>next section</hp:t></hp:run></hp:p>",
+        ),
+    ];
+    let output = lower_sections(
+        &inputs,
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.blocks[0].page_number, Some(1));
+    assert_eq!(output.blocks[1].page_number, Some(3));
+    assert_eq!(
+        output
+            .page_evidence
+            .iter()
+            .map(|evidence| evidence.page_number)
+            .collect::<Vec<_>>(),
+        [1, 2, 3]
+    );
+}
+
+#[test]
+fn inherits_section_note_number_formats_and_applies_note_local_decorations() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:run><hp:secPr><hp:footNotePr><hp:autoNumFormat type=\"DIGIT\" userChar=\"\" prefixChar=\"문\" suffixChar=\"）\"/></hp:footNotePr><hp:endNotePr><hp:autoNumFormat type=\"DIGIT\" userChar=\"\" prefixChar=\"E\" suffixChar=\".\"/></hp:endNotePr></hp:secPr><hp:t>A</hp:t><hp:ctrl><hp:footNote number=\"3\"><hp:subList><hp:p><hp:run><hp:t>foot</hp:t></hp:run></hp:p></hp:subList></hp:footNote></hp:ctrl><hp:t>B</hp:t><hp:ctrl><hp:endNote number=\"4\" prefixChar=\"40\" suffixChar=\"41\"><hp:subList><hp:p><hp:run><hp:t>end</hp:t></hp:run></hp:p></hp:subList></hp:endNote></hp:ctrl><hp:t>C</hp:t><hp:ctrl><hp:endNote number=\"5\"><hp:subList><hp:p><hp:run><hp:t>inherited end</hp:t></hp:run></hp:p></hp:subList></hp:endNote></hp:ctrl><hp:t>D</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.blocks[0].text.as_deref(), Some("A문3）B(4)CE5.D"));
+}
+
+#[test]
+fn inherits_user_character_note_format_and_honors_note_local_user_character() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:run><hp:secPr><hp:footNotePr><hp:autoNumFormat type=\"USER_CHAR\" userChar=\"*\" prefixChar=\"\" suffixChar=\"\"/></hp:footNotePr></hp:secPr><hp:t>A</hp:t><hp:ctrl><hp:footNote number=\"3\"><hp:subList><hp:p><hp:run><hp:t>inherited</hp:t></hp:run></hp:p></hp:subList></hp:footNote></hp:ctrl><hp:t>B</hp:t><hp:ctrl><hp:footNote number=\"4\" userChar=\"9733\"><hp:subList><hp:p><hp:run><hp:t>overridden</hp:t></hp:run></hp:p></hp:subList></hp:footNote></hp:ctrl><hp:t>C</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.blocks[0].text.as_deref(), Some("A*B★C"));
+}
+
+#[test]
 fn resets_layout_page_number_between_sections() {
     let inputs = [
         section(

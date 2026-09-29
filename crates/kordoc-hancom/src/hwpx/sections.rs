@@ -50,6 +50,26 @@ struct ParagraphLayout {
     explicit_page_break: bool,
 }
 
+#[derive(Debug)]
+struct XmlLayoutCache {
+    section_pages: Vec<Vec<u32>>,
+    evidence_pages: BTreeSet<u32>,
+}
+
+#[derive(Debug, Clone)]
+struct NoteNumberFormat {
+    kind: String,
+    user_char: String,
+    prefix: String,
+    suffix: String,
+}
+
+#[derive(Debug, Clone, Default)]
+struct NoteNumberFormats {
+    footnote: Option<NoteNumberFormat>,
+    endnote: Option<NoteNumberFormat>,
+}
+
 /// Orders already-discovered section member paths. A supplied spine is authoritative and must
 /// resolve every reference; absent a usable spine, the numeric suffix controls source order.
 pub(crate) fn order_section_paths(
@@ -106,9 +126,11 @@ pub(crate) fn lower_sections(
         match parse(&input.bytes) {
             Ok(root) => {
                 let mut delta = SectionDelta::default();
+                let note_formats = parse_note_number_formats(&root);
                 lower_content(
                     &root,
                     styles,
+                    &note_formats,
                     options.keep_empty_paragraphs == Some(true),
                     &mut delta,
                 );
@@ -141,11 +163,15 @@ pub(crate) fn lower_sections(
             })
     });
     let selected_layout_cache = xml_layout_cache
-        .as_deref()
+        .as_ref()
+        .map(|cache| cache.section_pages.as_slice())
         .or_else(|| supplied_layout_usable.then_some(layout_cache).flatten());
     let layout_usable = selected_layout_cache.is_some();
 
     let mut pages_seen = BTreeSet::new();
+    if let Some(xml_layout_cache) = &xml_layout_cache {
+        pages_seen.extend(xml_layout_cache.evidence_pages.iter().copied());
+    }
     for (index, delta) in deltas.into_iter().enumerate() {
         let Some(mut delta) = delta else {
             continue;
@@ -230,11 +256,12 @@ fn parse_page_range(value: &str) -> Option<BTreeSet<u32>> {
     Some((start..=end).collect())
 }
 
-fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<Vec<Vec<u32>>> {
+fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<XmlLayoutCache> {
     if deltas.is_empty() {
         return None;
     }
     let mut cache = Vec::with_capacity(deltas.len());
+    let mut evidence_pages = BTreeSet::new();
     let mut last_page = 0u32;
     let mut saw_layout_hint = false;
     for delta in deltas {
@@ -253,32 +280,42 @@ fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<Vec<Vec<u3
                 .is_some_and(|(position, previous)| position < previous);
             if explicit_break || line_reset {
                 page = page.checked_add(1)?;
+                evidence_pages.insert(page);
             }
             saw_layout_hint |= explicit_break || !layout.line_positions.is_empty();
             section_pages.push(page);
+            evidence_pages.insert(page);
             let mut previous_line = first_position;
             for position in layout.line_positions.iter().copied().skip(1) {
                 if previous_line.is_some_and(|previous| position < previous) {
                     page = page.checked_add(1)?;
+                    evidence_pages.insert(page);
                 }
                 previous_line = Some(position);
             }
             previous_position = previous_line.or(previous_position);
         }
+        if !delta.blocks.is_empty() {
+            evidence_pages.insert(page);
+        }
         last_page = page;
         cache.push(section_pages);
     }
-    saw_layout_hint.then_some(cache)
+    saw_layout_hint.then_some(XmlLayoutCache {
+        section_pages: cache,
+        evidence_pages,
+    })
 }
 
 fn lower_content(
     node: &XmlNode,
     styles: &StyleCatalog,
+    note_formats: &NoteNumberFormats,
     keep_empty_paragraphs: bool,
     delta: &mut SectionDelta,
 ) {
     match node.name.as_str() {
-        "p" => lower_paragraph(node, styles, keep_empty_paragraphs, delta),
+        "p" => lower_paragraph(node, styles, note_formats, keep_empty_paragraphs, delta),
         "footNote" | "endNote" => {
             let text = node.text_content();
             if !text.is_empty() {
@@ -293,7 +330,13 @@ fn lower_content(
         _ => {
             for part in &node.content {
                 if let XmlContent::Child(index) = part {
-                    lower_content(&node.children[*index], styles, keep_empty_paragraphs, delta);
+                    lower_content(
+                        &node.children[*index],
+                        styles,
+                        note_formats,
+                        keep_empty_paragraphs,
+                        delta,
+                    );
                 }
             }
         }
@@ -303,6 +346,7 @@ fn lower_content(
 fn lower_paragraph(
     node: &XmlNode,
     styles: &StyleCatalog,
+    note_formats: &NoteNumberFormats,
     keep_empty_paragraphs: bool,
     delta: &mut SectionDelta,
 ) {
@@ -323,9 +367,25 @@ fn lower_paragraph(
             XmlContent::Child(index) => {
                 let child = &node.children[*index];
                 match child.name.as_str() {
-                    "run" => append_inline_content(child, None, styles, &mut spans, &mut notes),
-                    "footNote" | "endNote" => append_note(child, None, &mut spans, &mut notes),
-                    "ctrl" => append_inline_content(child, None, styles, &mut spans, &mut notes),
+                    "run" => append_inline_content(
+                        child,
+                        None,
+                        styles,
+                        note_formats,
+                        &mut spans,
+                        &mut notes,
+                    ),
+                    "footNote" | "endNote" => {
+                        append_note(child, None, note_formats, &mut spans, &mut notes)
+                    }
+                    "ctrl" => append_inline_content(
+                        child,
+                        None,
+                        styles,
+                        note_formats,
+                        &mut spans,
+                        &mut notes,
+                    ),
                     _ => {}
                 }
             }
@@ -370,6 +430,7 @@ fn append_inline_content(
     node: &XmlNode,
     style: Option<&kordoc_ir::InlineStyle>,
     styles: &StyleCatalog,
+    note_formats: &NoteNumberFormats,
     spans: &mut Vec<IrSpan>,
     notes: &mut Vec<String>,
 ) {
@@ -396,8 +457,17 @@ fn append_inline_content(
             XmlContent::Child(index) => {
                 let child = &node.children[*index];
                 match child.name.as_str() {
-                    "footNote" | "endNote" => append_note(child, active_style, spans, notes),
-                    _ => append_inline_content(child, active_style, styles, spans, notes),
+                    "footNote" | "endNote" => {
+                        append_note(child, active_style, note_formats, spans, notes)
+                    }
+                    _ => append_inline_content(
+                        child,
+                        active_style,
+                        styles,
+                        note_formats,
+                        spans,
+                        notes,
+                    ),
                 }
             }
         }
@@ -407,11 +477,12 @@ fn append_inline_content(
 fn append_note(
     node: &XmlNode,
     style: Option<&kordoc_ir::InlineStyle>,
+    note_formats: &NoteNumberFormats,
     spans: &mut Vec<IrSpan>,
     notes: &mut Vec<String>,
 ) {
     spans.push(IrSpan {
-        text: note_reference_mark(node),
+        text: note_reference_mark(node, note_formats),
         bold: style.and_then(|style| style.bold),
         italic: style.and_then(|style| style.italic),
         strike: style.and_then(|style| style.strike),
@@ -425,14 +496,52 @@ fn append_note(
     }
 }
 
-fn note_reference_mark(node: &XmlNode) -> String {
+fn parse_note_number_formats(root: &XmlNode) -> NoteNumberFormats {
+    fn read(root: &XmlNode, property: &str) -> Option<NoteNumberFormat> {
+        let properties = root.descendants(property).into_iter().next()?;
+        let format = properties
+            .children
+            .iter()
+            .find(|child| child.name == "autoNumFormat")?;
+        Some(NoteNumberFormat {
+            kind: format.attr("type").unwrap_or("DIGIT").to_owned(),
+            user_char: format.attr("userChar").unwrap_or_default().to_owned(),
+            prefix: format.attr("prefixChar").unwrap_or_default().to_owned(),
+            suffix: format.attr("suffixChar").unwrap_or(")").to_owned(),
+        })
+    }
+
+    NoteNumberFormats {
+        footnote: read(root, "footNotePr"),
+        endnote: read(root, "endNotePr"),
+    }
+}
+
+fn note_reference_mark(node: &XmlNode, note_formats: &NoteNumberFormats) -> String {
+    let default = NoteNumberFormat {
+        kind: "DIGIT".to_owned(),
+        user_char: String::new(),
+        prefix: String::new(),
+        suffix: ")".to_owned(),
+    };
+    let format = if node.name == "endNote" {
+        note_formats.endnote.as_ref()
+    } else {
+        note_formats.footnote.as_ref()
+    }
+    .unwrap_or(&default);
     let number = node
         .attr("number")
         .and_then(|value| value.parse::<u32>().ok())
         .unwrap_or(1);
-    let prefix = note_decoration(node.attr("prefixChar")).unwrap_or_default();
-    let suffix = note_decoration(node.attr("suffixChar")).unwrap_or_else(|| ")".to_owned());
-    format!("{prefix}{number}{suffix}")
+    let core = if format.kind == "USER_CHAR" {
+        note_decoration(node.attr("userChar")).unwrap_or_else(|| format.user_char.clone())
+    } else {
+        format_note_number(number, &format.kind)
+    };
+    let prefix = note_decoration(node.attr("prefixChar")).unwrap_or_else(|| format.prefix.clone());
+    let suffix = note_decoration(node.attr("suffixChar")).unwrap_or_else(|| format.suffix.clone());
+    format!("{prefix}{core}{suffix}")
 }
 
 fn note_decoration(value: Option<&str>) -> Option<String> {
@@ -442,6 +551,100 @@ fn note_decoration(value: Option<&str>) -> Option<String> {
         return Some(String::new());
     }
     char::from_u32(codepoint).map(|character| character.to_string())
+}
+
+fn format_note_number(number: u32, kind: &str) -> String {
+    if number == 0 && kind == "DIGIT" {
+        return "0".to_owned();
+    }
+    let number = number.max(1);
+    let index = number - 1;
+    match kind {
+        "CIRCLED_DIGIT" => circled_number(index),
+        "HANGUL_SYLLABLE" => hangul_ordinal(index),
+        "CIRCLED_HANGUL_SYLLABLE" => {
+            if index < 14 {
+                char::from_u32(0x326e + index).unwrap_or(' ').to_string()
+            } else {
+                hangul_ordinal(index)
+            }
+        }
+        "HANGUL_JAMO" => sequence_character("ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ", index),
+        "CIRCLED_HANGUL_JAMO" => {
+            if index < 14 {
+                char::from_u32(0x3260 + index).unwrap_or(' ').to_string()
+            } else {
+                sequence_character("ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ", index)
+            }
+        }
+        "LATIN_CAPITAL" => sequence_character("ABCDEFGHIJKLMNOPQRSTUVWXYZ", index),
+        "LATIN_SMALL" => sequence_character("abcdefghijklmnopqrstuvwxyz", index),
+        "CIRCLED_LATIN_CAPITAL" => {
+            if index < 26 {
+                char::from_u32(0x24b6 + index).unwrap_or(' ').to_string()
+            } else {
+                sequence_character("ABCDEFGHIJKLMNOPQRSTUVWXYZ", index)
+            }
+        }
+        "CIRCLED_LATIN_SMALL" => {
+            if index < 26 {
+                char::from_u32(0x24d0 + index).unwrap_or(' ').to_string()
+            } else {
+                sequence_character("abcdefghijklmnopqrstuvwxyz", index)
+            }
+        }
+        "ROMAN_CAPITAL" => roman_numeral(number, true),
+        "ROMAN_SMALL" => roman_numeral(number, false),
+        _ => number.to_string(),
+    }
+}
+
+fn circled_number(index: u32) -> String {
+    let codepoint = match index {
+        0..20 => 0x2460 + index,
+        20..35 => 0x3251 + (index - 20),
+        35..50 => 0x32b1 + (index - 35),
+        _ => return format!("({})", index + 1),
+    };
+    char::from_u32(codepoint).unwrap_or(' ').to_string()
+}
+
+fn sequence_character(sequence: &str, index: u32) -> String {
+    let chars: Vec<char> = sequence.chars().collect();
+    chars[(index as usize) % chars.len()].to_string()
+}
+
+fn hangul_ordinal(index: u32) -> String {
+    const INITIALS: [u32; 14] = [0, 2, 3, 5, 6, 7, 9, 11, 12, 14, 15, 16, 17, 18];
+    const MEDIALS: [u32; 6] = [0, 4, 8, 13, 18, 20];
+    let vowel_index = ((index / INITIALS.len() as u32) as usize).min(MEDIALS.len() - 1);
+    let initial = INITIALS[(index % INITIALS.len() as u32) as usize];
+    char::from_u32(0xac00 + initial * 588 + MEDIALS[vowel_index] * 28)
+        .unwrap_or(' ')
+        .to_string()
+}
+
+fn roman_numeral(number: u32, uppercase: bool) -> String {
+    if number > 3999 {
+        return number.to_string();
+    }
+    let values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    let upper = [
+        "M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I",
+    ];
+    let lower = [
+        "m", "cm", "d", "cd", "c", "xc", "l", "xl", "x", "ix", "v", "iv", "i",
+    ];
+    let symbols = if uppercase { &upper } else { &lower };
+    let mut remaining = number;
+    let mut output = String::new();
+    for (value, symbol) in values.into_iter().zip(symbols) {
+        while remaining >= value {
+            output.push_str(symbol);
+            remaining -= value;
+        }
+    }
+    output
 }
 
 fn paragraph_layout_position(node: &XmlNode) -> ParagraphLayout {
