@@ -4,6 +4,10 @@
 /dist/
 /build/
 *.egg-info/
+python/kordoc/_native*.dll
+python/kordoc/_native*.dylib
+python/kordoc/_native*.pyd
+python/kordoc/_native*.so
 __pycache__/
 .pytest_cache/
 .mypy_cache/

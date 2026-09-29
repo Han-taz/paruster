@@ -1,0 +1,19 @@
+[package]
+name = "kordoc-python"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "_native"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kordoc-core = { path = "../kordoc-core" }
+kordoc-ir = { path = "../kordoc-ir" }
+pyo3 = { workspace = true, features = ["abi3-py310"] }
+
+[features]
+default = []
+extension-module = ["pyo3/extension-module"]
