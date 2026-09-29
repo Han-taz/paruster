@@ -57,6 +57,12 @@ Full real-document oracle parity is pending. All document parsers, OCR pipelines
 
 The first parser wave is specified by focused [HWPX](plans/2026-09-30-hwpx-implementation-plan.md) and [PDF](plans/2026-09-30-pdf-implementation-plan.md) execution plans. These plans authorize parallel implementation only after their planning PR and the protected parser-wave scaffold PR merge; they do not advance either parser's capability or parity status. HWPX keeps the generic strict ZIP security gate and allows only bounded part-local recovery after a structurally valid archive is opened. PDF semantic extraction is pure Rust; PDFium may later be introduced only behind an optional raster/OCR feature and separate license, wheel, and failure-isolation gate.
 
+The parser-wave scaffold registers `kordoc-hancom` and `kordoc-pdf` as root
+workspace members with dependency-direction tests and no public parser entry
+points. Neither crate is connected to the production registry or Python API;
+`parse_hwpx`, `validate_hwpx`, and `parse_pdf` remain planned, and the
+real-document oracle-success numerator remains zero.
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy
