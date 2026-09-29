@@ -10,7 +10,7 @@ This page is the live capability ledger. A capability is complete only after its
 - checked single-disk ZIP/ZIP64 preflight with input, entry-count, uncompressed-size, and local-extent bounds
 - foundation dispatch that reports empty, oversized, security-rejected, and unsupported inputs without claiming parser completion
 
-The Python facade, deterministic detector golden harness, CI matrix, fuzzing, coverage, wheels, and release automation remain in progress until their own tasks and gates pass.
+The Python facade and deterministic detector golden harness are verified foundation capabilities. The CI matrix, fuzzing, coverage, wheels, and release automation remain in progress until their own tasks and gates pass.
 
 ## Pending product parity
 

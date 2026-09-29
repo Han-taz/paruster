@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "minimal-pdf",
+      "input": "fixtures/minimal.pdf",
+      "expected": "expected/minimal-pdf.json",
+      "license": "CC0-1.0",
+      "generator": "Python standard library; three literal PDF 1.4 objects and generated cross-reference; no external inputs",
+      "sha256": "8792b87131d1711a6d387edfc90d15a6f6515cd46fabd68bc561a05c68fd77c9",
+      "covered_contract": "docs/SSOT/components/detection.md: PDF magic recognition; detector-only evidence"
+    }
+  ]
+}
