@@ -22,3 +22,15 @@ Report the compared dimensions, source and fixture provenance, normalizations ap
 The document-result harness is separate from the detector manifest. Every case records input and expected hashes, license/provenance, generator, oracle source digest and capture command, options, dimensions, evidence kind, parity-numerator status, and exact normalization pointer allowlists. Source-contract smoke cases run but remain outside oracle parity. At the parser-seam stage successful oracle cases are unavailable and the numerator is zero; future per-case oracle captures do not require weakening this policy.
 
 The six compatibility detection helpers have a separate exact-output matrix captured by executing the pinned TypeScript oracle. Its synthetic magic, malformed-container, deterministic ZIP, and generated CFB recipes are rebuilt in CI; committed hashes bind both inputs and captured answers, and no normalization is applied. This helper evidence does not enter the document-result numerator or imply parser parity.
+
+P7 has a second, separate generated-IR projection matrix with six locally
+captured runtime-oracle answers for ordered Markdown blocks, page gaps,
+structural chunks, merged tables, table classification, and HTML/table units.
+The projection manifest pins the oracle commit, source digests, input and
+expected-output hashes, dimensions, license/provenance, and exact capture
+commands. All six local comparisons pass without normalization. Its nine
+projection-parity tests include manifest/provenance and numerator checks; they
+do not represent nine independent oracle captures. The successful
+real-document oracle numerator remains zero until P1-P6 parsers reproduce
+full source-document outputs. Security/no-loss rejection of oversized spans
+and rows is a documented intentional divergence, not a parity normalization.

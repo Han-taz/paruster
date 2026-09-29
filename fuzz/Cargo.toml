@@ -11,6 +11,9 @@ cargo-fuzz-version = "0.13.2"
 [dependencies]
 libfuzzer-sys = "0.4"
 kordoc-core = { path = "../crates/kordoc-core", features = ["fuzzing"] }
+kordoc-ir = { path = "../crates/kordoc-ir" }
+serde = "1.0"
+serde_json = { version = "1.0", features = ["unbounded_depth"] }
 
 [[bin]]
 name = "detect_format"
@@ -22,6 +25,20 @@ bench = false
 [[bin]]
 name = "zip_preflight"
 path = "fuzz_targets/zip_preflight.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "markdown_units"
+path = "fuzz_targets/markdown_units.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "projections"
+path = "fuzz_targets/projections.rs"
 test = false
 doc = false
 bench = false

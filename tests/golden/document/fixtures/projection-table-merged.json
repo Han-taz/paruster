@@ -1,0 +1,88 @@
+{
+  "operation": "markdown",
+  "blocks": [
+    {
+      "type": "table",
+      "table": {
+        "rows": 3,
+        "cols": 2,
+        "cells": [
+          [
+            {
+              "text": "통합 제목",
+              "colSpan": 2,
+              "rowSpan": 1
+            },
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ],
+          [
+            {
+              "text": "왼쪽",
+              "colSpan": 1,
+              "rowSpan": 2
+            },
+            {
+              "text": "오른쪽",
+              "colSpan": 1,
+              "rowSpan": 1,
+              "blocks": [
+                {
+                  "type": "table",
+                  "table": {
+                    "rows": 2,
+                    "cols": 2,
+                    "cells": [
+                      [
+                        {
+                          "text": "내부 항목",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        },
+                        {
+                          "text": "내부 값",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        }
+                      ],
+                      [
+                        {
+                          "text": "A",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        },
+                        {
+                          "text": "1",
+                          "colSpan": 1,
+                          "rowSpan": 1
+                        }
+                      ]
+                    ],
+                    "hasHeader": true
+                  }
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "text": "",
+              "colSpan": 1,
+              "rowSpan": 1
+            },
+            {
+              "text": "아래",
+              "colSpan": 1,
+              "rowSpan": 1
+            }
+          ]
+        ],
+        "hasHeader": true,
+        "caption": "병합 표"
+      }
+    }
+  ]
+}

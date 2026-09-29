@@ -574,7 +574,7 @@ pub fn try_parse_with_options(
     // registry empty preserves the foundation's existing unsupported-format behavior.
     let registry = ParserRegistry::default();
     try_parse_with_registry(bytes, &registry, options)
-        .map(|(file_type, parsed)| assemble_success(file_type, parsed, String::new(), None))
+        .and_then(|(file_type, parsed)| assemble_success(file_type, parsed, options))
 }
 
 #[cfg(test)]

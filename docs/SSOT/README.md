@@ -8,6 +8,7 @@ This directory contains the current, normative description of paruster. A code c
 - [`migration/plans/2026-09-29-foundation-implementation-plan.md`](migration/plans/2026-09-29-foundation-implementation-plan.md): executable contract, workspace, binding, parity, and CI foundation plan
 - [`migration/plans/2026-09-30-product-port-implementation-plan.md`](migration/plans/2026-09-30-product-port-implementation-plan.md): full parser, transform, Python, MCP, packaging, and Node-removal execution DAG
 - [`migration/plans/2026-09-30-parser-seam-implementation-plan.md`](migration/plans/2026-09-30-parser-seam-implementation-plan.md): focused P0 internal DTO, dispatch, Python success model, detector-helper, and parity-harness plan
+- [`migration/plans/2026-09-30-ir-projections-implementation-plan.md`](migration/plans/2026-09-30-ir-projections-implementation-plan.md): focused P7 Markdown, page/chunk, table policy, and shared table-unit execution plan
 - [`migration/status.md`](migration/status.md): live implementation and parity status
 - [Workspace architecture](architecture/workspace.md): current crate boundaries, data flow, and security boundaries
 - [`contracts/errors.md`](contracts/errors.md): stable shared error code inventory and status semantics
@@ -16,6 +17,7 @@ This directory contains the current, normative description of paruster. A code c
 - [`contracts/python-api.md`](contracts/python-api.md): Python input, result, error, and public API translation contract
 - [`contracts/compatibility-manifest.md`](contracts/compatibility-manifest.md): classified TypeScript-to-Python export and removal inventory
 - [`components/detection.md`](components/detection.md): bounded format detection, container preflight, and foundation dispatch rules
+- [`components/normalization.md`](components/normalization.md): bounded Markdown, page, chunk, and table-policy projection semantics
 - [`quality/parity.md`](quality/parity.md): allowed normalization and parity evaluation policy
 - [Operations guide](operations/README.md): index for the current [development](operations/development.md) and [release](operations/release.md) procedures
 

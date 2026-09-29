@@ -143,13 +143,15 @@ Type ownership follows behavior ownership: P0 owns common parse/result/options/d
 **Branch:** `feature/ir-projections` — depends on P0 and merges before P1-P6  
 **Files:** Create `crates/kordoc-core/src/{markdown,pages,chunks,table/mod,table/builder,table/classifier,table/visual}.rs`, projection tests, and `docs/SSOT/components/normalization.md`.
 
-- [ ] Test `blocks_to_markdown`, `blocks_to_pages`, `blocks_to_chunks`, `classify_table`, `classify_table_tree`, `collect_table_blocks`, `choose_table_representation`, `flatten_layout_tables`, and `has_structured_cell_content` across recursive/nested IR.
-- [ ] Implement one shared, tested HTML/GFM Markdown table-unit parser here for both roundtrip patching and HWPX generation; neither downstream crate may fork it.
-- [ ] Preserve ordering, escaping, empty blocks, page ranges, chunk overlap/limits, HTML table safety, label/layout/data classification, and default-output stability.
+- [x] Test `blocks_to_markdown`, `blocks_to_pages`, `blocks_to_chunks`, `classify_table`, `classify_table_tree`, `collect_table_blocks`, `choose_table_representation`, `flatten_layout_tables`, and `has_structured_cell_content` across recursive/nested IR.
+- [x] Implement one shared, tested HTML/GFM Markdown table-unit parser here for both roundtrip patching and HWPX generation; neither downstream crate may fork it.
+- [x] Preserve ordering, escaping, empty blocks, page ranges, chunk overlap/limits, HTML table safety, label/layout/data classification, and default-output stability.
 - [ ] First prove the projections with synthetic recursive IR and merge them so every parser can populate mandatory Markdown/pages without a dependency cycle. Each P1-P6 PR then adds its fixtures to the same projection matrix without changing projection policy.
-- [ ] Keep projection calls in `kordoc-core` after dispatch. Format crates return only `kordoc-ir`'s internal `ParsedDocument`; they never depend on or call `kordoc-core`.
-- [ ] Assign `is_label_cell` here with exact table-classification API tests. Property-test recursion and arbitrary Unicode.
-- [ ] Focused command: `cargo +1.97.0 test -p kordoc-core --test projections --locked`.
+- [x] Keep projection calls in `kordoc-core` after dispatch. Format crates return only `kordoc-ir`'s internal `ParsedDocument`; they never depend on or call `kordoc-core`.
+- [x] Assign `is_label_cell` here with exact table-classification API tests. Property-test recursion and arbitrary Unicode.
+- [x] Focused command: `cargo +1.97.0 test -p kordoc-core --test projections --locked`.
+
+P7's source-neutral implementation and local gate are complete on the feature branch: six pinned runtime-oracle generated-IR captures pass exactly, with 91 core unit and 20 all-feature integration tests, 8 native tests, 124 combined Python/parity tests, and strict local Clippy/Ruff/mypy checks. Two bounded proptests cover arbitrary Unicode and recursive IR, while dedicated Markdown-unit and projection fuzz targets join the detector/container targets in the four-target CI matrix. The successful real-document parser numerator is still zero. The original checklist item coupling synthetic proof to **merge** remains open until PR review, required hosted CI/Security/Wheels/Fuzz/CodeQL, and squash merge. P1-P6 remain blocked on the P7 merge gate, not merely this local result.
 
 ### Task P8: Diff, splices, text redaction, and metric utilities
 

@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "oracle": {
+    "repository": "local ignored migration oracle",
+    "commit": "bb71f7fb0bf51dd456d27505a8c04772df182144",
+    "node_runtime": "v22.22.0",
+    "tsx_runtime": "4.23.13",
+    "capture_working_directory": "/tmp",
+    "capture_environment": "Local development only; outputs are committed and CI does not load the oracle. The oracle checkout was clean and read-only."
+  },
+  "summary": {
+    "oracle_capture_cases": 6,
+    "parser_parity_numerator": 0,
+    "real_document_successful_numerator": 0
+  },
+  "approved_divergences": [
+    {
+      "id": "bounded-span-and-row-budget",
+      "oracle_behavior": "The legacy table builder may clamp or truncate oversized spans/rows.",
+      "rust_behavior": "P7 returns typed OUTPUT_TOO_LARGE before losing cells or allocating beyond budget.",
+      "fixture_policy": "Oversized span and row-truncation inputs are excluded from this shared in-budget parity matrix."
+    }
+  ],
+  "cases": [
+    {
+      "id": "projection-ordered-blocks",
+      "input": "fixtures/projection-ordered-blocks.json",
+      "input_sha256": "5cc574d6e84fdef8c98b350ca27437aa25ca269b1e09c68b44a59a8efcbc139f",
+      "expected": "expected/projection-ordered-blocks.json",
+      "expected_sha256": "c38ae6ecbbbc33a83d33be19ee6a81e55eba9cd6534d7a3c36c98c36baa64c04",
+      "license": "CC0-1.0",
+      "generator": "python3 tests/golden/document/generate_projection_inputs.py",
+      "operation": "markdown",
+      "options": {},
+      "dimensions": ["heading", "block ordering", "GFM escaping", "unsafe link rejection", "footnote", "list", "image", "PUA", "separator"],
+      "oracle_sources": {
+        "src/chunks.ts": "8de6844ea9c48f242cd0f5f136673eb5e8d93af44616953b9dbf02ae2d890056",
+        "src/page-markdown.ts": "32019305ed8f4f41efc3a53ee4724c30685382c10a9681f8ef4caeadab3607d2",
+        "src/table/builder.ts": "062aa444cef210dfeb674d52a8de01158612ca89cfbd747c8077de63941da021",
+        "src/table/classifier.ts": "45145c852fd32217ad05c49c7efd286b8c3dea83ae5660d657d56d097b8764cd"
+      },
+      "runtime": {"node": "v22.22.0", "tsx": "4.23.13"},
+      "oracle_command": "node --import /Users/shkoh/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/loader.mjs --input-type=module -e 'import { readFileSync } from \"node:fs\"; import { blocksToMarkdown } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/builder.ts\"; import { blocksToPages } from \"/Users/shkoh/Projects/paruster/kordoc/src/page-markdown.ts\"; import { blocksToChunks } from \"/Users/shkoh/Projects/paruster/kordoc/src/chunks.ts\"; import { classifyTable } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/classifier.ts\"; const x = JSON.parse(readFileSync(process.argv[1], \"utf8\")); let y; if (x.operation === \"markdown\") y = blocksToMarkdown(x.blocks); else if (x.operation === \"pages\") y = blocksToPages(x.blocks); else if (x.operation === \"chunks\") y = blocksToChunks(x.blocks, x.options); else if (x.operation === \"classify\") y = x.tables.map(({table, context}) => classifyTable(table, context)); else throw new Error(x.operation); process.stdout.write(JSON.stringify(y) + \"\\n\");' /Users/shkoh/Projects/paruster-worktrees/ir-projections/tests/golden/document/fixtures/projection-ordered-blocks.json",
+      "oracle_execution": "captured",
+      "parser_parity_numerator": false
+    },
+    {
+      "id": "projection-pages-gap",
+      "input": "fixtures/projection-pages-gap.json",
+      "input_sha256": "8b1b989a6c1e578825ae43862a6f0e963e38365e2a8cd7f879b6b56c8fa5016b",
+      "expected": "expected/projection-pages-gap.json",
+      "expected_sha256": "a1341ef7b4c25c446263b2b947427af1ea83c65ba05be3a7d60d54b91e73c1d6",
+      "license": "CC0-1.0",
+      "generator": "python3 tests/golden/document/generate_projection_inputs.py",
+      "operation": "pages",
+      "options": {},
+      "dimensions": ["leading unnumbered blocks", "page 1 and page 3", "empty page 2", "continuing unnumbered blocks"],
+      "oracle_sources": {
+        "src/chunks.ts": "8de6844ea9c48f242cd0f5f136673eb5e8d93af44616953b9dbf02ae2d890056",
+        "src/page-markdown.ts": "32019305ed8f4f41efc3a53ee4724c30685382c10a9681f8ef4caeadab3607d2",
+        "src/table/builder.ts": "062aa444cef210dfeb674d52a8de01158612ca89cfbd747c8077de63941da021",
+        "src/table/classifier.ts": "45145c852fd32217ad05c49c7efd286b8c3dea83ae5660d657d56d097b8764cd"
+      },
+      "runtime": {"node": "v22.22.0", "tsx": "4.23.13"},
+      "oracle_command": "node --import /Users/shkoh/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/loader.mjs --input-type=module -e 'import { readFileSync } from \"node:fs\"; import { blocksToMarkdown } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/builder.ts\"; import { blocksToPages } from \"/Users/shkoh/Projects/paruster/kordoc/src/page-markdown.ts\"; import { blocksToChunks } from \"/Users/shkoh/Projects/paruster/kordoc/src/chunks.ts\"; import { classifyTable } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/classifier.ts\"; const x = JSON.parse(readFileSync(process.argv[1], \"utf8\")); let y; if (x.operation === \"markdown\") y = blocksToMarkdown(x.blocks); else if (x.operation === \"pages\") y = blocksToPages(x.blocks); else if (x.operation === \"chunks\") y = blocksToChunks(x.blocks, x.options); else if (x.operation === \"classify\") y = x.tables.map(({table, context}) => classifyTable(table, context)); else throw new Error(x.operation); process.stdout.write(JSON.stringify(y) + \"\\n\");' /Users/shkoh/Projects/paruster-worktrees/ir-projections/tests/golden/document/fixtures/projection-pages-gap.json",
+      "oracle_execution": "captured",
+      "parser_parity_numerator": false
+    },
+    {
+      "id": "projection-chunks-tree",
+      "input": "fixtures/projection-chunks-tree.json",
+      "input_sha256": "228301f63ca74b1b686114397e53fb64c8b2c969a5efb4f30cecef30f397fa9c",
+      "expected": "expected/projection-chunks-tree.json",
+      "expected_sha256": "96c1ac390c422017a1dd3f20daa4516ac246797a3e904aeba74cb19dc6e9f3c6",
+      "license": "CC0-1.0",
+      "generator": "python3 tests/golden/document/generate_projection_inputs.py",
+      "operation": "chunks",
+      "options": {"granularity": "section", "includeTableCells": true},
+      "dimensions": ["heading hierarchy", "list depth", "standalone table", "empty block skipped", "inclusive block ranges", "deterministic ids", "page number"],
+      "oracle_sources": {
+        "src/chunks.ts": "8de6844ea9c48f242cd0f5f136673eb5e8d93af44616953b9dbf02ae2d890056",
+        "src/page-markdown.ts": "32019305ed8f4f41efc3a53ee4724c30685382c10a9681f8ef4caeadab3607d2",
+        "src/table/builder.ts": "062aa444cef210dfeb674d52a8de01158612ca89cfbd747c8077de63941da021",
+        "src/table/classifier.ts": "45145c852fd32217ad05c49c7efd286b8c3dea83ae5660d657d56d097b8764cd"
+      },
+      "runtime": {"node": "v22.22.0", "tsx": "4.23.13"},
+      "oracle_command": "node --import /Users/shkoh/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/loader.mjs --input-type=module -e 'import { readFileSync } from \"node:fs\"; import { blocksToMarkdown } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/builder.ts\"; import { blocksToPages } from \"/Users/shkoh/Projects/paruster/kordoc/src/page-markdown.ts\"; import { blocksToChunks } from \"/Users/shkoh/Projects/paruster/kordoc/src/chunks.ts\"; import { classifyTable } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/classifier.ts\"; const x = JSON.parse(readFileSync(process.argv[1], \"utf8\")); let y; if (x.operation === \"markdown\") y = blocksToMarkdown(x.blocks); else if (x.operation === \"pages\") y = blocksToPages(x.blocks); else if (x.operation === \"chunks\") y = blocksToChunks(x.blocks, x.options); else if (x.operation === \"classify\") y = x.tables.map(({table, context}) => classifyTable(table, context)); else throw new Error(x.operation); process.stdout.write(JSON.stringify(y) + \"\\n\");' /Users/shkoh/Projects/paruster-worktrees/ir-projections/tests/golden/document/fixtures/projection-chunks-tree.json",
+      "oracle_execution": "captured",
+      "parser_parity_numerator": false
+    },
+    {
+      "id": "projection-table-merged",
+      "input": "fixtures/projection-table-merged.json",
+      "input_sha256": "0146d7a0c437337bbc3d42f023c4486ff285acecba2a10df1e4c22c8e6ff70cc",
+      "expected": "expected/projection-table-merged.json",
+      "expected_sha256": "43ebc005de6e957229e177f7213ab35c7e67aedfa2f3c7a6f5af791a5d22c5e0",
+      "license": "CC0-1.0",
+      "generator": "python3 tests/golden/document/generate_projection_inputs.py",
+      "operation": "markdown",
+      "options": {},
+      "dimensions": ["merged cells", "row span", "nested HTML table", "caption", "HTML table"],
+      "oracle_sources": {
+        "src/chunks.ts": "8de6844ea9c48f242cd0f5f136673eb5e8d93af44616953b9dbf02ae2d890056",
+        "src/page-markdown.ts": "32019305ed8f4f41efc3a53ee4724c30685382c10a9681f8ef4caeadab3607d2",
+        "src/table/builder.ts": "062aa444cef210dfeb674d52a8de01158612ca89cfbd747c8077de63941da021",
+        "src/table/classifier.ts": "45145c852fd32217ad05c49c7efd286b8c3dea83ae5660d657d56d097b8764cd"
+      },
+      "runtime": {"node": "v22.22.0", "tsx": "4.23.13"},
+      "oracle_command": "node --import /Users/shkoh/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/loader.mjs --input-type=module -e 'import { readFileSync } from \"node:fs\"; import { blocksToMarkdown } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/builder.ts\"; import { blocksToPages } from \"/Users/shkoh/Projects/paruster/kordoc/src/page-markdown.ts\"; import { blocksToChunks } from \"/Users/shkoh/Projects/paruster/kordoc/src/chunks.ts\"; import { classifyTable } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/classifier.ts\"; const x = JSON.parse(readFileSync(process.argv[1], \"utf8\")); let y; if (x.operation === \"markdown\") y = blocksToMarkdown(x.blocks); else if (x.operation === \"pages\") y = blocksToPages(x.blocks); else if (x.operation === \"chunks\") y = blocksToChunks(x.blocks, x.options); else if (x.operation === \"classify\") y = x.tables.map(({table, context}) => classifyTable(table, context)); else throw new Error(x.operation); process.stdout.write(JSON.stringify(y) + \"\\n\");' /Users/shkoh/Projects/paruster-worktrees/ir-projections/tests/golden/document/fixtures/projection-table-merged.json",
+      "oracle_execution": "captured",
+      "parser_parity_numerator": false
+    },
+    {
+      "id": "projection-classifier-matrix",
+      "input": "fixtures/projection-classifier-matrix.json",
+      "input_sha256": "da90c63ce7a5a823f85550f2eb773ab0b8423f670e52582d5e68d7ee32816188",
+      "expected": "expected/projection-classifier-matrix.json",
+      "expected_sha256": "ad5642d2e00e77e747198875baed12611bb033f06c309e755e3e6979b2feb616",
+      "license": "CC0-1.0",
+      "generator": "python3 tests/golden/document/generate_projection_inputs.py",
+      "operation": "classify_table_tree",
+      "options": {},
+      "dimensions": ["dense semantic table", "sparse diagram with sibling context", "nested wrapper", "recursive child classification", "uncertain small table", "classification scores", "reason ordering"],
+      "oracle_sources": {
+        "src/table/analyze.ts": "89fa6b58f1f1e107882e5ddf0e4a97fb9067eb4c767d8036406a6bba09c24a58",
+        "src/table/builder.ts": "062aa444cef210dfeb674d52a8de01158612ca89cfbd747c8077de63941da021",
+        "src/table/classifier.ts": "45145c852fd32217ad05c49c7efd286b8c3dea83ae5660d657d56d097b8764cd"
+      },
+      "runtime": {"node": "v22.22.0", "tsx": "4.23.13"},
+      "oracle_command": "node --import /Users/shkoh/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/loader.mjs --input-type=module -e 'import { readFileSync } from \"node:fs\"; import { classifyTableTree } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/analyze.ts\"; const x = JSON.parse(readFileSync(process.argv[1], \"utf8\")); process.stdout.write(JSON.stringify(classifyTableTree(x.blocks)) + \"\\n\");' /Users/shkoh/Projects/paruster-worktrees/ir-projections/tests/golden/document/fixtures/projection-classifier-matrix.json",
+      "oracle_execution": "captured",
+      "parser_parity_numerator": false
+    },
+    {
+      "id": "projection-html-units",
+      "input": "fixtures/projection-html-units.json",
+      "input_sha256": "8ff78f37fdab1596a6436f0d935a82eb348eab4a4a36b310a136fb9ccbc808f2",
+      "expected": "expected/projection-html-units.json",
+      "expected_sha256": "3b60fb797183e03cc0ea7b01b605fb9e055ec5eb6c87bb5c3a724f44068fda11",
+      "license": "CC0-1.0",
+      "generator": "python3 tests/golden/document/generate_projection_inputs.py",
+      "operation": "markdown",
+      "options": {},
+      "dimensions": ["escaped GFM pipe", "nested HTML table", "structured cell content", "cell order"],
+      "oracle_sources": {
+        "src/chunks.ts": "8de6844ea9c48f242cd0f5f136673eb5e8d93af44616953b9dbf02ae2d890056",
+        "src/page-markdown.ts": "32019305ed8f4f41efc3a53ee4724c30685382c10a9681f8ef4caeadab3607d2",
+        "src/table/builder.ts": "062aa444cef210dfeb674d52a8de01158612ca89cfbd747c8077de63941da021",
+        "src/table/classifier.ts": "45145c852fd32217ad05c49c7efd286b8c3dea83ae5660d657d56d097b8764cd"
+      },
+      "runtime": {"node": "v22.22.0", "tsx": "4.23.13"},
+      "oracle_command": "node --import /Users/shkoh/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/loader.mjs --input-type=module -e 'import { readFileSync } from \"node:fs\"; import { blocksToMarkdown } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/builder.ts\"; import { blocksToPages } from \"/Users/shkoh/Projects/paruster/kordoc/src/page-markdown.ts\"; import { blocksToChunks } from \"/Users/shkoh/Projects/paruster/kordoc/src/chunks.ts\"; import { classifyTable } from \"/Users/shkoh/Projects/paruster/kordoc/src/table/classifier.ts\"; const x = JSON.parse(readFileSync(process.argv[1], \"utf8\")); let y; if (x.operation === \"markdown\") y = blocksToMarkdown(x.blocks); else if (x.operation === \"pages\") y = blocksToPages(x.blocks); else if (x.operation === \"chunks\") y = blocksToChunks(x.blocks, x.options); else if (x.operation === \"classify\") y = x.tables.map(({table, context}) => classifyTable(table, context)); else throw new Error(x.operation); process.stdout.write(JSON.stringify(y) + \"\\n\");' /Users/shkoh/Projects/paruster-worktrees/ir-projections/tests/golden/document/fixtures/projection-html-units.json",
+      "oracle_execution": "captured",
+      "parser_parity_numerator": false
+    }
+  ]
+}
