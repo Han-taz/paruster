@@ -6,6 +6,37 @@ from pathlib import Path
 ROOT = Path(__file__).parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "security.yml"
 POLICY = ROOT / "deny.toml"
+ACTIVE_PYTEST_SOURCES = (
+    ROOT / "pyproject.toml",
+    ROOT / ".github" / "workflows" / "ci.yml",
+    ROOT / ".github" / "workflows" / "wheels.yml",
+    ROOT / ".github" / "workflows" / "release.yml",
+    ROOT
+    / "docs"
+    / "SSOT"
+    / "migration"
+    / "plans"
+    / "2026-09-29-foundation-implementation-plan.md",
+)
+
+
+def test_active_pytest_pins_use_security_patched_release() -> None:
+    pyproject = ACTIVE_PYTEST_SOURCES[0].read_text(encoding="utf-8")
+    dev_group = pyproject.split("[dependency-groups]", maxsplit=1)[1].split(
+        "[tool.", maxsplit=1
+    )[0]
+    assert re.search(r'"pytest==9\.0\.3"', dev_group)
+
+    lock = (ROOT / "uv.lock").read_text(encoding="utf-8")
+    assert '{ name = "pytest", specifier = "==9.0.3" }' in lock
+    assert re.search(
+        r'(?ms)^\[\[package\]\]\nname = "pytest"\n.*?^version = "9\.0\.3"$',
+        lock,
+    )
+    for source in ACTIVE_PYTEST_SOURCES:
+        text = source.read_text(encoding="utf-8")
+        assert "pytest==9.0.3" in text, source
+        assert not re.search(r"pytest==8\.\d+\.\d+", text), source
 
 
 def test_security_workflow_and_dependency_policy_are_pinned_and_gated() -> None:

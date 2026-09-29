@@ -74,7 +74,7 @@ jobs:
           subprocess.check_call([sys.executable, 'scripts/check_artifacts.py', str(wheels[0])]);
           venv.create('.venv-rc', with_pip=True);
           exe=pathlib.Path('.venv-rc') / ('Scripts/python.exe' if sys.platform == 'win32' else 'bin/python');
-          subprocess.check_call([str(exe), '-m', 'pip', 'install', str(wheels[0]), 'pytest==8.4.2']);
+          subprocess.check_call([str(exe), '-m', 'pip', 'install', str(wheels[0]), 'pytest==9.0.3']);
           subprocess.check_call([str(exe), '-m', 'pytest', 'tests/python/test_import.py', 'tests/python/test_error_mapping.py', 'tests/parity/test_golden.py', '-q'])"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

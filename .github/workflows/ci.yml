@@ -105,7 +105,7 @@ jobs:
           manylinux: 2_28
       - name: Test committed goldens from installed wheel
         run: |
-          python -m pip install dist/*.whl pytest==8.4.2
+          python -m pip install dist/*.whl pytest==9.0.3
           python -m pytest tests/parity -q
 
   docs:
