@@ -50,7 +50,7 @@ Every task below follows the same sequence in addition to its focused steps:
 - [ ] Build/install the wheel, then run `uv run --python 3.10 pytest tests/contracts tests/parity tests/python -q`; include `tests/mcp` once created. Run Ruff, mypy, docs, artifact, license, audit, deny, coverage, and relevant fuzz gates from `docs/SSOT/operations/development.md`.
 - [ ] Append WIKI evidence, update current SSOT truth, request SOL review, push a focused branch, open a PR, wait for strict hosted CI/Security/Wheels/Fuzz/CodeQL, and squash-merge. Never push implementation directly to `main`.
 
-Every new-crate or new-operation PR has a serialized coordinator integration checkpoint after the worker's crate-local red/green commit. Format crates depend on `kordoc-ir`, never `kordoc-core`, and return an internal source-neutral `ParsedDocument` containing IR/metadata/assets/page evidence without final Markdown projection. At the checkpoint the coordinator alone adds root workspace membership and dependency pins, regenerates `Cargo.lock`, wires `kordoc-core` dispatch and P7 projections to assemble the frozen `ParseSuccess`, adds the PyO3 binding plus Python wrapper/stub/model, assigns and updates the affected value and type entries in `contracts/public-api.json`, and adds wheel-installed Python parity tests. This dependency direction (`format -> ir`, `core -> format + ir`) forbids a Cargo cycle. Only after this checkpoint does the PR run `--locked`, workspace, wheel, and end-to-end gates. This keeps worker ownership disjoint without deferring usable Python APIs to P18.
+Every new-crate or new-operation PR has a serialized coordinator integration checkpoint. For the parallel P1/P2 first wave, a protected coordinator scaffold registers both minimal crates, pins candidate dependencies, and regenerates `Cargo.lock` before worker branches, so every worker slice runs `--locked` workspace CI. Later new crates may use the original sequence in which the coordinator performs registration after crate-local red/green work. Format crates depend on `kordoc-ir`, never `kordoc-core`, and return an internal source-neutral `ParsedDocument` containing IR/metadata/assets/page evidence without final Markdown projection. At the capability checkpoint the coordinator alone verifies or updates root workspace membership and dependency pins, regenerates `Cargo.lock` when needed, wires `kordoc-core` dispatch and P7 projections to assemble the frozen `ParseSuccess`, adds the PyO3 binding plus Python wrapper/stub/model, assigns and updates the affected value and type entries in `contracts/public-api.json`, and adds wheel-installed Python parity tests. This dependency direction (`format -> ir`, `core -> format + ir`) forbids a Cargo cycle. Public exposure occurs only after locked workspace, wheel, and end-to-end gates pass. This keeps worker ownership disjoint without deferring usable Python APIs to P18.
 
 Type ownership follows behavior ownership: P0 owns common parse/result/options/document types; P1/P2/P3/P4/P5/P6 own their format and OCR option/result types; P7 owns pages/chunks/table projection types; P8 owns diff/splice/metric types; P9 owns recognition and form-preserving types; P10 owns sessions/patch types; P11 owns redaction types; P12 owns generation/profile/lint types and the completed top-level fill result; P13 owns scene/render/region/print types; P14-P17 own MCP-only adapter types. Each PR changes its assigned `type_entries` from `planned` only when its Python model, stub, serialization, and installed-wheel tests pass. P18 is an exact zero-remaining audit, not the first implementation of these 112 mappings.
 
@@ -72,7 +72,9 @@ Type ownership follows behavior ownership: P0 owns common parse/result/options/d
 ### Task P1: HWPX parser
 
 **Branch:** `feature/parse-hwpx` — depends on P7  
-**Files:** Create `crates/kordoc-hancom/src/hwpx/{mod,xml,sections,styles,tables,images,metadata,crypto}.rs`, `crates/kordoc-hancom/tests/hwpx_{structure,security}.rs`, HWPX goldens, and `docs/SSOT/components/hwpx.md`.
+**Files:** Create `crates/kordoc-hancom/src/hwpx/{mod,xml,sections,styles,tables,images,metadata,crypto}.rs`, colocated module tests plus `crates/kordoc-hancom/tests/hwpx_integration.rs`, HWPX goldens, and `docs/SSOT/components/hwpx.md`.
+
+Execution is governed by the focused [P1 HWPX implementation plan](2026-09-30-hwpx-implementation-plan.md). Its stricter package-security decisions and serialized coordinator integration checkpoints are normative for this task.
 
 - [ ] Test ZIP manifest/multi-section order, namespace-local names, paragraphs/spans, headings/outlines, nested tables/captions/spans, notes, images, metadata, page cache/fallback, warnings, and deterministic Markdown.
 - [ ] Test traversal names, DTD/entities, XML depth, 500-entry and 256 MiB expansion limits, corrupt ZIP recovery, missing sections, encrypted ODF AES-256-CBC password/no-password/wrong-password, and partial-parse preservation.
@@ -80,12 +82,14 @@ Type ownership follows behavior ownership: P0 owns common parse/result/options/d
 - [ ] Implement and expose `parse_hwpx` plus the format-specific metadata-only path; add exact public signature and result tests.
 - [ ] Own and expose `validate_hwpx` here; test required package entries, XML/package integrity, limits, encrypted inputs, and deterministic diagnostics before the public API status changes.
 - [ ] Add parser and ZIP/XML fuzz targets; gate recursive IR and normalized ZIP/XML parity.
-- [ ] Focused command: `cargo +1.97.0 test -p kordoc-hancom --test hwpx_structure --test hwpx_security --locked`.
+- [ ] Focused commands: `cargo +1.97.0 test -p kordoc-hancom --lib --locked` and `cargo +1.97.0 test -p kordoc-hancom --test hwpx_integration --locked`.
 
 ### Task P2: PDF text, layout, and tables
 
 **Branch:** `feature/parse-pdf` — depends on P7  
 **Files:** Create `crates/kordoc-pdf/src/{parser,document,layout,table,text,image,links,quality}.rs`, `crates/kordoc-pdf/tests/pdf_*`, PDF goldens, and `docs/SSOT/components/pdf.md`.
+
+Execution is governed by the focused [P2 PDF implementation plan](2026-09-30-pdf-implementation-plan.md). Its pure-Rust semantic backend decision and optional raster-only PDFium boundary are normative for this task.
 
 - [ ] Test page geometry, glyph ordering, CJK spacing, vertical/two-column/two-up text, headings, foot/endnotes, links, images, quality, page ranges, and image-based PDF failure semantics.
 - [ ] Port table detection as small tested modules: ruled/borderless grids, cells, clips, bands, continuations, nested forms, headers, contacts, and text-box tables.
