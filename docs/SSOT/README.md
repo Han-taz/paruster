@@ -11,6 +11,7 @@ This directory contains the current, normative description of paruster. A code c
 - [`contracts/ir.md`](contracts/ir.md): recursive document IR, result, warning, and error wire contract
 - [`contracts/python-api.md`](contracts/python-api.md): Python input, result, error, and public API translation contract
 - [`contracts/compatibility-manifest.md`](contracts/compatibility-manifest.md): classified TypeScript-to-Python export and removal inventory
+- [`components/detection.md`](components/detection.md): bounded format detection, container preflight, and foundation dispatch rules
 - [`quality/parity.md`](quality/parity.md): allowed normalization and parity evaluation policy
 
 ## Planned sections
