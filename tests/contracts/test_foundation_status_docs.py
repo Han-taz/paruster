@@ -49,7 +49,7 @@ def test_workspace_page_describes_current_boundaries_and_data_flow() -> None:
         assert fact in normalized_workspace
 
 
-def test_status_separates_verified_local_gates_from_pending_work() -> None:
+def test_status_records_remediation_ci_and_protected_branch_enforcement() -> None:
     status = (SSOT / "migration" / "status.md").read_text(encoding="utf-8")
     for fact in (
         "88.63% line coverage",
@@ -62,9 +62,21 @@ def test_status_separates_verified_local_gates_from_pending_work() -> None:
         "36601581506",
         "36601581485",
         "36601581555",
-        "identified CVE-2025-71176 in pytest",
-        "pytest 9.0.3 remediation checks are pending PR #4",
-        "Required-check enforcement remains pending PR #4",
+        "PR #4 remediation head `31212275` passed",
+        "36603823278",
+        "36603823358",
+        "36603823436",
+        "36603823386",
+        "main-target Dependency review",
+        "ruleset `24182744`",
+        "strict",
+        "ci-gate",
+        "security-gate",
+        "wheels-gate",
+        "fuzz-gate",
+        "CodeQL",
+        "squash-only",
+        "later heads must pass",
         "parsers",
         "OCR",
         "transformations",
@@ -73,3 +85,9 @@ def test_status_separates_verified_local_gates_from_pending_work() -> None:
         "Product parity remains pending",
     ):
         assert fact in status
+    for stale_fact in (
+        "pytest 9.0.3 remediation checks are pending PR #4",
+        "Required-check enforcement remains pending PR #4",
+        "Main-target dependency-review proof and required-check enforcement remain pending PR #4",
+    ):
+        assert stale_fact not in status

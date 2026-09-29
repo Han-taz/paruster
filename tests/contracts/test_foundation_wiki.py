@@ -127,6 +127,35 @@ def test_foundation_execution_entry_appends_final_hosted_run_evidence() -> None:
     assert text.index("currently in progress") < text.index("## Hosted run update")
 
 
+def test_foundation_execution_entry_appends_remediation_and_ruleset_follow_up() -> None:
+    text = _entry_text()
+    follow_up = text.split("## Verification follow-up — 2026-09-30", maxsplit=1)
+    assert len(follow_up) == 2
+    required = (
+        "PR #4 remediation head `31212275`",
+        "36603823278",
+        "36603823358",
+        "36603823436",
+        "36603823386",
+        "main-target Dependency review",
+        "ruleset `24182744`",
+        "ci-gate",
+        "security-gate",
+        "wheels-gate",
+        "fuzz-gate",
+        "CodeQL",
+        "squash-only",
+        "later heads must pass",
+        "docs-only followup must pass its own checks before integration",
+        "linked workflow runs and active ruleset provide the final evidence",
+    )
+    assert all(fact.casefold() in follow_up[1].casefold() for fact in required)
+    assert "https://github.com/Han-taz/paruster/actions/runs/36603823278" in text
+    assert "https://github.com/Han-taz/paruster/actions/runs/36603823358" in text
+    assert "https://github.com/Han-taz/paruster/actions/runs/36603823436" in text
+    assert "https://github.com/Han-taz/paruster/actions/runs/36603823386" in text
+
+
 def test_foundation_execution_entry_is_indexed_exactly_once() -> None:
     assert INDEX.is_file()
     destinations = re.findall(r"\]\(([^)]+)\)", INDEX.read_text(encoding="utf-8"))
