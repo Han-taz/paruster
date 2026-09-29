@@ -18,7 +18,7 @@ fn parses_outline_and_inline_style_references() {
 #[test]
 fn parses_heading_child_and_only_real_strikeout_shapes() {
     let catalog = StyleCatalog::parse(
-        br#"<head><paraPr id="3" outlineLvl="0"><heading type="OUTLINE" level="0"/></paraPr><charPr id="8"><strikeout/></charPr><charPr id="9" strike="true"><strike/></charPr></head>"#,
+        br#"<head><paraPr id="3" outlineLvl="0"><heading type="OUTLINE" level="0"/></paraPr><charPr id="8"><strikeout shape="SOLID"/></charPr><charPr id="9" strikeout="true"><strikeout shape="3D"/></charPr></head>"#,
     )
     .unwrap();
     let section =

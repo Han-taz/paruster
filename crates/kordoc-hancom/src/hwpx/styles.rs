@@ -56,7 +56,6 @@ impl StyleCatalog {
                 bold: parse_flag(node.attr("bold")),
                 italic: parse_flag(node.attr("italic")),
                 underline: parse_flag(node.attr("underline")),
-                strike: parse_flag(node.attr("strikeout")),
                 ..InlineStyle::default()
             };
             for child in &node.children {
@@ -64,7 +63,9 @@ impl StyleCatalog {
                     "bold" => style.bold = Some(true),
                     "italic" => style.italic = Some(true),
                     "underline" => style.underline = Some(true),
-                    "strikeout" => style.strike = Some(true),
+                    "strikeout" if child.attr("shape").is_some_and(is_real_strike_shape) => {
+                        style.strike = Some(true)
+                    }
                     _ => {}
                 }
             }
@@ -83,6 +84,25 @@ impl StyleCatalog {
         run.attr("charPrIDRef")
             .and_then(|id| self.character_styles.get(id))
     }
+}
+
+fn is_real_strike_shape(shape: &str) -> bool {
+    matches!(
+        shape,
+        "SOLID"
+            | "DASH"
+            | "DOT"
+            | "DASH_DOT"
+            | "DASH_DOT_DOT"
+            | "LONG_DASH"
+            | "CIRCLE"
+            | "DOUBLE_SLIM"
+            | "SLIM_THICK"
+            | "THICK_SLIM"
+            | "SLIM_THICK_SLIM"
+            | "WAVE"
+            | "DOUBLE_WAVE"
+    )
 }
 
 fn parse_flag(value: Option<&str>) -> Option<bool> {

@@ -139,7 +139,7 @@ fn retains_footnotes_and_endnotes() {
 fn lowers_inline_notes_in_source_order_and_attaches_them_to_host() {
     let input = section(
         "Contents/section0.xml",
-        "<hp:p><hp:run><hp:t>A</hp:t><hp:ctrl><hp:footNote><hp:subList><hp:p><hp:run><hp:t>foot</hp:t></hp:run></hp:p></hp:subList></hp:footNote></hp:ctrl><hp:t>B</hp:t><hp:ctrl><hp:endNote><hp:subList><hp:p><hp:run><hp:t>end</hp:t></hp:run></hp:p></hp:subList></hp:endNote></hp:ctrl><hp:t>C</hp:t></hp:run></hp:p>",
+        "<hp:p><hp:run><hp:t>A</hp:t><hp:ctrl><hp:footNote number=\"7\"><hp:subList><hp:p><hp:run><hp:t>foot</hp:t></hp:run></hp:p></hp:subList></hp:footNote></hp:ctrl><hp:t>B</hp:t><hp:ctrl><hp:endNote number=\"2\" prefixChar=\"47928\" suffixChar=\"65289\"><hp:subList><hp:p><hp:run><hp:t>end</hp:t></hp:run></hp:p></hp:subList></hp:endNote></hp:ctrl><hp:t>C</hp:t></hp:run></hp:p>",
     );
     let output = lower_sections(
         &[input],
@@ -149,8 +149,70 @@ fn lowers_inline_notes_in_source_order_and_attaches_them_to_host() {
     )
     .unwrap();
     assert_eq!(output.blocks.len(), 1);
-    assert_eq!(output.blocks[0].text.as_deref(), Some("ABC"));
+    assert_eq!(output.blocks[0].text.as_deref(), Some("A7)B문2）C"));
+    assert_eq!(
+        output.blocks[0]
+            .spans
+            .as_ref()
+            .unwrap()
+            .iter()
+            .map(|span| span.text.as_str())
+            .collect::<String>(),
+        "A7)B문2）C"
+    );
     assert_eq!(output.blocks[0].footnote_text.as_deref(), Some("foot\nend"));
+}
+
+#[test]
+fn resets_layout_page_number_between_sections() {
+    let inputs = [
+        section(
+            "Contents/section0.xml",
+            "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>one</hp:t></hp:run></hp:p>",
+        ),
+        section(
+            "Contents/section1.xml",
+            "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>two</hp:t></hp:run></hp:p>",
+        ),
+    ];
+    let output = lower_sections(
+        &inputs,
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(
+        output
+            .blocks
+            .iter()
+            .map(|block| block.page_number)
+            .collect::<Vec<_>>(),
+        [Some(1), Some(2)]
+    );
+}
+
+#[test]
+fn infers_explicit_and_intra_paragraph_page_breaks() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"3000\"/></hp:linesegarray><hp:run><hp:t>first</hp:t></hp:run></hp:p><hp:p pageBreak=\"1\"><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>explicit</hp:t></hp:run></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"4000\"/><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>spanning</hp:t></hp:run></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"500\"/></hp:linesegarray><hp:run><hp:t>after</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(
+        output
+            .blocks
+            .iter()
+            .map(|block| block.page_number)
+            .collect::<Vec<_>>(),
+        [Some(1), Some(2), Some(2), Some(3)]
+    );
 }
 
 #[test]

@@ -41,7 +41,13 @@ pub(crate) struct SectionOutput {
 struct SectionDelta {
     blocks: Vec<IrBlock>,
     outline: Vec<(usize, OutlineItem)>,
-    layout_positions: Vec<Option<u32>>,
+    layout_positions: Vec<ParagraphLayout>,
+}
+
+#[derive(Debug, Default)]
+struct ParagraphLayout {
+    line_positions: Vec<u32>,
+    explicit_page_break: bool,
 }
 
 /// Orders already-discovered section member paths. A supplied spine is authoritative and must
@@ -228,26 +234,41 @@ fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<Vec<Vec<u3
     if deltas.is_empty() {
         return None;
     }
-    let mut previous_position = None;
-    let mut page = 1u32;
     let mut cache = Vec::with_capacity(deltas.len());
+    let mut last_page = 0u32;
+    let mut saw_layout_hint = false;
     for delta in deltas {
         let delta = delta.as_ref()?;
         if delta.layout_positions.len() != delta.blocks.len() {
             return None;
         }
+        let mut page = last_page.checked_add(1)?;
+        let mut previous_position = None;
         let mut section_pages = Vec::with_capacity(delta.blocks.len());
-        for position in &delta.layout_positions {
-            let position = (*position)?;
-            if previous_position.is_some_and(|previous| position < previous) {
+        for (block_index, layout) in delta.layout_positions.iter().enumerate() {
+            let first_position = layout.line_positions.first().copied();
+            let explicit_break = layout.explicit_page_break && block_index > 0;
+            let line_reset = first_position
+                .zip(previous_position)
+                .is_some_and(|(position, previous)| position < previous);
+            if explicit_break || line_reset {
                 page = page.checked_add(1)?;
             }
-            previous_position = Some(position);
+            saw_layout_hint |= explicit_break || !layout.line_positions.is_empty();
             section_pages.push(page);
+            let mut previous_line = first_position;
+            for position in layout.line_positions.iter().copied().skip(1) {
+                if previous_line.is_some_and(|previous| position < previous) {
+                    page = page.checked_add(1)?;
+                }
+                previous_line = Some(position);
+            }
+            previous_position = previous_line.or(previous_position);
         }
+        last_page = page;
         cache.push(section_pages);
     }
-    Some(cache)
+    saw_layout_hint.then_some(cache)
 }
 
 fn lower_content(
@@ -266,7 +287,7 @@ fn lower_content(
                     footnote_text: Some(text),
                     ..IrBlock::default()
                 });
-                delta.layout_positions.push(None);
+                delta.layout_positions.push(ParagraphLayout::default());
             }
         }
         _ => {
@@ -303,7 +324,7 @@ fn lower_paragraph(
                 let child = &node.children[*index];
                 match child.name.as_str() {
                     "run" => append_inline_content(child, None, styles, &mut spans, &mut notes),
-                    "footNote" | "endNote" => push_note(child, &mut notes),
+                    "footNote" | "endNote" => append_note(child, None, &mut spans, &mut notes),
                     "ctrl" => append_inline_content(child, None, styles, &mut spans, &mut notes),
                     _ => {}
                 }
@@ -375,7 +396,7 @@ fn append_inline_content(
             XmlContent::Child(index) => {
                 let child = &node.children[*index];
                 match child.name.as_str() {
-                    "footNote" | "endNote" => push_note(child, notes),
+                    "footNote" | "endNote" => append_note(child, active_style, spans, notes),
                     _ => append_inline_content(child, active_style, styles, spans, notes),
                 }
             }
@@ -383,7 +404,20 @@ fn append_inline_content(
     }
 }
 
-fn push_note(node: &XmlNode, notes: &mut Vec<String>) {
+fn append_note(
+    node: &XmlNode,
+    style: Option<&kordoc_ir::InlineStyle>,
+    spans: &mut Vec<IrSpan>,
+    notes: &mut Vec<String>,
+) {
+    spans.push(IrSpan {
+        text: note_reference_mark(node),
+        bold: style.and_then(|style| style.bold),
+        italic: style.and_then(|style| style.italic),
+        strike: style.and_then(|style| style.strike),
+        underline: style.and_then(|style| style.underline),
+        ..IrSpan::default()
+    });
     let text = node.text_content();
     let text = text.trim();
     if !text.is_empty() {
@@ -391,15 +425,42 @@ fn push_note(node: &XmlNode, notes: &mut Vec<String>) {
     }
 }
 
-fn paragraph_layout_position(node: &XmlNode) -> Option<u32> {
-    let line_segments = node
+fn note_reference_mark(node: &XmlNode) -> String {
+    let number = node
+        .attr("number")
+        .and_then(|value| value.parse::<u32>().ok())
+        .unwrap_or(1);
+    let prefix = note_decoration(node.attr("prefixChar")).unwrap_or_default();
+    let suffix = note_decoration(node.attr("suffixChar")).unwrap_or_else(|| ")".to_owned());
+    format!("{prefix}{number}{suffix}")
+}
+
+fn note_decoration(value: Option<&str>) -> Option<String> {
+    let value = value?;
+    let codepoint = value.parse::<u32>().ok()?;
+    if codepoint == 0 {
+        return Some(String::new());
+    }
+    char::from_u32(codepoint).map(|character| character.to_string())
+}
+
+fn paragraph_layout_position(node: &XmlNode) -> ParagraphLayout {
+    let line_positions = node
         .children
         .iter()
-        .find(|child| child.name == "linesegarray")?;
-    line_segments
-        .descendants("lineseg")
-        .into_iter()
-        .find_map(|line| line.attr("vertpos").and_then(|value| value.parse().ok()))
+        .find(|child| child.name == "linesegarray")
+        .map(|line_segments| {
+            line_segments
+                .descendants("lineseg")
+                .into_iter()
+                .filter_map(|line| line.attr("vertpos").and_then(|value| value.parse().ok()))
+                .collect()
+        })
+        .unwrap_or_default();
+    ParagraphLayout {
+        line_positions,
+        explicit_page_break: node.attr("pageBreak") == Some("1"),
+    }
 }
 
 pub(crate) fn assign_page_recursive(block: &mut IrBlock, page: u32) {
