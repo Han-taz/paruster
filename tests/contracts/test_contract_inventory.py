@@ -2,6 +2,8 @@ import json
 import re
 from pathlib import Path
 
+from jsonschema import Draft202012Validator
+
 ROOT = Path(__file__).parents[2]
 
 ERROR_CODES = {
@@ -714,3 +716,63 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
     assert contract["source_evidence"]["source_sha256"] == "85943942619d9c2b7ed0855bdb58eb0360fec028e84efdd0f719589ba6ce4e01"
     assert schema["ImageData"]["properties"]["data"]["x-python-translation"] == "bytes"
     assert all(item.get("type") != "null" for item in schema.values())
+
+
+def test_ir_schema_validates_inherited_options_adapters_and_face_class() -> None:
+    contract = load("ir-schema.json")
+    defs = contract["$defs"]
+
+    def validator_for(name: str) -> Draft202012Validator:
+        return Draft202012Validator({
+            "$schema": contract["$schema"],
+            "$ref": f"#/$defs/{name}",
+            "$defs": defs,
+        })
+
+    Draft202012Validator.check_schema(contract)
+    region_options = validator_for("ExtractRegionOptions")
+    assert region_options.is_valid({"pages": "1-3", "reflow": True, "reflowMode": "keep"})
+
+    image_options = validator_for("MarkdownToHwpxOptions")
+    assert image_options.is_valid({"images": {"logo.png": [0, 255]}})
+    image_bytes = defs["MarkdownToHwpxOptions"]["properties"]["images"]["additionalProperties"]
+    assert image_bytes["type"] == "array"
+    assert image_bytes["x-typescript-input-types"] == ["Uint8Array", "ArrayBuffer"]
+    assert image_bytes["items"] == {"type": "integer", "minimum": 0, "maximum": 255}
+
+    face_class = validator_for("FaceClass")
+    assert all(face_class.is_valid(value) for value in ("hcr", "fixedPitch", "gothic", "font:Arial"))
+    assert not face_class.is_valid("unrelated")
+
+
+def test_ocr_callable_is_not_json_and_preserves_callable_signature() -> None:
+    contract = load("ir-schema.json")
+    defs = contract["$defs"]
+    ocr_provider = Draft202012Validator({
+        "$schema": contract["$schema"],
+        "$ref": "#/$defs/OcrProvider",
+        "$defs": defs,
+    })
+    assert not ocr_provider.is_valid(None)
+    assert not ocr_provider.is_valid({})
+    assert not ocr_provider.is_valid("callback")
+
+    provider_schema = defs["OcrProvider"]
+    assert provider_schema["x-typescript-signature"] == {
+        "parameters": [
+            {"name": "pageImage", "type": "Uint8Array"},
+            {"name": "pageNumber", "type": "number"},
+            {"name": "mimeType", "type": "string", "enum": ["image/png", "image/jpeg", "image/webp"]},
+        ],
+        "returns": "Promise<string>",
+    }
+    assert provider_schema["x-python-translation"] == "Callable[[bytes, int, Literal['image/png', 'image/jpeg', 'image/webp']], Awaitable[str]]"
+
+    parse_options = Draft202012Validator({
+        "$schema": contract["$schema"],
+        "$ref": "#/$defs/ParseOptions",
+        "$defs": defs,
+    })
+    assert parse_options.is_valid({"ocr": True})
+    assert parse_options.is_valid({"ocr": "force"})
+    assert not parse_options.is_valid({"ocr": "callback"})

@@ -963,6 +963,9 @@
       "category": "input-options",
       "mapping": "#/$defs/ExtractRegionOptions",
       "fields": [
+        "pages",
+        "reflow",
+        "reflowMode",
         "types",
         "format",
         "paddingPt",
@@ -4005,28 +4008,17 @@
         "images": {
           "type": "object",
           "additionalProperties": {
-            "oneOf": [
-              {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 255
-                },
-                "x-typescript-type": "Uint8Array",
-                "x-python-translation": "bytes"
-              },
-              {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 255
-                },
-                "x-typescript-type": "ArrayBuffer",
-                "x-python-translation": "bytes"
-              }
-            ]
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "x-typescript-input-types": [
+              "Uint8Array",
+              "ArrayBuffer"
+            ],
+            "x-python-translation": "bytes"
           }
         },
         "warnings": {
@@ -4135,7 +4127,8 @@
           "const": "gothic"
         },
         {
-          "type": "string"
+          "type": "string",
+          "pattern": "^font:"
         }
       ]
     },
@@ -5613,6 +5606,25 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "pages": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "reflow": {
+          "type": "boolean"
+        },
+        "reflowMode": {
+          "$ref": "#/$defs/WrapMode"
+        },
         "types": {
           "type": "array",
           "items": {
@@ -6107,8 +6119,31 @@
       ]
     },
     "OcrProvider": {
+      "not": {},
       "x-typescript-callable": true,
-      "x-python-translation": "Callable[[bytes, int, str], Awaitable[str]]"
+      "x-typescript-signature": {
+        "parameters": [
+          {
+            "name": "pageImage",
+            "type": "Uint8Array"
+          },
+          {
+            "name": "pageNumber",
+            "type": "number"
+          },
+          {
+            "name": "mimeType",
+            "type": "string",
+            "enum": [
+              "image/png",
+              "image/jpeg",
+              "image/webp"
+            ]
+          }
+        ],
+        "returns": "Promise<string>"
+      },
+      "x-python-translation": "Callable[[bytes, int, Literal['image/png', 'image/jpeg', 'image/webp']], Awaitable[str]]"
     },
     "ParseOptions": {
       "type": "object",
