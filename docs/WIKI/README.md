@@ -19,3 +19,4 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 - [`2026/09/2026-09-29-repository-bootstrap.md`](2026/09/2026-09-29-repository-bootstrap.md)
 - [`2026/09/2026-09-29-foundation-planning.md`](2026/09/2026-09-29-foundation-planning.md)
 - [`2026/09/2026-09-29-contract-freeze.md`](2026/09/2026-09-29-contract-freeze.md)
+- [`2026/09/2026-09-29-contract-freeze-review.md`](2026/09/2026-09-29-contract-freeze-review.md)
