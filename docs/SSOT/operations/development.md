@@ -44,6 +44,8 @@ cargo +1.97.0 llvm-cov -p kordoc-ir -p kordoc-core --locked --fail-under-lines 8
 # Bounded safety campaigns (nightly-2026-09-20 and cargo-fuzz 0.13.2)
 cargo +nightly-2026-09-20 fuzz run detect_format -- -max_total_time=30
 cargo +nightly-2026-09-20 fuzz run zip_preflight -- -max_total_time=30
+cargo +nightly-2026-09-20 fuzz run markdown_units -- -max_total_time=30
+cargo +nightly-2026-09-20 fuzz run projections -- -max_total_time=30
 
 # Python behavior, lint, formatting, and types
 uv run pytest tests/contracts tests/parity tests/python -q
