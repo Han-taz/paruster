@@ -6,6 +6,12 @@ This directory contains the current, normative description of paruster. A code c
 
 - [`migration/2026-09-29-rust-python-port-design.md`](migration/2026-09-29-rust-python-port-design.md): approved product and migration design
 - [`migration/plans/2026-09-29-foundation-implementation-plan.md`](migration/plans/2026-09-29-foundation-implementation-plan.md): executable contract, workspace, binding, parity, and CI foundation plan
+- [`contracts/errors.md`](contracts/errors.md): stable shared error code inventory and status semantics
+- [`contracts/mcp.md`](contracts/mcp.md): frozen MCP schemas, envelopes, limits, security, and stdio requirements
+- [`contracts/ir.md`](contracts/ir.md): recursive document IR, result, warning, and error wire contract
+- [`contracts/python-api.md`](contracts/python-api.md): Python input, result, error, and public API translation contract
+- [`contracts/compatibility-manifest.md`](contracts/compatibility-manifest.md): classified TypeScript-to-Python export and removal inventory
+- [`quality/parity.md`](quality/parity.md): allowed normalization and parity evaluation policy
 
 ## Planned sections
 

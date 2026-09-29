@@ -97,7 +97,7 @@ def test_mcp_protocol_covers_every_tool_and_shared_limit() -> None:
 
 - [ ] **Step 2: Run the tests and verify the files are missing**
 
-Run: `uv run --python 3.10 --with pytest==8.4.2 pytest tests/contracts/test_contract_inventory.py -q`
+Run: `uv run --python 3.10 --with pytest==8.4.2 --with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py -q`
 
 Expected: failures for the three missing contract files.
 
@@ -136,9 +136,9 @@ Document in `errors.md` that codes are stable protocol values and that unimpleme
 
 - [ ] **Step 4: Run the inventory tests**
 
-Run: `uv run --python 3.10 --with pytest==8.4.2 pytest tests/contracts/test_contract_inventory.py -q`
+Run: `uv run --python 3.10 --with pytest==8.4.2 --with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py -q`
 
-Expected: `3 passed`.
+Expected: `all Task 1 inventory tests pass`.
 
 - [ ] **Step 5: Commit**
 
@@ -189,7 +189,7 @@ def test_every_api_entry_has_a_disposition() -> None:
 
 - [ ] **Step 2: Verify the test fails**
 
-Run: `uv run --python 3.10 --with pytest==8.4.2 pytest tests/contracts/test_contract_inventory.py::test_every_api_entry_has_a_disposition -q`
+Run: `uv run --python 3.10 --with pytest==8.4.2 --with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py::test_every_api_entry_has_a_disposition -q`
 
 Expected: failure because `contracts/public-api.json` does not exist.
 
@@ -209,9 +209,9 @@ input := path-like | bytes | bytearray | memoryview | BinaryIO
 
 - [ ] **Step 4: Run the complete contract test**
 
-Run: `uv run --python 3.10 --with pytest==8.4.2 pytest tests/contracts -q`
+Run: `uv run --python 3.10 --with pytest==8.4.2 --with jsonschema==4.25.1 pytest tests/contracts -q`
 
-Expected: `4 passed`.
+Expected: all contract tests pass. The `jsonschema` dependency validates the Draft 2020-12 IR schema and representative valid/invalid wire instances.
 
 - [ ] **Step 5: Commit, open a draft PR, and append its WIKI evidence**
 
@@ -288,7 +288,7 @@ proptest = "1.11.0"
 
 `rust-toolchain.toml` pins `1.97.0` with `rustfmt` and `clippy`; this is also the declared and tested Rust minimum. Each crate inherits workspace package fields. `kordoc-core` uses workspace `proptest` only as a dev-dependency. `kordoc-python` uses `cdylib` and `rlib`, depends on both internal crates, enables `abi3-py310` on its PyO3 dependency, and declares a crate feature `extension-module = ["pyo3/extension-module"]` with no default. `[tool.maturin]` selects that feature for extension builds; ordinary `cargo test --workspace` does not, preventing macOS libpython link failures.
 
-`LICENSE` contains the MIT license for the project. `pyproject.toml` uses `maturin==1.15.0`, declares `requires-python = ">=3.10"`, module name `kordoc._native`, Python source `python`, and `license-files = ["LICENSE"]`. Define `[dependency-groups].dev` with exact versions `maturin==1.15.0`, `pytest==8.4.2`, `ruff==0.16.9`, and `mypy==1.19.1` so every documented `uv sync --all-groups` and `uv run` command is reproducible.
+`LICENSE` contains the MIT license for the project. `pyproject.toml` uses `maturin==1.15.0`, declares `requires-python = ">=3.10"`, module name `kordoc._native`, Python source `python`, and `license-files = ["LICENSE"]`. Define `[dependency-groups].dev` with exact versions `maturin==1.15.0`, `pytest==8.4.2`, `jsonschema==4.25.1`, `ruff==0.16.9`, and `mypy==1.19.1` so every documented `uv sync --all-groups` and `uv run` command is reproducible.
 
 - [ ] **Step 4: Add the minimal native version function and facade**
 

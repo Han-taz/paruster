@@ -1,0 +1,6290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "paruster public serializable value",
+  "description": "A JSON value matching one declared public API input, result, enum, union, or model. For a specific contract entry point, validate against its $defs/<Type> schema.",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/BlockCapability"
+    },
+    {
+      "$ref": "#/$defs/BlockCapabilityInfo"
+    },
+    {
+      "$ref": "#/$defs/BlockDiff"
+    },
+    {
+      "$ref": "#/$defs/BlockEdit"
+    },
+    {
+      "$ref": "#/$defs/BlockSourceRef"
+    },
+    {
+      "$ref": "#/$defs/BorderDef"
+    },
+    {
+      "$ref": "#/$defs/BorderFillDef"
+    },
+    {
+      "$ref": "#/$defs/BoundingBox"
+    },
+    {
+      "$ref": "#/$defs/BuiltinTemplate"
+    },
+    {
+      "$ref": "#/$defs/CellCapability"
+    },
+    {
+      "$ref": "#/$defs/CellContext"
+    },
+    {
+      "$ref": "#/$defs/CellDiff"
+    },
+    {
+      "$ref": "#/$defs/CellProfile"
+    },
+    {
+      "$ref": "#/$defs/CharPrDef"
+    },
+    {
+      "$ref": "#/$defs/ChunkOptions"
+    },
+    {
+      "$ref": "#/$defs/ClassifyContext"
+    },
+    {
+      "$ref": "#/$defs/ClickHereField"
+    },
+    {
+      "$ref": "#/$defs/DiffChangeType"
+    },
+    {
+      "$ref": "#/$defs/DiffResult"
+    },
+    {
+      "$ref": "#/$defs/DocChunk"
+    },
+    {
+      "$ref": "#/$defs/DocumentMetadata"
+    },
+    {
+      "$ref": "#/$defs/DocumentQualitySummary"
+    },
+    {
+      "$ref": "#/$defs/ErrorCode"
+    },
+    {
+      "$ref": "#/$defs/ExtractRegionOptions"
+    },
+    {
+      "$ref": "#/$defs/ExtractTableVisualOptions"
+    },
+    {
+      "$ref": "#/$defs/ExtractedImage"
+    },
+    {
+      "$ref": "#/$defs/ExtractedTable"
+    },
+    {
+      "$ref": "#/$defs/ExtractedTableCrop"
+    },
+    {
+      "$ref": "#/$defs/FileType"
+    },
+    {
+      "$ref": "#/$defs/FillFormOutput"
+    },
+    {
+      "$ref": "#/$defs/FillInput"
+    },
+    {
+      "$ref": "#/$defs/FillOutputFormat"
+    },
+    {
+      "$ref": "#/$defs/FillResult"
+    },
+    {
+      "$ref": "#/$defs/FillValue"
+    },
+    {
+      "$ref": "#/$defs/FormField"
+    },
+    {
+      "$ref": "#/$defs/FormFieldSchema"
+    },
+    {
+      "$ref": "#/$defs/FormFieldType"
+    },
+    {
+      "$ref": "#/$defs/FormResult"
+    },
+    {
+      "$ref": "#/$defs/FormSchemaResult"
+    },
+    {
+      "$ref": "#/$defs/FormatProfile"
+    },
+    {
+      "$ref": "#/$defs/GongmunFont"
+    },
+    {
+      "$ref": "#/$defs/GongmunLintFinding"
+    },
+    {
+      "$ref": "#/$defs/GongmunNumbering"
+    },
+    {
+      "$ref": "#/$defs/GongmunOptions"
+    },
+    {
+      "$ref": "#/$defs/GongmunPreset"
+    },
+    {
+      "$ref": "#/$defs/GongmunPresetInput"
+    },
+    {
+      "$ref": "#/$defs/HwpxFillResult"
+    },
+    {
+      "$ref": "#/$defs/HwpxTheme"
+    },
+    {
+      "$ref": "#/$defs/IRBlock"
+    },
+    {
+      "$ref": "#/$defs/IRBlockType"
+    },
+    {
+      "$ref": "#/$defs/IRCell"
+    },
+    {
+      "$ref": "#/$defs/IRTable"
+    },
+    {
+      "$ref": "#/$defs/ImageData"
+    },
+    {
+      "$ref": "#/$defs/InlineStyle"
+    },
+    {
+      "$ref": "#/$defs/MarkdownToHwpxOptions"
+    },
+    {
+      "$ref": "#/$defs/MeasureOptions"
+    },
+    {
+      "$ref": "#/$defs/MuncheLineKind"
+    },
+    {
+      "$ref": "#/$defs/MuncheLintFinding"
+    },
+    {
+      "$ref": "#/$defs/OutlineItem"
+    },
+    {
+      "$ref": "#/$defs/PageBBox"
+    },
+    {
+      "$ref": "#/$defs/PageMargin"
+    },
+    {
+      "$ref": "#/$defs/PageMarkdown"
+    },
+    {
+      "$ref": "#/$defs/PageOptions"
+    },
+    {
+      "$ref": "#/$defs/PageQuality"
+    },
+    {
+      "$ref": "#/$defs/ParseFailure"
+    },
+    {
+      "$ref": "#/$defs/ParseOptions"
+    },
+    {
+      "$ref": "#/$defs/ParseResult"
+    },
+    {
+      "$ref": "#/$defs/ParseSuccess"
+    },
+    {
+      "$ref": "#/$defs/ParseWarning"
+    },
+    {
+      "$ref": "#/$defs/PatchOptions"
+    },
+    {
+      "$ref": "#/$defs/PatchResult"
+    },
+    {
+      "$ref": "#/$defs/PatchSkip"
+    },
+    {
+      "$ref": "#/$defs/PlaceSealResult"
+    },
+    {
+      "$ref": "#/$defs/PrintOptions"
+    },
+    {
+      "$ref": "#/$defs/PrintPreset"
+    },
+    {
+      "$ref": "#/$defs/RedactHit"
+    },
+    {
+      "$ref": "#/$defs/RedactOptions"
+    },
+    {
+      "$ref": "#/$defs/RedactRule"
+    },
+    {
+      "$ref": "#/$defs/RedactTextResult"
+    },
+    {
+      "$ref": "#/$defs/RegionAsset"
+    },
+    {
+      "$ref": "#/$defs/RenderAsset"
+    },
+    {
+      "$ref": "#/$defs/RenderDocumentOptions"
+    },
+    {
+      "$ref": "#/$defs/RenderDocumentResult"
+    },
+    {
+      "$ref": "#/$defs/RenderFormat"
+    },
+    {
+      "$ref": "#/$defs/RenderObjectType"
+    },
+    {
+      "$ref": "#/$defs/RenderRegion"
+    },
+    {
+      "$ref": "#/$defs/RenderScene"
+    },
+    {
+      "$ref": "#/$defs/RenderSourceFormat"
+    },
+    {
+      "$ref": "#/$defs/RenderSvgOptions"
+    },
+    {
+      "$ref": "#/$defs/RenderSvgResult"
+    },
+    {
+      "$ref": "#/$defs/ScanCell"
+    },
+    {
+      "$ref": "#/$defs/ScanParaKind"
+    },
+    {
+      "$ref": "#/$defs/ScanParagraph"
+    },
+    {
+      "$ref": "#/$defs/ScanTable"
+    },
+    {
+      "$ref": "#/$defs/ScenePage"
+    },
+    {
+      "$ref": "#/$defs/SceneRenderOptions"
+    },
+    {
+      "$ref": "#/$defs/SceneRenderResult"
+    },
+    {
+      "$ref": "#/$defs/SealOp"
+    },
+    {
+      "$ref": "#/$defs/SealPlacement"
+    },
+    {
+      "$ref": "#/$defs/SectionScan"
+    },
+    {
+      "$ref": "#/$defs/SpliceEdit"
+    },
+    {
+      "$ref": "#/$defs/TRange"
+    },
+    {
+      "$ref": "#/$defs/TableProfile"
+    },
+    {
+      "$ref": "#/$defs/TableRepresentation"
+    },
+    {
+      "$ref": "#/$defs/TableVisualPolicy"
+    },
+    {
+      "$ref": "#/$defs/ValidateIssue"
+    },
+    {
+      "$ref": "#/$defs/ValidateResult"
+    },
+    {
+      "$ref": "#/$defs/WarningCode"
+    },
+    {
+      "$ref": "#/$defs/WatchOptions"
+    },
+    {
+      "$ref": "#/$defs/WrapMode"
+    },
+    {
+      "$ref": "#/$defs/WrapResult"
+    }
+  ],
+  "schema_version": 1,
+  "source_evidence": {
+    "source_path": "src/index.ts",
+    "source_sha256": "85943942619d9c2b7ed0855bdb58eb0360fec028e84efdd0f719589ba6ce4e01",
+    "type_source_path": "src/types.ts",
+    "type_source_sha256": "5b1e4b5793a04bd059600b6daf3b14b1b299958ee9f22633d9027c9d9956110c",
+    "cwd": "kordoc",
+    "extraction_command": "sha256sum src/index.ts src/types.ts; sed -n '1,$p' src/index.ts src/types.ts",
+    "review_command": "sed -n '1,$p' src/index.ts src/types.ts"
+  },
+  "root_types": [
+    "BlockCapability",
+    "BlockCapabilityInfo",
+    "BlockDiff",
+    "BlockEdit",
+    "BlockSourceRef",
+    "BorderDef",
+    "BorderFillDef",
+    "BoundingBox",
+    "BuiltinTemplate",
+    "CellCapability",
+    "CellContext",
+    "CellDiff",
+    "CellProfile",
+    "CharPrDef",
+    "ChunkOptions",
+    "ClassifyContext",
+    "ClickHereField",
+    "DiffChangeType",
+    "DiffResult",
+    "DocChunk",
+    "DocumentMetadata",
+    "DocumentQualitySummary",
+    "ErrorCode",
+    "ExtractRegionOptions",
+    "ExtractTableVisualOptions",
+    "ExtractedImage",
+    "ExtractedTable",
+    "ExtractedTableCrop",
+    "FileType",
+    "FillFormOutput",
+    "FillInput",
+    "FillOutputFormat",
+    "FillResult",
+    "FillValue",
+    "FormField",
+    "FormFieldSchema",
+    "FormFieldType",
+    "FormResult",
+    "FormSchemaResult",
+    "FormatProfile",
+    "GongmunFont",
+    "GongmunLintFinding",
+    "GongmunNumbering",
+    "GongmunOptions",
+    "GongmunPreset",
+    "GongmunPresetInput",
+    "HwpxFillResult",
+    "HwpxTheme",
+    "IRBlock",
+    "IRBlockType",
+    "IRCell",
+    "IRTable",
+    "ImageData",
+    "InlineStyle",
+    "MarkdownToHwpxOptions",
+    "MeasureOptions",
+    "MuncheLineKind",
+    "MuncheLintFinding",
+    "OutlineItem",
+    "PageBBox",
+    "PageMargin",
+    "PageMarkdown",
+    "PageOptions",
+    "PageQuality",
+    "ParseFailure",
+    "ParseOptions",
+    "ParseResult",
+    "ParseSuccess",
+    "ParseWarning",
+    "PatchOptions",
+    "PatchResult",
+    "PatchSkip",
+    "PlaceSealResult",
+    "PrintOptions",
+    "PrintPreset",
+    "RedactHit",
+    "RedactOptions",
+    "RedactRule",
+    "RedactTextResult",
+    "RegionAsset",
+    "RenderAsset",
+    "RenderDocumentOptions",
+    "RenderDocumentResult",
+    "RenderFormat",
+    "RenderObjectType",
+    "RenderRegion",
+    "RenderScene",
+    "RenderSourceFormat",
+    "RenderSvgOptions",
+    "RenderSvgResult",
+    "ScanCell",
+    "ScanParaKind",
+    "ScanParagraph",
+    "ScanTable",
+    "ScenePage",
+    "SceneRenderOptions",
+    "SceneRenderResult",
+    "SealOp",
+    "SealPlacement",
+    "SectionScan",
+    "SpliceEdit",
+    "TRange",
+    "TableProfile",
+    "TableRepresentation",
+    "TableVisualPolicy",
+    "ValidateIssue",
+    "ValidateResult",
+    "WarningCode",
+    "WatchOptions",
+    "WrapMode",
+    "WrapResult"
+  ],
+  "wire_types": [
+    "BlockCapability",
+    "BlockCapabilityInfo",
+    "BlockDiff",
+    "BlockEdit",
+    "BlockSourceRef",
+    "BorderDef",
+    "BorderFillDef",
+    "BoundingBox",
+    "BuiltinTemplate",
+    "CellCapability",
+    "CellContext",
+    "CellDiff",
+    "CellProfile",
+    "CharPrDef",
+    "ChunkOptions",
+    "ClassifyContext",
+    "ClickHereField",
+    "DiffChangeType",
+    "DiffResult",
+    "DocChunk",
+    "DocumentMetadata",
+    "DocumentQualitySummary",
+    "ErrorCode",
+    "ExtractRegionOptions",
+    "ExtractTableVisualOptions",
+    "ExtractedImage",
+    "ExtractedTable",
+    "ExtractedTableCrop",
+    "FileType",
+    "FillFormOutput",
+    "FillInput",
+    "FillOutputFormat",
+    "FillResult",
+    "FillValue",
+    "FormField",
+    "FormFieldSchema",
+    "FormFieldType",
+    "FormResult",
+    "FormSchemaResult",
+    "FormatProfile",
+    "GongmunFont",
+    "GongmunLintFinding",
+    "GongmunNumbering",
+    "GongmunOptions",
+    "GongmunPreset",
+    "GongmunPresetInput",
+    "HwpxFillResult",
+    "HwpxTheme",
+    "IRBlock",
+    "IRBlockType",
+    "IRCell",
+    "IRTable",
+    "ImageData",
+    "InlineStyle",
+    "MarkdownToHwpxOptions",
+    "MeasureOptions",
+    "MuncheLineKind",
+    "MuncheLintFinding",
+    "OutlineItem",
+    "PageBBox",
+    "PageMargin",
+    "PageMarkdown",
+    "PageOptions",
+    "PageQuality",
+    "ParseFailure",
+    "ParseOptions",
+    "ParseResult",
+    "ParseSuccess",
+    "ParseWarning",
+    "PatchOptions",
+    "PatchResult",
+    "PatchSkip",
+    "PlaceSealResult",
+    "PrintOptions",
+    "PrintPreset",
+    "RedactHit",
+    "RedactOptions",
+    "RedactRule",
+    "RedactTextResult",
+    "RegionAsset",
+    "RenderAsset",
+    "RenderDocumentOptions",
+    "RenderDocumentResult",
+    "RenderFormat",
+    "RenderObjectType",
+    "RenderRegion",
+    "RenderScene",
+    "RenderSourceFormat",
+    "RenderSvgOptions",
+    "RenderSvgResult",
+    "ScanCell",
+    "ScanParaKind",
+    "ScanParagraph",
+    "ScanTable",
+    "ScenePage",
+    "SceneRenderOptions",
+    "SceneRenderResult",
+    "SealOp",
+    "SealPlacement",
+    "SectionScan",
+    "SpliceEdit",
+    "TRange",
+    "TableProfile",
+    "TableRepresentation",
+    "TableVisualPolicy",
+    "ValidateIssue",
+    "ValidateResult",
+    "WarningCode",
+    "WatchOptions",
+    "WrapMode",
+    "WrapResult"
+  ],
+  "supporting_types": [
+    "FaceClass",
+    "GaejosikSizeOverrides",
+    "GongmunLevelStyle",
+    "IRSpan",
+    "RasterFormat",
+    "TableClassificationKind",
+    "TableClassificationReason",
+    "TableClassificationSummary"
+  ],
+  "warning_codes": [
+    "SKIPPED_IMAGE",
+    "SKIPPED_OLE",
+    "TRUNCATED_TABLE",
+    "OCR_FALLBACK",
+    "UNSUPPORTED_ELEMENT",
+    "BROKEN_ZIP_RECOVERY",
+    "HIDDEN_TEXT_FILTERED",
+    "MALFORMED_XML",
+    "PARTIAL_PARSE",
+    "LENIENT_CFB_RECOVERY",
+    "NEEDS_OCR",
+    "OCR_FAILED",
+    "OCR_APPLIED",
+    "OCR_LOW_CONF",
+    "COM_EMPTY",
+    "DRM_COM_FALLBACK",
+    "PAGE_BOUNDARY_APPROXIMATE"
+  ],
+  "type_classifications": [
+    {
+      "source_name": "BlockCapability",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/BlockCapability",
+      "enum_values": [
+        "text",
+        "cell-text",
+        "locked"
+      ]
+    },
+    {
+      "source_name": "BlockCapabilityInfo",
+      "category": "serializable-object",
+      "mapping": "#/$defs/BlockCapabilityInfo",
+      "fields": [
+        "capability",
+        "reason",
+        "cells"
+      ],
+      "required_fields": [
+        "capability"
+      ]
+    },
+    {
+      "source_name": "BlockDiff",
+      "category": "serializable-object",
+      "mapping": "#/$defs/BlockDiff",
+      "fields": [
+        "type",
+        "before",
+        "after",
+        "cellDiffs",
+        "similarity"
+      ],
+      "required_fields": [
+        "type"
+      ]
+    },
+    {
+      "source_name": "BlockEdit",
+      "category": "serializable-object",
+      "mapping": "#/$defs/BlockEdit",
+      "fields": [
+        "blockIndex",
+        "newText",
+        "cells"
+      ],
+      "required_fields": [
+        "blockIndex"
+      ]
+    },
+    {
+      "source_name": "BlockSourceRef",
+      "category": "serializable-object",
+      "mapping": "#/$defs/BlockSourceRef",
+      "fields": [
+        "kind",
+        "sectionIndex",
+        "xmlStart"
+      ],
+      "required_fields": [
+        "kind",
+        "sectionIndex",
+        "xmlStart"
+      ]
+    },
+    {
+      "source_name": "BorderDef",
+      "category": "serializable-object",
+      "mapping": "#/$defs/BorderDef",
+      "fields": [
+        "type",
+        "width",
+        "color"
+      ],
+      "required_fields": [
+        "type",
+        "width",
+        "color"
+      ]
+    },
+    {
+      "source_name": "BorderFillDef",
+      "category": "serializable-object",
+      "mapping": "#/$defs/BorderFillDef",
+      "fields": [
+        "leftBorder",
+        "rightBorder",
+        "topBorder",
+        "bottomBorder",
+        "fill"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "BoundingBox",
+      "category": "serializable-object",
+      "mapping": "#/$defs/BoundingBox",
+      "fields": [
+        "page",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "required_fields": [
+        "page",
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    {
+      "source_name": "BuiltinTemplate",
+      "category": "serializable-object",
+      "mapping": "#/$defs/BuiltinTemplate",
+      "fields": [
+        "id",
+        "aliases",
+        "file",
+        "sampleFile",
+        "title"
+      ],
+      "required_fields": [
+        "id",
+        "aliases",
+        "file",
+        "sampleFile",
+        "title"
+      ]
+    },
+    {
+      "source_name": "CellCapability",
+      "category": "serializable-object",
+      "mapping": "#/$defs/CellCapability",
+      "fields": [
+        "editable",
+        "reason"
+      ],
+      "required_fields": [
+        "editable"
+      ]
+    },
+    {
+      "source_name": "CellContext",
+      "category": "serializable-object",
+      "mapping": "#/$defs/CellContext",
+      "fields": [
+        "text",
+        "colSpan",
+        "rowSpan",
+        "colAddr",
+        "rowAddr"
+      ],
+      "required_fields": [
+        "text",
+        "colSpan",
+        "rowSpan"
+      ]
+    },
+    {
+      "source_name": "CellDiff",
+      "category": "serializable-object",
+      "mapping": "#/$defs/CellDiff",
+      "fields": [
+        "type",
+        "before",
+        "after"
+      ],
+      "required_fields": [
+        "type"
+      ]
+    },
+    {
+      "source_name": "CellProfile",
+      "category": "serializable-object",
+      "mapping": "#/$defs/CellProfile",
+      "fields": [
+        "row",
+        "col",
+        "rowSpan",
+        "colSpan",
+        "width_hwpunit",
+        "height_hwpunit",
+        "borderFillIDRef",
+        "charPrIDRef"
+      ],
+      "required_fields": [
+        "row",
+        "col"
+      ]
+    },
+    {
+      "source_name": "CharPrDef",
+      "category": "serializable-object",
+      "mapping": "#/$defs/CharPrDef",
+      "fields": [
+        "height_hwpunit",
+        "textColor",
+        "bold",
+        "italic",
+        "underline",
+        "fontRef_hangul",
+        "fontName_hangul"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "ChunkOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/ChunkOptions",
+      "fields": [
+        "includeTableCells",
+        "granularity"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "ClassifyContext",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ClassifyContext",
+      "fields": [
+        "nearbyText"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "ClickHereField",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ClickHereField",
+      "fields": [
+        "name",
+        "placeholder",
+        "value",
+        "section"
+      ],
+      "required_fields": [
+        "name",
+        "value",
+        "section"
+      ]
+    },
+    {
+      "source_name": "DiffChangeType",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/DiffChangeType",
+      "enum_values": [
+        "added",
+        "removed",
+        "modified",
+        "unchanged"
+      ]
+    },
+    {
+      "source_name": "DiffResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/DiffResult",
+      "fields": [
+        "stats",
+        "diffs"
+      ],
+      "required_fields": [
+        "stats",
+        "diffs"
+      ]
+    },
+    {
+      "source_name": "DocChunk",
+      "category": "serializable-object",
+      "mapping": "#/$defs/DocChunk",
+      "fields": [
+        "id",
+        "type",
+        "breadcrumb",
+        "text",
+        "page",
+        "blockRange",
+        "table"
+      ],
+      "required_fields": [
+        "id",
+        "type",
+        "breadcrumb",
+        "text",
+        "blockRange"
+      ]
+    },
+    {
+      "source_name": "DocumentMetadata",
+      "category": "serializable-object",
+      "mapping": "#/$defs/DocumentMetadata",
+      "fields": [
+        "title",
+        "author",
+        "creator",
+        "createdAt",
+        "modifiedAt",
+        "pageCount",
+        "pageMode",
+        "version",
+        "description",
+        "keywords"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "DocumentQualitySummary",
+      "category": "serializable-object",
+      "mapping": "#/$defs/DocumentQualitySummary",
+      "fields": [
+        "totalPages",
+        "totalTextChars",
+        "avgHangulRatio",
+        "avgControlCharRatio",
+        "avgReplacementCharRatio",
+        "avgPuaRatio",
+        "lowTextPageCount",
+        "highPuaPageCount",
+        "needsOcr",
+        "ocrCandidatePages"
+      ],
+      "required_fields": [
+        "totalPages",
+        "totalTextChars",
+        "avgHangulRatio",
+        "avgControlCharRatio",
+        "avgReplacementCharRatio",
+        "avgPuaRatio",
+        "lowTextPageCount",
+        "highPuaPageCount",
+        "needsOcr",
+        "ocrCandidatePages"
+      ]
+    },
+    {
+      "source_name": "ErrorCode",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/ErrorCode",
+      "enum_values": [
+        "EMPTY_INPUT",
+        "UNSUPPORTED_FORMAT",
+        "ENCRYPTED",
+        "DRM_PROTECTED",
+        "CORRUPTED",
+        "DECOMPRESSION_BOMB",
+        "ZIP_BOMB",
+        "IMAGE_BASED_PDF",
+        "NO_SECTIONS",
+        "PARSE_ERROR",
+        "MISSING_DEPENDENCY",
+        "OUTPUT_TOO_LARGE",
+        "FILE_NOT_FOUND"
+      ]
+    },
+    {
+      "source_name": "ExtractRegionOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/ExtractRegionOptions",
+      "fields": [
+        "pages",
+        "reflow",
+        "reflowMode",
+        "types",
+        "format",
+        "paddingPt",
+        "maxWidthPx",
+        "quality",
+        "filter"
+      ],
+      "required_fields": [],
+      "adapter_fields": [
+        "filter"
+      ]
+    },
+    {
+      "source_name": "ExtractTableVisualOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/ExtractTableVisualOptions",
+      "fields": [
+        "policy",
+        "format",
+        "paddingPt",
+        "maxWidthPx"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "ExtractedImage",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ExtractedImage",
+      "fields": [
+        "filename",
+        "data",
+        "mimeType",
+        "source"
+      ],
+      "required_fields": [
+        "filename",
+        "data",
+        "mimeType"
+      ],
+      "adapter_fields": [
+        "data"
+      ]
+    },
+    {
+      "source_name": "ExtractedTable",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ExtractedTable",
+      "fields": [
+        "id",
+        "page",
+        "table",
+        "classification",
+        "sourceId",
+        "regions",
+        "crops",
+        "warnings"
+      ],
+      "required_fields": [
+        "id",
+        "page",
+        "table",
+        "classification",
+        "regions",
+        "crops",
+        "warnings"
+      ]
+    },
+    {
+      "source_name": "ExtractedTableCrop",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ExtractedTableCrop",
+      "fields": [
+        "page",
+        "bbox",
+        "mimeType",
+        "data"
+      ],
+      "required_fields": [
+        "page",
+        "bbox",
+        "mimeType",
+        "data"
+      ],
+      "adapter_fields": [
+        "data"
+      ]
+    },
+    {
+      "source_name": "FileType",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/FileType",
+      "enum_values": [
+        "hwpx",
+        "hwp",
+        "hwp3",
+        "hwpml",
+        "pdf",
+        "xlsx",
+        "xls",
+        "docx",
+        "pptx",
+        "image",
+        "unknown"
+      ]
+    },
+    {
+      "source_name": "FillFormOutput",
+      "category": "serializable-object",
+      "mapping": "#/$defs/FillFormOutput",
+      "fields": [
+        "output",
+        "format",
+        "fill"
+      ],
+      "required_fields": [
+        "output",
+        "format",
+        "fill"
+      ],
+      "adapter_fields": [
+        "output"
+      ]
+    },
+    {
+      "source_name": "FillInput",
+      "category": "serializable-union",
+      "mapping": "#/$defs/FillInput"
+    },
+    {
+      "source_name": "FillOutputFormat",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/FillOutputFormat",
+      "enum_values": [
+        "markdown",
+        "hwpx",
+        "hwpx-preserve"
+      ]
+    },
+    {
+      "source_name": "FillResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/FillResult",
+      "fields": [
+        "blocks",
+        "filled",
+        "unmatched",
+        "warnings"
+      ],
+      "required_fields": [
+        "blocks",
+        "filled",
+        "unmatched"
+      ]
+    },
+    {
+      "source_name": "FillValue",
+      "category": "serializable-union",
+      "mapping": "#/$defs/FillValue"
+    },
+    {
+      "source_name": "FormField",
+      "category": "serializable-object",
+      "mapping": "#/$defs/FormField",
+      "fields": [
+        "label",
+        "value",
+        "row",
+        "col",
+        "key",
+        "source"
+      ],
+      "required_fields": [
+        "label",
+        "value",
+        "row",
+        "col"
+      ]
+    },
+    {
+      "source_name": "FormFieldSchema",
+      "category": "serializable-object",
+      "mapping": "#/$defs/FormFieldSchema",
+      "fields": [
+        "label",
+        "value",
+        "row",
+        "col",
+        "key",
+        "source",
+        "type",
+        "required",
+        "empty"
+      ],
+      "required_fields": [
+        "label",
+        "value",
+        "row",
+        "col",
+        "type",
+        "empty"
+      ]
+    },
+    {
+      "source_name": "FormFieldType",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/FormFieldType",
+      "enum_values": [
+        "text",
+        "date",
+        "phone",
+        "email",
+        "amount",
+        "checkbox",
+        "idnum"
+      ]
+    },
+    {
+      "source_name": "FormResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/FormResult",
+      "fields": [
+        "fields",
+        "confidence"
+      ],
+      "required_fields": [
+        "fields",
+        "confidence"
+      ]
+    },
+    {
+      "source_name": "FormSchemaResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/FormSchemaResult",
+      "fields": [
+        "fields",
+        "confidence"
+      ],
+      "required_fields": [
+        "fields",
+        "confidence"
+      ]
+    },
+    {
+      "source_name": "FormatProfile",
+      "category": "serializable-object",
+      "mapping": "#/$defs/FormatProfile",
+      "fields": [
+        "schema_version",
+        "tables"
+      ],
+      "required_fields": [
+        "tables"
+      ]
+    },
+    {
+      "source_name": "GongmunFont",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/GongmunFont",
+      "enum_values": [
+        "myeongjo",
+        "gothic"
+      ]
+    },
+    {
+      "source_name": "GongmunLintFinding",
+      "category": "serializable-object",
+      "mapping": "#/$defs/GongmunLintFinding",
+      "fields": [
+        "line",
+        "match",
+        "rule",
+        "severity",
+        "message",
+        "suggest"
+      ],
+      "required_fields": [
+        "line",
+        "match",
+        "rule",
+        "severity",
+        "message"
+      ]
+    },
+    {
+      "source_name": "GongmunNumbering",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/GongmunNumbering",
+      "enum_values": [
+        "standard",
+        "report",
+        "gaejosik"
+      ]
+    },
+    {
+      "source_name": "GongmunOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/GongmunOptions",
+      "fields": [
+        "preset",
+        "bodyFont",
+        "bodyPt",
+        "lineSpacing",
+        "numbering",
+        "cover",
+        "toc",
+        "margins",
+        "centerTitle",
+        "autoFit",
+        "fonts",
+        "sizes",
+        "levels",
+        "pageNumbers",
+        "endMark",
+        "approval",
+        "bodyTitleBox",
+        "chapterFit",
+        "h2Marker",
+        "bandColor",
+        "bandTextColor",
+        "bullet2",
+        "suppressSingle",
+        "docHead",
+        "docFoot",
+        "summary",
+        "docInfo",
+        "checklist",
+        "reportInfo",
+        "noticeHead",
+        "press"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "GongmunPreset",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/GongmunPreset",
+      "enum_values": [
+        "official",
+        "report",
+        "plan",
+        "notice",
+        "minutes",
+        "gaejosik",
+        "press",
+        "ministry",
+        "bangchim"
+      ]
+    },
+    {
+      "source_name": "GongmunPresetInput",
+      "category": "serializable-union",
+      "mapping": "#/$defs/GongmunPresetInput"
+    },
+    {
+      "source_name": "HwpxFillResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/HwpxFillResult",
+      "fields": [
+        "buffer",
+        "filled",
+        "unmatched",
+        "warnings"
+      ],
+      "required_fields": [
+        "buffer",
+        "filled",
+        "unmatched"
+      ],
+      "adapter_fields": [
+        "buffer"
+      ]
+    },
+    {
+      "source_name": "HwpxTheme",
+      "category": "serializable-object",
+      "mapping": "#/$defs/HwpxTheme",
+      "fields": [
+        "headingColors",
+        "bodyColor",
+        "quoteColor",
+        "tableHeaderColor",
+        "tableHeaderBold"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "IRBlock",
+      "category": "serializable-object",
+      "mapping": "#/$defs/IRBlock",
+      "fields": [
+        "type",
+        "text",
+        "table",
+        "level",
+        "pageNumber",
+        "bbox",
+        "style",
+        "listType",
+        "children",
+        "href",
+        "footnoteText",
+        "imageData",
+        "spans",
+        "quote",
+        "indent",
+        "listDepth"
+      ],
+      "required_fields": [
+        "type"
+      ]
+    },
+    {
+      "source_name": "IRBlockType",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/IRBlockType",
+      "enum_values": [
+        "paragraph",
+        "table",
+        "heading",
+        "list",
+        "image",
+        "separator"
+      ]
+    },
+    {
+      "source_name": "IRCell",
+      "category": "serializable-object",
+      "mapping": "#/$defs/IRCell",
+      "fields": [
+        "text",
+        "colSpan",
+        "rowSpan",
+        "blocks",
+        "isHeader"
+      ],
+      "required_fields": [
+        "text",
+        "colSpan",
+        "rowSpan"
+      ]
+    },
+    {
+      "source_name": "IRTable",
+      "category": "serializable-object",
+      "mapping": "#/$defs/IRTable",
+      "fields": [
+        "rows",
+        "cols",
+        "cells",
+        "renderAsTable",
+        "hasHeader",
+        "classification",
+        "sourceId",
+        "regions",
+        "caption",
+        "captionBlocks"
+      ],
+      "required_fields": [
+        "rows",
+        "cols",
+        "cells",
+        "hasHeader"
+      ]
+    },
+    {
+      "source_name": "ImageData",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ImageData",
+      "fields": [
+        "data",
+        "mimeType",
+        "filename"
+      ],
+      "required_fields": [
+        "data",
+        "mimeType"
+      ],
+      "adapter_fields": [
+        "data"
+      ]
+    },
+    {
+      "source_name": "InlineStyle",
+      "category": "serializable-object",
+      "mapping": "#/$defs/InlineStyle",
+      "fields": [
+        "bold",
+        "italic",
+        "strike",
+        "underline",
+        "fontSize",
+        "fontName"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "MarkdownToHwpxOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/MarkdownToHwpxOptions",
+      "fields": [
+        "theme",
+        "gongmun",
+        "profile",
+        "page",
+        "images",
+        "warnings"
+      ],
+      "required_fields": [],
+      "adapter_fields": [
+        "images"
+      ]
+    },
+    {
+      "source_name": "MeasureOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/MeasureOptions",
+      "fields": [
+        "spaceEm",
+        "spacingPct",
+        "faceClass"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "MuncheLineKind",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/MuncheLineKind",
+      "enum_values": [
+        "dae",
+        "item",
+        "sub",
+        "concl",
+        "lead",
+        "note",
+        "para"
+      ]
+    },
+    {
+      "source_name": "MuncheLintFinding",
+      "category": "serializable-object",
+      "mapping": "#/$defs/MuncheLintFinding",
+      "fields": [
+        "line",
+        "match",
+        "rule",
+        "severity",
+        "kind",
+        "message",
+        "suggest"
+      ],
+      "required_fields": [
+        "line",
+        "match",
+        "rule",
+        "severity",
+        "kind",
+        "message"
+      ]
+    },
+    {
+      "source_name": "OcrProvider",
+      "category": "callable-adapter",
+      "mapping": "#/$defs/OcrProvider",
+      "python_adapter_fields": [
+        "ocr"
+      ]
+    },
+    {
+      "source_name": "OutlineItem",
+      "category": "serializable-object",
+      "mapping": "#/$defs/OutlineItem",
+      "fields": [
+        "level",
+        "text",
+        "pageNumber"
+      ],
+      "required_fields": [
+        "level",
+        "text"
+      ]
+    },
+    {
+      "source_name": "PageBBox",
+      "category": "serializable-object",
+      "mapping": "#/$defs/PageBBox",
+      "fields": [
+        "page",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "required_fields": [
+        "page",
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    {
+      "source_name": "PageMargin",
+      "category": "serializable-object",
+      "mapping": "#/$defs/PageMargin",
+      "fields": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ],
+      "required_fields": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ]
+    },
+    {
+      "source_name": "PageMarkdown",
+      "category": "serializable-object",
+      "mapping": "#/$defs/PageMarkdown",
+      "fields": [
+        "pageNumber",
+        "markdown"
+      ],
+      "required_fields": [
+        "pageNumber",
+        "markdown"
+      ]
+    },
+    {
+      "source_name": "PageOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/PageOptions",
+      "fields": [
+        "size",
+        "orientation",
+        "columns",
+        "header",
+        "footer"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "PageQuality",
+      "category": "serializable-object",
+      "mapping": "#/$defs/PageQuality",
+      "fields": [
+        "page",
+        "textChars",
+        "hangulRatio",
+        "controlCharRatio",
+        "replacementCharRatio",
+        "puaRatio",
+        "needsOcr",
+        "ocrReason"
+      ],
+      "required_fields": [
+        "page",
+        "textChars",
+        "hangulRatio",
+        "controlCharRatio",
+        "replacementCharRatio",
+        "puaRatio",
+        "needsOcr"
+      ]
+    },
+    {
+      "source_name": "ParseFailure",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ParseFailure",
+      "fields": [
+        "fileType",
+        "pageCount",
+        "isImageBased",
+        "success",
+        "error",
+        "code"
+      ],
+      "required_fields": [
+        "fileType",
+        "success",
+        "error"
+      ]
+    },
+    {
+      "source_name": "ParseOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/ParseOptions",
+      "fields": [
+        "pages",
+        "ocr",
+        "onProgress",
+        "removeHeaderFooter",
+        "scriptTags",
+        "plain",
+        "htmlTables",
+        "keepTrailingEmptyCols",
+        "classifyTables",
+        "keepEmptyParagraphs",
+        "includeFieldPlaceholders",
+        "password",
+        "filePath",
+        "formulaOcr",
+        "dedupeRunningHeaders",
+        "inlineImages",
+        "images",
+        "tables"
+      ],
+      "excluded_fields": [
+        "filePath"
+      ],
+      "required_fields": [],
+      "adapter_fields": [
+        "ocr",
+        "onProgress"
+      ]
+    },
+    {
+      "source_name": "ParseResult",
+      "category": "serializable-union",
+      "mapping": "#/$defs/ParseResult"
+    },
+    {
+      "source_name": "ParseSuccess",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ParseSuccess",
+      "fields": [
+        "fileType",
+        "pageCount",
+        "isImageBased",
+        "success",
+        "markdown",
+        "blocks",
+        "metadata",
+        "outline",
+        "warnings",
+        "images",
+        "pages",
+        "pageQuality",
+        "qualitySummary"
+      ],
+      "required_fields": [
+        "fileType",
+        "success",
+        "markdown",
+        "blocks"
+      ]
+    },
+    {
+      "source_name": "ParseWarning",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ParseWarning",
+      "fields": [
+        "page",
+        "message",
+        "code"
+      ],
+      "required_fields": [
+        "message",
+        "code"
+      ]
+    },
+    {
+      "source_name": "PatchOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/PatchOptions",
+      "fields": [
+        "verify"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "PatchResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/PatchResult",
+      "fields": [
+        "success",
+        "data",
+        "applied",
+        "skipped",
+        "verification",
+        "changes",
+        "error"
+      ],
+      "required_fields": [
+        "success",
+        "applied",
+        "skipped"
+      ],
+      "adapter_fields": [
+        "data"
+      ]
+    },
+    {
+      "source_name": "PatchSkip",
+      "category": "serializable-object",
+      "mapping": "#/$defs/PatchSkip",
+      "fields": [
+        "reason",
+        "before",
+        "after",
+        "partial"
+      ],
+      "required_fields": [
+        "reason"
+      ]
+    },
+    {
+      "source_name": "PlaceSealResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/PlaceSealResult",
+      "fields": [
+        "buffer",
+        "placed"
+      ],
+      "required_fields": [
+        "buffer",
+        "placed"
+      ],
+      "adapter_fields": [
+        "buffer"
+      ]
+    },
+    {
+      "source_name": "PrintOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/PrintOptions",
+      "fields": [
+        "preset",
+        "pageSize",
+        "orientation",
+        "margin",
+        "header",
+        "footer",
+        "watermark",
+        "extraCss"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "PrintPreset",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/PrintPreset",
+      "enum_values": [
+        "default",
+        "gov-formal",
+        "compact"
+      ]
+    },
+    {
+      "source_name": "RedactHit",
+      "category": "serializable-object",
+      "mapping": "#/$defs/RedactHit",
+      "fields": [
+        "rule",
+        "masked",
+        "index",
+        "length"
+      ],
+      "required_fields": [
+        "rule",
+        "masked",
+        "index",
+        "length"
+      ]
+    },
+    {
+      "source_name": "RedactOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/RedactOptions",
+      "fields": [
+        "rules",
+        "maskChar"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "RedactRule",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/RedactRule",
+      "enum_values": [
+        "rrn",
+        "phone",
+        "email",
+        "card",
+        "account",
+        "passport",
+        "driver",
+        "brn",
+        "crn",
+        "ip",
+        "name",
+        "address"
+      ]
+    },
+    {
+      "source_name": "RedactTextResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/RedactTextResult",
+      "fields": [
+        "text",
+        "hits"
+      ],
+      "required_fields": [
+        "text",
+        "hits"
+      ]
+    },
+    {
+      "source_name": "RegionAsset",
+      "category": "serializable-object",
+      "mapping": "#/$defs/RegionAsset",
+      "fields": [
+        "region",
+        "page",
+        "bbox",
+        "mimeType",
+        "data",
+        "widthPx",
+        "heightPx"
+      ],
+      "required_fields": [
+        "region",
+        "page",
+        "bbox",
+        "mimeType",
+        "data",
+        "widthPx",
+        "heightPx"
+      ],
+      "adapter_fields": [
+        "data"
+      ]
+    },
+    {
+      "source_name": "RenderAsset",
+      "category": "serializable-object",
+      "mapping": "#/$defs/RenderAsset",
+      "fields": [
+        "format",
+        "page",
+        "data",
+        "width",
+        "height",
+        "scale",
+        "mimeType"
+      ],
+      "required_fields": [
+        "format",
+        "data"
+      ],
+      "adapter_fields": [
+        "data"
+      ]
+    },
+    {
+      "source_name": "RenderDocumentOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/RenderDocumentOptions",
+      "fields": [
+        "pages",
+        "reflow",
+        "password",
+        "reflowMode",
+        "highlights",
+        "maxImageBytes",
+        "format",
+        "maxWidthPx",
+        "quality",
+        "browserExecutablePath",
+        "title"
+      ],
+      "required_fields": [
+        "format"
+      ]
+    },
+    {
+      "source_name": "RenderDocumentResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/RenderDocumentResult",
+      "fields": [
+        "scene",
+        "assets"
+      ],
+      "required_fields": [
+        "scene",
+        "assets"
+      ]
+    },
+    {
+      "source_name": "RenderFormat",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/RenderFormat",
+      "enum_values": [
+        "svg",
+        "html",
+        "png",
+        "jpeg",
+        "pdf"
+      ]
+    },
+    {
+      "source_name": "RenderObjectType",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/RenderObjectType",
+      "enum_values": [
+        "paragraph",
+        "table",
+        "image",
+        "shape",
+        "equation",
+        "unknown"
+      ]
+    },
+    {
+      "source_name": "RenderRegion",
+      "category": "serializable-object",
+      "mapping": "#/$defs/RenderRegion",
+      "fields": [
+        "id",
+        "type",
+        "page",
+        "regions",
+        "sourceId",
+        "parentId"
+      ],
+      "required_fields": [
+        "id",
+        "type",
+        "page",
+        "regions"
+      ]
+    },
+    {
+      "source_name": "RenderScene",
+      "category": "serializable-object",
+      "mapping": "#/$defs/RenderScene",
+      "fields": [
+        "format",
+        "pages",
+        "regions",
+        "warnings",
+        "stats"
+      ],
+      "required_fields": [
+        "format",
+        "pages",
+        "regions",
+        "warnings",
+        "stats"
+      ]
+    },
+    {
+      "source_name": "RenderSourceFormat",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/RenderSourceFormat",
+      "enum_values": [
+        "hwpx",
+        "hwp"
+      ]
+    },
+    {
+      "source_name": "RenderSvgOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/RenderSvgOptions",
+      "fields": [
+        "maxImageBytes",
+        "highlights",
+        "reflow",
+        "reflowMode"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "RenderSvgResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/RenderSvgResult",
+      "fields": [
+        "svg",
+        "width",
+        "height",
+        "pageCount",
+        "warnings",
+        "stats",
+        "regions"
+      ],
+      "required_fields": [
+        "svg",
+        "width",
+        "height",
+        "pageCount",
+        "warnings",
+        "stats",
+        "regions"
+      ]
+    },
+    {
+      "source_name": "ScanCell",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ScanCell",
+      "fields": [
+        "rowAddr",
+        "colAddr",
+        "colSpan",
+        "rowSpan",
+        "paragraphs",
+        "tables",
+        "addrTagRange"
+      ],
+      "required_fields": [
+        "colSpan",
+        "rowSpan",
+        "paragraphs",
+        "tables"
+      ]
+    },
+    {
+      "source_name": "ScanParaKind",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/ScanParaKind",
+      "enum_values": [
+        "body",
+        "cell",
+        "draw",
+        "excluded"
+      ]
+    },
+    {
+      "source_name": "ScanParagraph",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ScanParagraph",
+      "fields": [
+        "sectionIndex",
+        "kind",
+        "start",
+        "tRanges",
+        "text",
+        "runInsertPos",
+        "runPrefix",
+        "selfCloseRun",
+        "inTextbox"
+      ],
+      "required_fields": [
+        "sectionIndex",
+        "kind",
+        "start",
+        "tRanges",
+        "text"
+      ]
+    },
+    {
+      "source_name": "ScanTable",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ScanTable",
+      "fields": [
+        "sectionIndex",
+        "start",
+        "topLevel",
+        "rows",
+        "rowRanges",
+        "cellByAnchor"
+      ],
+      "required_fields": [
+        "sectionIndex",
+        "start",
+        "topLevel",
+        "rows",
+        "rowRanges",
+        "cellByAnchor"
+      ],
+      "adapter_fields": [
+        "cellByAnchor"
+      ]
+    },
+    {
+      "source_name": "ScenePage",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ScenePage",
+      "fields": [
+        "page",
+        "width",
+        "height"
+      ],
+      "required_fields": [
+        "page",
+        "width",
+        "height"
+      ]
+    },
+    {
+      "source_name": "SceneRenderOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/SceneRenderOptions",
+      "fields": [
+        "pages",
+        "reflow",
+        "password",
+        "reflowMode",
+        "highlights",
+        "maxImageBytes"
+      ],
+      "required_fields": []
+    },
+    {
+      "source_name": "SceneRenderResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/SceneRenderResult",
+      "fields": [
+        "scene",
+        "pageSvgs"
+      ],
+      "required_fields": [
+        "scene",
+        "pageSvgs"
+      ],
+      "adapter_fields": [
+        "pageSvgs"
+      ]
+    },
+    {
+      "source_name": "SealOp",
+      "category": "serializable-object",
+      "mapping": "#/$defs/SealOp",
+      "fields": [
+        "anchor",
+        "occurrence",
+        "image",
+        "ext",
+        "sizeMm",
+        "mode",
+        "dxMm",
+        "dyMm"
+      ],
+      "required_fields": [
+        "anchor",
+        "image"
+      ],
+      "adapter_fields": [
+        "image"
+      ]
+    },
+    {
+      "source_name": "SealPlacement",
+      "category": "serializable-object",
+      "mapping": "#/$defs/SealPlacement",
+      "fields": [
+        "anchor",
+        "occurrence",
+        "sectionIndex",
+        "mode",
+        "posXMm",
+        "posYMm",
+        "sizeMm",
+        "entry",
+        "warnings"
+      ],
+      "required_fields": [
+        "anchor",
+        "occurrence",
+        "sectionIndex",
+        "mode",
+        "posXMm",
+        "posYMm",
+        "sizeMm",
+        "entry"
+      ]
+    },
+    {
+      "source_name": "SectionScan",
+      "category": "serializable-object",
+      "mapping": "#/$defs/SectionScan",
+      "fields": [
+        "sectionIndex",
+        "xml",
+        "bodyParagraphs",
+        "tables",
+        "headerTexts",
+        "footerTexts",
+        "excludedParagraphs",
+        "orphanTables"
+      ],
+      "required_fields": [
+        "sectionIndex",
+        "xml",
+        "bodyParagraphs",
+        "tables",
+        "headerTexts",
+        "footerTexts",
+        "excludedParagraphs",
+        "orphanTables"
+      ]
+    },
+    {
+      "source_name": "SpliceEdit",
+      "category": "serializable-object",
+      "mapping": "#/$defs/SpliceEdit",
+      "fields": [
+        "start",
+        "end",
+        "replacement"
+      ],
+      "required_fields": [
+        "start",
+        "end",
+        "replacement"
+      ]
+    },
+    {
+      "source_name": "TRange",
+      "category": "serializable-object",
+      "mapping": "#/$defs/TRange",
+      "fields": [
+        "contentStart",
+        "contentEnd",
+        "selfClosing",
+        "prefix"
+      ],
+      "required_fields": [
+        "contentStart",
+        "contentEnd"
+      ]
+    },
+    {
+      "source_name": "TableProfile",
+      "category": "serializable-object",
+      "mapping": "#/$defs/TableProfile",
+      "fields": [
+        "table_index",
+        "rows",
+        "cols",
+        "anchor_text",
+        "anchor_row",
+        "width_hwpunit",
+        "col_widths_hwpunit",
+        "cells",
+        "used_border_fills",
+        "used_char_prs"
+      ],
+      "required_fields": [
+        "table_index",
+        "rows",
+        "cols",
+        "cells",
+        "used_border_fills"
+      ]
+    },
+    {
+      "source_name": "TableRepresentation",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/TableRepresentation",
+      "enum_values": [
+        "gfm",
+        "html",
+        "visual"
+      ]
+    },
+    {
+      "source_name": "TableVisualPolicy",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/TableVisualPolicy",
+      "enum_values": [
+        "none",
+        "non-tabular",
+        "non-tabular-and-uncertain",
+        "all"
+      ]
+    },
+    {
+      "source_name": "ValidateIssue",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ValidateIssue",
+      "fields": [
+        "path",
+        "message"
+      ],
+      "required_fields": [
+        "message"
+      ]
+    },
+    {
+      "source_name": "ValidateResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/ValidateResult",
+      "fields": [
+        "ok",
+        "issues",
+        "entryCount"
+      ],
+      "required_fields": [
+        "ok",
+        "issues",
+        "entryCount"
+      ]
+    },
+    {
+      "source_name": "WarningCode",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/WarningCode",
+      "enum_values": [
+        "SKIPPED_IMAGE",
+        "SKIPPED_OLE",
+        "TRUNCATED_TABLE",
+        "OCR_FALLBACK",
+        "UNSUPPORTED_ELEMENT",
+        "BROKEN_ZIP_RECOVERY",
+        "HIDDEN_TEXT_FILTERED",
+        "MALFORMED_XML",
+        "PARTIAL_PARSE",
+        "LENIENT_CFB_RECOVERY",
+        "NEEDS_OCR",
+        "OCR_FAILED",
+        "OCR_APPLIED",
+        "OCR_LOW_CONF",
+        "COM_EMPTY",
+        "DRM_COM_FALLBACK",
+        "PAGE_BOUNDARY_APPROXIMATE"
+      ]
+    },
+    {
+      "source_name": "WatchOptions",
+      "category": "input-options",
+      "mapping": "#/$defs/WatchOptions",
+      "fields": [
+        "dir",
+        "outDir",
+        "webhook",
+        "format",
+        "pages",
+        "silent"
+      ],
+      "required_fields": [
+        "dir"
+      ]
+    },
+    {
+      "source_name": "WrapMode",
+      "category": "serializable-enum",
+      "mapping": "#/$defs/WrapMode",
+      "enum_values": [
+        "keep",
+        "charAll"
+      ]
+    },
+    {
+      "source_name": "WrapResult",
+      "category": "serializable-object",
+      "mapping": "#/$defs/WrapResult",
+      "fields": [
+        "lines",
+        "starts",
+        "lastLineWidth"
+      ],
+      "required_fields": [
+        "lines",
+        "starts",
+        "lastLineWidth"
+      ]
+    }
+  ],
+  "roots": {
+    "parse_result": {
+      "$ref": "#/$defs/ParseResult"
+    },
+    "block": {
+      "$ref": "#/$defs/IRBlock"
+    },
+    "warning": {
+      "$ref": "#/$defs/ParseWarning"
+    },
+    "error_code": {
+      "$ref": "#/$defs/ErrorCode"
+    }
+  },
+  "$defs": {
+    "FillOutputFormat": {
+      "type": "string",
+      "enum": [
+        "markdown",
+        "hwpx",
+        "hwpx-preserve"
+      ]
+    },
+    "FillFormOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "output": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "x-typescript-type": "ArrayBuffer",
+              "x-python-translation": "bytes"
+            }
+          ]
+        },
+        "format": {
+          "$ref": "#/$defs/FillOutputFormat"
+        },
+        "fill": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "filled": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FormField"
+              }
+            },
+            "unmatched": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "filled",
+            "unmatched"
+          ]
+        }
+      },
+      "required": [
+        "output",
+        "format",
+        "fill"
+      ]
+    },
+    "FormFieldType": {
+      "type": "string",
+      "enum": [
+        "text",
+        "date",
+        "phone",
+        "email",
+        "amount",
+        "checkbox",
+        "idnum"
+      ]
+    },
+    "FormFieldSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "row": {
+          "type": "number"
+        },
+        "col": {
+          "type": "number"
+        },
+        "key": {
+          "type": "string"
+        },
+        "source": {
+          "const": "clickhere"
+        },
+        "type": {
+          "$ref": "#/$defs/FormFieldType"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "empty": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "label",
+        "value",
+        "row",
+        "col",
+        "type",
+        "empty"
+      ]
+    },
+    "FormSchemaResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormFieldSchema"
+          }
+        },
+        "confidence": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "fields",
+        "confidence"
+      ]
+    },
+    "FillValue": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "FillInput": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/FillValue"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "$ref": "#/$defs/FillValue"
+            },
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      ]
+    },
+    "IRBlockType": {
+      "type": "string",
+      "enum": [
+        "paragraph",
+        "table",
+        "heading",
+        "list",
+        "image",
+        "separator"
+      ]
+    },
+    "IRCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "colSpan": {
+          "type": "number"
+        },
+        "rowSpan": {
+          "type": "number"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IRBlock"
+          }
+        },
+        "isHeader": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text",
+        "colSpan",
+        "rowSpan"
+      ]
+    },
+    "TableClassificationKind": {
+      "type": "string",
+      "enum": [
+        "semantic-table",
+        "non-tabular-layout",
+        "uncertain"
+      ]
+    },
+    "TableClassificationReason": {
+      "type": "string",
+      "enum": [
+        "repeated-row-schema",
+        "grid-regularity",
+        "high-active-density",
+        "column-type-consistency",
+        "nested-structure-wrapper",
+        "span-irregularity",
+        "spacer-bands",
+        "extreme-sparsity",
+        "diagram-context-keyword",
+        "low-evidence",
+        "ambiguous-scores"
+      ]
+    },
+    "TableClassificationSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/TableClassificationKind"
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "semanticScore": {
+          "type": "number"
+        },
+        "nonTabularScore": {
+          "type": "number"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TableClassificationReason"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "confidence",
+        "semanticScore",
+        "nonTabularScore",
+        "reasons"
+      ]
+    },
+    "BoundingBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page": {
+          "type": "number"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "page",
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "IRTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rows": {
+          "type": "number"
+        },
+        "cols": {
+          "type": "number"
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/IRCell"
+            }
+          }
+        },
+        "renderAsTable": {
+          "type": "boolean"
+        },
+        "hasHeader": {
+          "type": "boolean"
+        },
+        "classification": {
+          "$ref": "#/$defs/TableClassificationSummary"
+        },
+        "sourceId": {
+          "type": "string"
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BoundingBox"
+          }
+        },
+        "caption": {
+          "type": "string"
+        },
+        "captionBlocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IRBlock"
+          }
+        }
+      },
+      "required": [
+        "rows",
+        "cols",
+        "cells",
+        "hasHeader"
+      ]
+    },
+    "InlineStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "strike": {
+          "type": "boolean"
+        },
+        "underline": {
+          "type": "boolean"
+        },
+        "fontSize": {
+          "type": "number"
+        },
+        "fontName": {
+          "type": "string"
+        }
+      }
+    },
+    "ImageData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-typescript-type": "Uint8Array",
+          "x-python-translation": "bytes"
+        },
+        "mimeType": {
+          "type": "string"
+        },
+        "filename": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "mimeType"
+      ]
+    },
+    "IRSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "strike": {
+          "type": "boolean"
+        },
+        "underline": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text"
+      ]
+    },
+    "IRBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/IRBlockType"
+        },
+        "text": {
+          "type": "string"
+        },
+        "table": {
+          "$ref": "#/$defs/IRTable"
+        },
+        "level": {
+          "type": "number"
+        },
+        "pageNumber": {
+          "type": "number"
+        },
+        "bbox": {
+          "$ref": "#/$defs/BoundingBox"
+        },
+        "style": {
+          "$ref": "#/$defs/InlineStyle"
+        },
+        "listType": {
+          "type": "string",
+          "enum": [
+            "ordered",
+            "unordered"
+          ]
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IRBlock"
+          }
+        },
+        "href": {
+          "type": "string"
+        },
+        "footnoteText": {
+          "type": "string"
+        },
+        "imageData": {
+          "$ref": "#/$defs/ImageData"
+        },
+        "spans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IRSpan"
+          }
+        },
+        "quote": {
+          "type": "boolean"
+        },
+        "indent": {
+          "type": "number"
+        },
+        "listDepth": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "FormField": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "row": {
+          "type": "number"
+        },
+        "col": {
+          "type": "number"
+        },
+        "key": {
+          "type": "string"
+        },
+        "source": {
+          "const": "clickhere"
+        }
+      },
+      "required": [
+        "label",
+        "value",
+        "row",
+        "col"
+      ]
+    },
+    "FillResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IRBlock"
+          }
+        },
+        "filled": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormField"
+          }
+        },
+        "unmatched": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "blocks",
+        "filled",
+        "unmatched"
+      ]
+    },
+    "HwpxFillResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "buffer": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-typescript-type": "ArrayBuffer",
+          "x-python-translation": "bytes"
+        },
+        "filled": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormField"
+          }
+        },
+        "unmatched": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "buffer",
+        "filled",
+        "unmatched"
+      ]
+    },
+    "ClickHereField": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "section": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "section"
+      ]
+    },
+    "BuiltinTemplate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "file": {
+          "type": "string"
+        },
+        "sampleFile": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "aliases",
+        "file",
+        "sampleFile",
+        "title"
+      ]
+    },
+    "SealOp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "anchor": {
+          "type": "string"
+        },
+        "occurrence": {
+          "type": "number"
+        },
+        "image": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-typescript-type": "Uint8Array",
+          "x-python-translation": "bytes"
+        },
+        "ext": {
+          "type": "string",
+          "enum": [
+            "png",
+            "jpg",
+            "jpeg",
+            "bmp",
+            "gif"
+          ]
+        },
+        "sizeMm": {
+          "type": "number"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "overlap",
+            "right",
+            "auto"
+          ]
+        },
+        "dxMm": {
+          "type": "number"
+        },
+        "dyMm": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "anchor",
+        "image"
+      ]
+    },
+    "SealPlacement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "anchor": {
+          "type": "string"
+        },
+        "occurrence": {
+          "type": "number"
+        },
+        "sectionIndex": {
+          "type": "number"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "overlap",
+            "right"
+          ]
+        },
+        "posXMm": {
+          "type": "number"
+        },
+        "posYMm": {
+          "type": "number"
+        },
+        "sizeMm": {
+          "type": "number"
+        },
+        "entry": {
+          "type": "string"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "anchor",
+        "occurrence",
+        "sectionIndex",
+        "mode",
+        "posXMm",
+        "posYMm",
+        "sizeMm",
+        "entry"
+      ]
+    },
+    "PlaceSealResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "buffer": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-typescript-type": "ArrayBuffer",
+          "x-python-translation": "bytes"
+        },
+        "placed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SealPlacement"
+          }
+        }
+      },
+      "required": [
+        "buffer",
+        "placed"
+      ]
+    },
+    "HwpxTheme": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "headingColors": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "1": {
+              "type": "string"
+            },
+            "2": {
+              "type": "string"
+            },
+            "3": {
+              "type": "string"
+            },
+            "4": {
+              "type": "string"
+            }
+          }
+        },
+        "bodyColor": {
+          "type": "string"
+        },
+        "quoteColor": {
+          "type": "string"
+        },
+        "tableHeaderColor": {
+          "type": "string"
+        },
+        "tableHeaderBold": {
+          "type": "boolean"
+        }
+      }
+    },
+    "GongmunPreset": {
+      "type": "string",
+      "enum": [
+        "official",
+        "report",
+        "plan",
+        "notice",
+        "minutes",
+        "gaejosik",
+        "press",
+        "ministry",
+        "bangchim"
+      ]
+    },
+    "GongmunPresetInput": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/GongmunPreset"
+        },
+        {
+          "const": "기안문"
+        },
+        {
+          "const": "시행문"
+        },
+        {
+          "const": "공문"
+        },
+        {
+          "const": "공문서"
+        },
+        {
+          "const": "보고서"
+        },
+        {
+          "const": "계획서"
+        },
+        {
+          "const": "계획"
+        },
+        {
+          "const": "통지"
+        },
+        {
+          "const": "알림"
+        },
+        {
+          "const": "안내"
+        },
+        {
+          "const": "회의록"
+        },
+        {
+          "const": "개조식"
+        },
+        {
+          "const": "개조식보고서"
+        },
+        {
+          "const": "정부보고서"
+        },
+        {
+          "const": "정부표준개조식보고서"
+        },
+        {
+          "const": "보도자료"
+        },
+        {
+          "const": "업무보고"
+        },
+        {
+          "const": "부처업무보고"
+        },
+        {
+          "const": "중앙부처보고서"
+        },
+        {
+          "const": "서울방침"
+        },
+        {
+          "const": "방침서"
+        },
+        {
+          "const": "방침"
+        }
+      ]
+    },
+    "GongmunFont": {
+      "type": "string",
+      "enum": [
+        "myeongjo",
+        "gothic"
+      ]
+    },
+    "GongmunNumbering": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "report",
+        "gaejosik"
+      ]
+    },
+    "GaejosikSizeOverrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dae": {
+          "type": "number"
+        },
+        "cham": {
+          "type": "number"
+        },
+        "chapter": {
+          "type": "number"
+        },
+        "coverTitle": {
+          "type": "number"
+        },
+        "coverSub": {
+          "type": "number"
+        },
+        "tocLabel": {
+          "type": "number"
+        },
+        "tocRoman": {
+          "type": "number"
+        },
+        "tocItem": {
+          "type": "number"
+        },
+        "table": {
+          "type": "number"
+        },
+        "bodyTitle": {
+          "type": "number"
+        }
+      }
+    },
+    "GongmunLevelStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "font": {
+          "type": "string"
+        },
+        "pt": {
+          "type": "number"
+        },
+        "bold": {
+          "type": "boolean"
+        }
+      }
+    },
+    "GongmunOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preset": {
+          "$ref": "#/$defs/GongmunPresetInput"
+        },
+        "bodyFont": {
+          "$ref": "#/$defs/GongmunFont"
+        },
+        "bodyPt": {
+          "type": "number"
+        },
+        "lineSpacing": {
+          "type": "number"
+        },
+        "numbering": {
+          "$ref": "#/$defs/GongmunNumbering"
+        },
+        "cover": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "org": {
+                  "type": "string"
+                },
+                "dept": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "toc": {
+          "type": "boolean"
+        },
+        "margins": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "top": {
+              "type": "number"
+            },
+            "bottom": {
+              "type": "number"
+            },
+            "left": {
+              "type": "number"
+            },
+            "right": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+          ]
+        },
+        "centerTitle": {
+          "type": "boolean"
+        },
+        "autoFit": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "minRatio": {
+                  "type": "number"
+                }
+              }
+            }
+          ]
+        },
+        "fonts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "heading": {
+              "type": "string"
+            },
+            "ref": {
+              "type": "string"
+            },
+            "table": {
+              "type": "string"
+            }
+          }
+        },
+        "sizes": {
+          "$ref": "#/$defs/GaejosikSizeOverrides"
+        },
+        "levels": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/GongmunLevelStyle"
+          }
+        },
+        "pageNumbers": {
+          "type": "boolean"
+        },
+        "endMark": {
+          "type": "boolean"
+        },
+        "approval": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bodyTitleBox": {
+          "type": "boolean"
+        },
+        "chapterFit": {
+          "type": "boolean"
+        },
+        "h2Marker": {
+          "type": "string",
+          "enum": [
+            "band",
+            "roman",
+            "box",
+            "number",
+            "none",
+            "square"
+          ]
+        },
+        "bandColor": {
+          "type": "string"
+        },
+        "bandTextColor": {
+          "type": "string"
+        },
+        "bullet2": {
+          "type": "string",
+          "enum": [
+            "ㅇ",
+            "○"
+          ]
+        },
+        "suppressSingle": {
+          "type": "boolean"
+        },
+        "docHead": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "org": {
+              "type": "string"
+            },
+            "slogan": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            },
+            "via": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        "docFoot": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sender": {
+              "type": "string"
+            },
+            "drafter": {
+              "type": "string"
+            },
+            "reviewer": {
+              "type": "string"
+            },
+            "approver": {
+              "type": "string"
+            },
+            "approvers": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cooperator": {
+              "type": "string"
+            },
+            "recipients": {
+              "type": "string"
+            },
+            "docNum": {
+              "type": "string"
+            },
+            "receive": {
+              "type": "string"
+            },
+            "zip": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "site": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "fax": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "disclosure": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": {
+          "type": "string"
+        },
+        "docInfo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "docNum": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            },
+            "disclosure": {
+              "type": "string"
+            },
+            "policyNo": {
+              "type": "string"
+            }
+          }
+        },
+        "checklist": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "na": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "notes": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "reportInfo": {
+          "type": "string"
+        },
+        "noticeHead": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "no": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            },
+            "sender": {
+              "type": "string"
+            }
+          }
+        },
+        "press": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "release": {
+              "type": "string"
+            },
+            "distribute": {
+              "type": "string"
+            },
+            "sub": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "contact": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "dept": {
+                  "type": "string"
+                },
+                "manager": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "CellProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "row": {
+          "type": "number"
+        },
+        "col": {
+          "type": "number"
+        },
+        "rowSpan": {
+          "type": "number"
+        },
+        "colSpan": {
+          "type": "number"
+        },
+        "width_hwpunit": {
+          "type": "string"
+        },
+        "height_hwpunit": {
+          "type": "string"
+        },
+        "borderFillIDRef": {
+          "type": "string"
+        },
+        "charPrIDRef": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "row",
+        "col"
+      ]
+    },
+    "BorderDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "width": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "width",
+        "color"
+      ]
+    },
+    "BorderFillDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "leftBorder": {
+          "$ref": "#/$defs/BorderDef"
+        },
+        "rightBorder": {
+          "$ref": "#/$defs/BorderDef"
+        },
+        "topBorder": {
+          "$ref": "#/$defs/BorderDef"
+        },
+        "bottomBorder": {
+          "$ref": "#/$defs/BorderDef"
+        },
+        "fill": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "faceColor": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "faceColor"
+          ]
+        }
+      }
+    },
+    "CharPrDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "height_hwpunit": {
+          "type": "string"
+        },
+        "textColor": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "underline": {
+          "type": "boolean"
+        },
+        "fontRef_hangul": {
+          "type": "string"
+        },
+        "fontName_hangul": {
+          "type": "string"
+        }
+      }
+    },
+    "TableProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "table_index": {
+          "type": "number"
+        },
+        "rows": {
+          "type": "number"
+        },
+        "cols": {
+          "type": "number"
+        },
+        "anchor_text": {
+          "type": "string"
+        },
+        "anchor_row": {
+          "type": "string"
+        },
+        "width_hwpunit": {
+          "type": "string"
+        },
+        "col_widths_hwpunit": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellProfile"
+          }
+        },
+        "used_border_fills": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/BorderFillDef"
+          }
+        },
+        "used_char_prs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/CharPrDef"
+          }
+        }
+      },
+      "required": [
+        "table_index",
+        "rows",
+        "cols",
+        "cells",
+        "used_border_fills"
+      ]
+    },
+    "FormatProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "string"
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TableProfile"
+          }
+        }
+      },
+      "required": [
+        "tables"
+      ]
+    },
+    "PageOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "size": {
+          "oneOf": [
+            {
+              "const": "A4"
+            },
+            {
+              "const": "A3"
+            },
+            {
+              "const": "B4"
+            },
+            {
+              "const": "B5"
+            },
+            {
+              "const": "Letter"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "widthMm": {
+                  "type": "number"
+                },
+                "heightMm": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "widthMm",
+                "heightMm"
+              ]
+            }
+          ]
+        },
+        "orientation": {
+          "type": "string",
+          "enum": [
+            "portrait",
+            "landscape"
+          ]
+        },
+        "columns": {
+          "type": "number"
+        },
+        "header": {
+          "type": "string"
+        },
+        "footer": {
+          "type": "string"
+        }
+      }
+    },
+    "MarkdownToHwpxOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "theme": {
+          "$ref": "#/$defs/HwpxTheme"
+        },
+        "gongmun": {
+          "$ref": "#/$defs/GongmunOptions"
+        },
+        "profile": {
+          "$ref": "#/$defs/FormatProfile"
+        },
+        "page": {
+          "$ref": "#/$defs/PageOptions"
+        },
+        "images": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "x-typescript-input-types": [
+              "Uint8Array",
+              "ArrayBuffer"
+            ],
+            "x-python-translation": "bytes"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "GongmunLintFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "type": "number"
+        },
+        "match": {
+          "type": "string"
+        },
+        "rule": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "suggest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "line",
+        "match",
+        "rule",
+        "severity",
+        "message"
+      ]
+    },
+    "MuncheLineKind": {
+      "type": "string",
+      "enum": [
+        "dae",
+        "item",
+        "sub",
+        "concl",
+        "lead",
+        "note",
+        "para"
+      ]
+    },
+    "MuncheLintFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "type": "number"
+        },
+        "match": {
+          "type": "string"
+        },
+        "rule": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning"
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/MuncheLineKind"
+        },
+        "message": {
+          "type": "string"
+        },
+        "suggest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "line",
+        "match",
+        "rule",
+        "severity",
+        "kind",
+        "message"
+      ]
+    },
+    "FaceClass": {
+      "oneOf": [
+        {
+          "const": "hcr"
+        },
+        {
+          "const": "fixedPitch"
+        },
+        {
+          "const": "gothic"
+        },
+        {
+          "type": "string",
+          "pattern": "^font:"
+        }
+      ]
+    },
+    "MeasureOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "spaceEm": {
+          "type": "number"
+        },
+        "spacingPct": {
+          "type": "number"
+        },
+        "faceClass": {
+          "$ref": "#/$defs/FaceClass"
+        }
+      }
+    },
+    "WrapResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lines": {
+          "type": "number"
+        },
+        "starts": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "lastLineWidth": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "lines",
+        "starts",
+        "lastLineWidth"
+      ]
+    },
+    "WrapMode": {
+      "type": "string",
+      "enum": [
+        "keep",
+        "charAll"
+      ]
+    },
+    "PatchSkip": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "type": "string"
+        },
+        "before": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        },
+        "partial": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "reason"
+      ]
+    },
+    "DiffChangeType": {
+      "type": "string",
+      "enum": [
+        "added",
+        "removed",
+        "modified",
+        "unchanged"
+      ]
+    },
+    "CellDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/DiffChangeType"
+        },
+        "before": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "BlockDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/DiffChangeType"
+        },
+        "before": {
+          "$ref": "#/$defs/IRBlock"
+        },
+        "after": {
+          "$ref": "#/$defs/IRBlock"
+        },
+        "cellDiffs": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CellDiff"
+            }
+          }
+        },
+        "similarity": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "DiffResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stats": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "added": {
+              "type": "number"
+            },
+            "removed": {
+              "type": "number"
+            },
+            "modified": {
+              "type": "number"
+            },
+            "unchanged": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "added",
+            "removed",
+            "modified",
+            "unchanged"
+          ]
+        },
+        "diffs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockDiff"
+          }
+        }
+      },
+      "required": [
+        "stats",
+        "diffs"
+      ]
+    },
+    "PatchResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-typescript-type": "Uint8Array",
+          "x-python-translation": "bytes"
+        },
+        "applied": {
+          "type": "number"
+        },
+        "skipped": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PatchSkip"
+          }
+        },
+        "verification": {
+          "$ref": "#/$defs/DiffResult"
+        },
+        "changes": {
+          "$ref": "#/$defs/DiffResult"
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "success",
+        "applied",
+        "skipped"
+      ]
+    },
+    "PatchOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "verify": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ValidateIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ]
+    },
+    "ValidateResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ValidateIssue"
+          }
+        },
+        "entryCount": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "ok",
+        "issues",
+        "entryCount"
+      ]
+    },
+    "RedactRule": {
+      "type": "string",
+      "enum": [
+        "rrn",
+        "phone",
+        "email",
+        "card",
+        "account",
+        "passport",
+        "driver",
+        "brn",
+        "crn",
+        "ip",
+        "name",
+        "address"
+      ]
+    },
+    "RedactHit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rule": {
+          "$ref": "#/$defs/RedactRule"
+        },
+        "masked": {
+          "type": "string"
+        },
+        "index": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule",
+        "masked",
+        "index",
+        "length"
+      ]
+    },
+    "RedactTextResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "hits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RedactHit"
+          }
+        }
+      },
+      "required": [
+        "text",
+        "hits"
+      ]
+    },
+    "RedactOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RedactRule"
+          }
+        },
+        "maskChar": {
+          "type": "string"
+        }
+      }
+    },
+    "DocChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "text",
+            "table",
+            "heading"
+          ]
+        },
+        "breadcrumb": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "text": {
+          "type": "string"
+        },
+        "page": {
+          "type": "number"
+        },
+        "blockRange": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "table": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rows": {
+              "type": "number"
+            },
+            "cols": {
+              "type": "number"
+            },
+            "cells": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": [
+            "rows",
+            "cols"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "breadcrumb",
+        "text",
+        "blockRange"
+      ]
+    },
+    "ChunkOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "includeTableCells": {
+          "type": "boolean"
+        },
+        "granularity": {
+          "type": "string",
+          "enum": [
+            "block",
+            "section"
+          ]
+        }
+      }
+    },
+    "BlockEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blockIndex": {
+          "type": "number"
+        },
+        "newText": {
+          "type": "string"
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "row": {
+                "type": "number"
+              },
+              "col": {
+                "type": "number"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "row",
+              "col",
+              "text"
+            ]
+          }
+        }
+      },
+      "required": [
+        "blockIndex"
+      ]
+    },
+    "BlockCapability": {
+      "type": "string",
+      "enum": [
+        "text",
+        "cell-text",
+        "locked"
+      ]
+    },
+    "CellCapability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "editable": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "editable"
+      ]
+    },
+    "BlockCapabilityInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capability": {
+          "$ref": "#/$defs/BlockCapability"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CellCapability"
+            }
+          }
+        }
+      },
+      "required": [
+        "capability"
+      ]
+    },
+    "BlockSourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "paragraph",
+            "table"
+          ]
+        },
+        "sectionIndex": {
+          "type": "number"
+        },
+        "xmlStart": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "sectionIndex",
+        "xmlStart"
+      ]
+    },
+    "ScanParaKind": {
+      "type": "string",
+      "enum": [
+        "body",
+        "cell",
+        "draw",
+        "excluded"
+      ]
+    },
+    "TRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contentStart": {
+          "type": "number"
+        },
+        "contentEnd": {
+          "type": "number"
+        },
+        "selfClosing": {
+          "type": "boolean"
+        },
+        "prefix": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "contentStart",
+        "contentEnd"
+      ]
+    },
+    "ScanParagraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sectionIndex": {
+          "type": "number"
+        },
+        "kind": {
+          "$ref": "#/$defs/ScanParaKind"
+        },
+        "start": {
+          "type": "number"
+        },
+        "tRanges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TRange"
+          }
+        },
+        "text": {
+          "type": "string"
+        },
+        "runInsertPos": {
+          "type": "number"
+        },
+        "runPrefix": {
+          "type": "string"
+        },
+        "selfCloseRun": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": {
+              "type": "number"
+            },
+            "end": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "start",
+            "end"
+          ]
+        },
+        "inTextbox": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sectionIndex",
+        "kind",
+        "start",
+        "tRanges",
+        "text"
+      ]
+    },
+    "ScanCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rowAddr": {
+          "type": "number"
+        },
+        "colAddr": {
+          "type": "number"
+        },
+        "colSpan": {
+          "type": "number"
+        },
+        "rowSpan": {
+          "type": "number"
+        },
+        "paragraphs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScanParagraph"
+          }
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScanTable"
+          }
+        },
+        "addrTagRange": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": {
+              "type": "number"
+            },
+            "end": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "start",
+            "end"
+          ]
+        }
+      },
+      "required": [
+        "colSpan",
+        "rowSpan",
+        "paragraphs",
+        "tables"
+      ]
+    },
+    "ScanTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sectionIndex": {
+          "type": "number"
+        },
+        "start": {
+          "type": "number"
+        },
+        "topLevel": {
+          "type": "boolean"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/ScanCell"
+            }
+          }
+        },
+        "rowRanges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "start": {
+                "type": "number"
+              },
+              "end": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ]
+          }
+        },
+        "cellByAnchor": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ScanCell"
+          },
+          "x-typescript-type": "Map<string, ScanCell>",
+          "x-python-translation": "dict[str, ScanCell]"
+        }
+      },
+      "required": [
+        "sectionIndex",
+        "start",
+        "topLevel",
+        "rows",
+        "rowRanges",
+        "cellByAnchor"
+      ]
+    },
+    "SectionScan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sectionIndex": {
+          "type": "number"
+        },
+        "xml": {
+          "type": "string"
+        },
+        "bodyParagraphs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScanParagraph"
+          }
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScanTable"
+          }
+        },
+        "headerTexts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "footerTexts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludedParagraphs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScanParagraph"
+          }
+        },
+        "orphanTables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScanTable"
+          }
+        }
+      },
+      "required": [
+        "sectionIndex",
+        "xml",
+        "bodyParagraphs",
+        "tables",
+        "headerTexts",
+        "footerTexts",
+        "excludedParagraphs",
+        "orphanTables"
+      ]
+    },
+    "SpliceEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "number"
+        },
+        "end": {
+          "type": "number"
+        },
+        "replacement": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "replacement"
+      ]
+    },
+    "PrintPreset": {
+      "type": "string",
+      "enum": [
+        "default",
+        "gov-formal",
+        "compact"
+      ]
+    },
+    "PageMargin": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "top": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "right": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "bottom": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "left": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "required": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ]
+    },
+    "PrintOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preset": {
+          "$ref": "#/$defs/PrintPreset"
+        },
+        "pageSize": {
+          "type": "string",
+          "enum": [
+            "A4",
+            "Letter"
+          ]
+        },
+        "orientation": {
+          "type": "string",
+          "enum": [
+            "portrait",
+            "landscape"
+          ]
+        },
+        "margin": {
+          "$ref": "#/$defs/PageMargin"
+        },
+        "header": {
+          "type": "string"
+        },
+        "footer": {
+          "type": "string"
+        },
+        "watermark": {
+          "type": "string"
+        },
+        "extraCss": {
+          "type": "string"
+        }
+      }
+    },
+    "ClassifyContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nearbyText": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TableRepresentation": {
+      "type": "string",
+      "enum": [
+        "gfm",
+        "html",
+        "visual"
+      ]
+    },
+    "TableVisualPolicy": {
+      "type": "string",
+      "enum": [
+        "none",
+        "non-tabular",
+        "non-tabular-and-uncertain",
+        "all"
+      ]
+    },
+    "ExtractTableVisualOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "$ref": "#/$defs/TableVisualPolicy"
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "png",
+            "jpeg"
+          ]
+        },
+        "paddingPt": {
+          "type": "number"
+        },
+        "maxWidthPx": {
+          "type": "number"
+        }
+      }
+    },
+    "PageBBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page": {
+          "type": "number"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "page",
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "ExtractedTableCrop": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page": {
+          "type": "number"
+        },
+        "bbox": {
+          "$ref": "#/$defs/PageBBox"
+        },
+        "mimeType": {
+          "type": "string",
+          "enum": [
+            "image/png",
+            "image/jpeg"
+          ]
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-typescript-type": "Buffer",
+          "x-python-translation": "bytes"
+        }
+      },
+      "required": [
+        "page",
+        "bbox",
+        "mimeType",
+        "data"
+      ]
+    },
+    "ExtractedTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "page": {
+          "type": "number"
+        },
+        "table": {
+          "$ref": "#/$defs/IRTable"
+        },
+        "classification": {
+          "$ref": "#/$defs/TableClassificationSummary"
+        },
+        "sourceId": {
+          "type": "string"
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageBBox"
+          }
+        },
+        "crops": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExtractedTableCrop"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "page",
+        "table",
+        "classification",
+        "regions",
+        "crops",
+        "warnings"
+      ]
+    },
+    "RenderSvgOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxImageBytes": {
+          "type": "number"
+        },
+        "highlights": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reflow": {
+          "type": "boolean"
+        },
+        "reflowMode": {
+          "$ref": "#/$defs/WrapMode"
+        }
+      }
+    },
+    "RenderObjectType": {
+      "type": "string",
+      "enum": [
+        "paragraph",
+        "table",
+        "image",
+        "shape",
+        "equation",
+        "unknown"
+      ]
+    },
+    "RenderRegion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/RenderObjectType"
+        },
+        "page": {
+          "type": "number"
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageBBox"
+          }
+        },
+        "sourceId": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "page",
+        "regions"
+      ]
+    },
+    "RenderSvgResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "svg": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "pageCount": {
+          "type": "number"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stats": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "texts": {
+              "type": "number"
+            },
+            "images": {
+              "type": "number"
+            },
+            "tables": {
+              "type": "number"
+            },
+            "shapes": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "texts",
+            "images",
+            "tables",
+            "shapes"
+          ]
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RenderRegion"
+          }
+        }
+      },
+      "required": [
+        "svg",
+        "width",
+        "height",
+        "pageCount",
+        "warnings",
+        "stats",
+        "regions"
+      ]
+    },
+    "RenderSourceFormat": {
+      "type": "string",
+      "enum": [
+        "hwpx",
+        "hwp"
+      ]
+    },
+    "ScenePage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "page",
+        "width",
+        "height"
+      ]
+    },
+    "RenderScene": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/RenderSourceFormat"
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScenePage"
+          }
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RenderRegion"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stats": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "texts": {
+              "type": "number"
+            },
+            "tables": {
+              "type": "number"
+            },
+            "images": {
+              "type": "number"
+            },
+            "shapes": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "texts",
+            "tables",
+            "images",
+            "shapes"
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "pages",
+        "regions",
+        "warnings",
+        "stats"
+      ]
+    },
+    "RenderFormat": {
+      "type": "string",
+      "enum": [
+        "svg",
+        "html",
+        "png",
+        "jpeg",
+        "pdf"
+      ]
+    },
+    "RenderDocumentOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pages": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "reflow": {
+          "type": "boolean"
+        },
+        "password": {
+          "type": "string"
+        },
+        "reflowMode": {
+          "$ref": "#/$defs/WrapMode"
+        },
+        "highlights": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "maxImageBytes": {
+          "type": "number"
+        },
+        "format": {
+          "$ref": "#/$defs/RenderFormat"
+        },
+        "maxWidthPx": {
+          "type": "number"
+        },
+        "quality": {
+          "type": "number"
+        },
+        "browserExecutablePath": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "format"
+      ]
+    },
+    "RenderAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/RenderFormat"
+        },
+        "page": {
+          "type": "number"
+        },
+        "data": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "x-typescript-type": "Buffer",
+              "x-python-translation": "bytes"
+            }
+          ]
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "scale": {
+          "type": "number"
+        },
+        "mimeType": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "format",
+        "data"
+      ]
+    },
+    "RenderDocumentResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scene": {
+          "$ref": "#/$defs/RenderScene"
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RenderAsset"
+          }
+        }
+      },
+      "required": [
+        "scene",
+        "assets"
+      ]
+    },
+    "SceneRenderOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pages": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "reflow": {
+          "type": "boolean"
+        },
+        "password": {
+          "type": "string"
+        },
+        "reflowMode": {
+          "$ref": "#/$defs/WrapMode"
+        },
+        "highlights": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "maxImageBytes": {
+          "type": "number"
+        }
+      }
+    },
+    "SceneRenderResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scene": {
+          "$ref": "#/$defs/RenderScene"
+        },
+        "pageSvgs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-typescript-type": "Map<number, string>",
+          "x-python-translation": "dict[int, str]; JSON object keys are decimal strings"
+        }
+      },
+      "required": [
+        "scene",
+        "pageSvgs"
+      ]
+    },
+    "RasterFormat": {
+      "type": "string",
+      "enum": [
+        "png",
+        "jpeg"
+      ]
+    },
+    "ExtractRegionOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pages": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "reflow": {
+          "type": "boolean"
+        },
+        "reflowMode": {
+          "$ref": "#/$defs/WrapMode"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RenderObjectType"
+          }
+        },
+        "format": {
+          "$ref": "#/$defs/RasterFormat"
+        },
+        "paddingPt": {
+          "type": "number"
+        },
+        "maxWidthPx": {
+          "type": "number"
+        },
+        "quality": {
+          "type": "number"
+        },
+        "filter": {
+          "not": {},
+          "x-typescript-callable": true,
+          "x-python-translation": "callable (region: RenderRegion) => boolean"
+        }
+      },
+      "x-python-callable-fields": [
+        "filter"
+      ],
+      "x-python-translation": {
+        "filter": "callable accepting RenderRegion and returning bool"
+      }
+    },
+    "RegionAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "region": {
+          "$ref": "#/$defs/RenderRegion"
+        },
+        "page": {
+          "type": "number"
+        },
+        "bbox": {
+          "$ref": "#/$defs/PageBBox"
+        },
+        "mimeType": {
+          "type": "string",
+          "enum": [
+            "image/png",
+            "image/jpeg"
+          ]
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-typescript-type": "Buffer",
+          "x-python-translation": "bytes"
+        },
+        "widthPx": {
+          "type": "number"
+        },
+        "heightPx": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "region",
+        "page",
+        "bbox",
+        "mimeType",
+        "data",
+        "widthPx",
+        "heightPx"
+      ]
+    },
+    "FileType": {
+      "type": "string",
+      "enum": [
+        "hwpx",
+        "hwp",
+        "hwp3",
+        "hwpml",
+        "pdf",
+        "xlsx",
+        "xls",
+        "docx",
+        "pptx",
+        "image",
+        "unknown"
+      ]
+    },
+    "DocumentMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "modifiedAt": {
+          "type": "string"
+        },
+        "pageCount": {
+          "type": "number"
+        },
+        "pageMode": {
+          "type": "string",
+          "enum": [
+            "layout",
+            "section"
+          ]
+        },
+        "version": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "OutlineItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        },
+        "pageNumber": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "level",
+        "text"
+      ]
+    },
+    "WarningCode": {
+      "type": "string",
+      "enum": [
+        "SKIPPED_IMAGE",
+        "SKIPPED_OLE",
+        "TRUNCATED_TABLE",
+        "OCR_FALLBACK",
+        "UNSUPPORTED_ELEMENT",
+        "BROKEN_ZIP_RECOVERY",
+        "HIDDEN_TEXT_FILTERED",
+        "MALFORMED_XML",
+        "PARTIAL_PARSE",
+        "LENIENT_CFB_RECOVERY",
+        "NEEDS_OCR",
+        "OCR_FAILED",
+        "OCR_APPLIED",
+        "OCR_LOW_CONF",
+        "COM_EMPTY",
+        "DRM_COM_FALLBACK",
+        "PAGE_BOUNDARY_APPROXIMATE"
+      ]
+    },
+    "ParseWarning": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page": {
+          "type": "number"
+        },
+        "message": {
+          "type": "string"
+        },
+        "code": {
+          "$ref": "#/$defs/WarningCode"
+        }
+      },
+      "required": [
+        "message",
+        "code"
+      ]
+    },
+    "ExtractedImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filename": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-typescript-type": "Uint8Array",
+          "x-python-translation": "bytes"
+        },
+        "mimeType": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "filename",
+        "data",
+        "mimeType"
+      ]
+    },
+    "PageMarkdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pageNumber": {
+          "type": "number"
+        },
+        "markdown": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pageNumber",
+        "markdown"
+      ]
+    },
+    "PageQuality": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page": {
+          "type": "number"
+        },
+        "textChars": {
+          "type": "number"
+        },
+        "hangulRatio": {
+          "type": "number"
+        },
+        "controlCharRatio": {
+          "type": "number"
+        },
+        "replacementCharRatio": {
+          "type": "number"
+        },
+        "puaRatio": {
+          "type": "number"
+        },
+        "needsOcr": {
+          "type": "boolean"
+        },
+        "ocrReason": {
+          "type": "string",
+          "enum": [
+            "vector_text",
+            "low_text",
+            "high_pua",
+            "high_control",
+            "high_replacement",
+            "garbled_hangul"
+          ]
+        }
+      },
+      "required": [
+        "page",
+        "textChars",
+        "hangulRatio",
+        "controlCharRatio",
+        "replacementCharRatio",
+        "puaRatio",
+        "needsOcr"
+      ]
+    },
+    "DocumentQualitySummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "totalPages": {
+          "type": "number"
+        },
+        "totalTextChars": {
+          "type": "number"
+        },
+        "avgHangulRatio": {
+          "type": "number"
+        },
+        "avgControlCharRatio": {
+          "type": "number"
+        },
+        "avgReplacementCharRatio": {
+          "type": "number"
+        },
+        "avgPuaRatio": {
+          "type": "number"
+        },
+        "lowTextPageCount": {
+          "type": "number"
+        },
+        "highPuaPageCount": {
+          "type": "number"
+        },
+        "needsOcr": {
+          "type": "boolean"
+        },
+        "ocrCandidatePages": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      },
+      "required": [
+        "totalPages",
+        "totalTextChars",
+        "avgHangulRatio",
+        "avgControlCharRatio",
+        "avgReplacementCharRatio",
+        "avgPuaRatio",
+        "lowTextPageCount",
+        "highPuaPageCount",
+        "needsOcr",
+        "ocrCandidatePages"
+      ]
+    },
+    "ParseSuccess": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fileType": {
+          "$ref": "#/$defs/FileType"
+        },
+        "pageCount": {
+          "type": "number"
+        },
+        "isImageBased": {
+          "type": "boolean"
+        },
+        "success": {
+          "const": true
+        },
+        "markdown": {
+          "type": "string"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IRBlock"
+          }
+        },
+        "metadata": {
+          "$ref": "#/$defs/DocumentMetadata"
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OutlineItem"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ParseWarning"
+          }
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExtractedImage"
+          }
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageMarkdown"
+          }
+        },
+        "pageQuality": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageQuality"
+          }
+        },
+        "qualitySummary": {
+          "$ref": "#/$defs/DocumentQualitySummary"
+        }
+      },
+      "required": [
+        "fileType",
+        "success",
+        "markdown",
+        "blocks"
+      ]
+    },
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "EMPTY_INPUT",
+        "UNSUPPORTED_FORMAT",
+        "ENCRYPTED",
+        "DRM_PROTECTED",
+        "CORRUPTED",
+        "DECOMPRESSION_BOMB",
+        "ZIP_BOMB",
+        "IMAGE_BASED_PDF",
+        "NO_SECTIONS",
+        "PARSE_ERROR",
+        "MISSING_DEPENDENCY",
+        "OUTPUT_TOO_LARGE",
+        "FILE_NOT_FOUND"
+      ]
+    },
+    "ParseFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fileType": {
+          "$ref": "#/$defs/FileType"
+        },
+        "pageCount": {
+          "type": "number"
+        },
+        "isImageBased": {
+          "type": "boolean"
+        },
+        "success": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "$ref": "#/$defs/ErrorCode"
+        }
+      },
+      "required": [
+        "fileType",
+        "success",
+        "error"
+      ]
+    },
+    "ParseResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ParseSuccess"
+        },
+        {
+          "$ref": "#/$defs/ParseFailure"
+        }
+      ]
+    },
+    "CellContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "colSpan": {
+          "type": "number"
+        },
+        "rowSpan": {
+          "type": "number"
+        },
+        "colAddr": {
+          "type": "number"
+        },
+        "rowAddr": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "text",
+        "colSpan",
+        "rowSpan"
+      ]
+    },
+    "OcrProvider": {
+      "not": {},
+      "x-typescript-callable": true,
+      "x-typescript-signature": {
+        "parameters": [
+          {
+            "name": "pageImage",
+            "type": "Uint8Array"
+          },
+          {
+            "name": "pageNumber",
+            "type": "number"
+          },
+          {
+            "name": "mimeType",
+            "type": "string",
+            "enum": [
+              "image/png",
+              "image/jpeg",
+              "image/webp"
+            ]
+          }
+        ],
+        "returns": "Promise<string>"
+      },
+      "x-python-translation": "Callable[[bytes, int, Literal['image/png', 'image/jpeg', 'image/webp']], Awaitable[str]]"
+    },
+    "ParseOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pages": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "ocr": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "force"
+            }
+          ],
+          "x-python-callable-adapter": true
+        },
+        "onProgress": {
+          "not": {},
+          "x-typescript-callable": true,
+          "x-python-translation": "callable (current, total)"
+        },
+        "removeHeaderFooter": {
+          "type": "boolean"
+        },
+        "scriptTags": {
+          "type": "boolean"
+        },
+        "plain": {
+          "type": "boolean"
+        },
+        "htmlTables": {
+          "type": "boolean"
+        },
+        "keepTrailingEmptyCols": {
+          "type": "boolean"
+        },
+        "classifyTables": {
+          "type": "boolean"
+        },
+        "keepEmptyParagraphs": {
+          "type": "boolean"
+        },
+        "includeFieldPlaceholders": {
+          "type": "boolean"
+        },
+        "password": {
+          "type": "string"
+        },
+        "formulaOcr": {
+          "type": "boolean"
+        },
+        "dedupeRunningHeaders": {
+          "type": "boolean"
+        },
+        "inlineImages": {
+          "type": "boolean"
+        },
+        "images": {
+          "type": "boolean"
+        },
+        "tables": {
+          "type": "boolean"
+        }
+      },
+      "x-internal-fields": [
+        "filePath"
+      ],
+      "x-node-only-fields": [
+        "filePath"
+      ],
+      "x-python-callable-fields": [
+        "onProgress",
+        "ocr"
+      ],
+      "x-python-translation": {
+        "onProgress": "callable (current, total)",
+        "ocr": "callable adapted to OcrProvider"
+      }
+    },
+    "FormResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormField"
+          }
+        },
+        "confidence": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "fields",
+        "confidence"
+      ]
+    },
+    "WatchOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dir": {
+          "type": "string"
+        },
+        "outDir": {
+          "type": "string"
+        },
+        "webhook": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "markdown",
+            "json"
+          ]
+        },
+        "pages": {
+          "type": "string"
+        },
+        "silent": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "dir"
+      ]
+    }
+  }
+}
