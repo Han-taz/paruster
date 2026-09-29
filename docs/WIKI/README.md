@@ -30,3 +30,4 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 - [`2026/09/2026-09-30-parser-seam-merge.md`](2026/09/2026-09-30-parser-seam-merge.md)
 - [`2026/09/2026-09-30-ir-projections.md`](2026/09/2026-09-30-ir-projections.md)
 - [`2026/09/2026-09-30-ir-projections-merge.md`](2026/09/2026-09-30-ir-projections-merge.md)
+- [`2026/09/2026-09-30-parser-wave-planning.md`](2026/09/2026-09-30-parser-wave-planning.md)
