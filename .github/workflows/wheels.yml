@@ -1,0 +1,108 @@
+name: Native wheels
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wheels-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wheels:
+    name: wheel (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            oldest: "3.10"
+            manylinux: 2_28
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            oldest: "3.10"
+            manylinux: 2_28
+          - runner: windows-2025
+            target: x86_64-pc-windows-msvc
+            oldest: "3.10"
+            manylinux: "off"
+          - runner: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            oldest: ""
+            manylinux: "off"
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+            oldest: "3.10"
+            manylinux: "off"
+          - runner: macos-15
+            target: aarch64-apple-darwin
+            oldest: "3.10"
+            manylinux: "off"
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          command: build
+          maturin-version: v1.15.0
+          target: ${{ matrix.target }}
+          args: --release --locked --out dist
+          manylinux: ${{ matrix.manylinux }}
+      - name: Audit abi3 wheel tag
+        shell: bash
+        run: test "$(find dist -maxdepth 1 -name '*cp310-abi3*.whl' | wc -l | tr -d ' ')" = 1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        if: ${{ matrix.oldest != '' }}
+        with:
+          python-version: ${{ matrix.oldest }}
+      - name: Smoke-test oldest native CPython in a clean environment
+        if: ${{ matrix.oldest != '' }}
+        shell: bash
+        run: >-
+          python -c "import pathlib, subprocess, sys, venv;
+          venv.create('.venv-old', with_pip=True);
+          exe=pathlib.Path('.venv-old') / ('Scripts/python.exe' if sys.platform == 'win32' else 'bin/python');
+          wheel=str(next(pathlib.Path('dist').glob('*.whl')));
+          subprocess.check_call([str(exe), '-m', 'pip', 'install', wheel, 'pytest==8.4.2']);
+          subprocess.check_call([str(exe), '-c', 'import kordoc; assert kordoc.detect_format(bytes.fromhex(\"255044462d\")) == \"pdf\"']);
+          subprocess.check_call([str(exe), '-m', 'pytest', 'tests/python/test_import.py', 'tests/python/test_error_mapping.py', 'tests/parity/test_golden.py', '-q'])"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+      - name: Smoke-test newest supported CPython in a clean environment
+        shell: bash
+        run: >-
+          python -c "import pathlib, subprocess, sys, venv;
+          venv.create('.venv-new', with_pip=True);
+          exe=pathlib.Path('.venv-new') / ('Scripts/python.exe' if sys.platform == 'win32' else 'bin/python');
+          wheel=str(next(pathlib.Path('dist').glob('*.whl')));
+          subprocess.check_call([str(exe), '-m', 'pip', 'install', wheel, 'pytest==8.4.2']);
+          subprocess.check_call([str(exe), '-c', 'import kordoc; assert kordoc.detect_format(bytes.fromhex(\"255044462d\")) == \"pdf\"']);
+          subprocess.check_call([str(exe), '-m', 'pytest', 'tests/python/test_import.py', 'tests/python/test_error_mapping.py', 'tests/parity/test_golden.py', '-q'])"
+      - name: Reject forbidden artifact contents
+        shell: bash
+        run: python scripts/check_artifacts.py dist/*.whl
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: wheel-${{ matrix.target }}-${{ github.sha }}
+          path: dist/*.whl
+          if-no-files-found: error
+
+  wheels-gate:
+    if: ${{ always() }}
+    needs: [wheels]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every wheel dependency to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: jq -e 'all(.[]; .result == "success")' <<< "$RESULTS"
