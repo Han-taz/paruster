@@ -6,7 +6,6 @@ from pathlib import Path
 import kordoc
 from kordoc._errors import typed_error_from_native
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 

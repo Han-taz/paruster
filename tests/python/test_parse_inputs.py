@@ -1,16 +1,15 @@
 from __future__ import annotations
 
+import os
 from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 
-import pytest
-
 import kordoc
+import pytest
 from kordoc import _native
 from kordoc._api import _normalize_input
 from kordoc._models import TryParseResult
-
 
 PDF = b"%PDF-1.7\n"
 
@@ -48,6 +47,17 @@ def test_detect_format_accepts_paths(tmp_path: Path) -> None:
     assert kordoc.detect_format(str(path)) == "pdf"
 
 
+def test_detect_format_accepts_bytes_pathlike(tmp_path: Path) -> None:
+    path = tmp_path / "bytes-path.pdf"
+    path.write_bytes(PDF)
+
+    class BytesPath:
+        def __fspath__(self) -> bytes:
+            return os.fsencode(path)
+
+    assert kordoc.detect_format(BytesPath()) == "pdf"
+
+
 def test_detect_and_parse_map_missing_paths_to_typed_file_not_found(
     tmp_path: Path,
 ) -> None:
@@ -55,6 +65,7 @@ def test_detect_and_parse_map_missing_paths_to_typed_file_not_found(
     with pytest.raises(kordoc.InputFileNotFoundError) as detected:
         kordoc.detect_format(missing)
     assert detected.value.code == "FILE_NOT_FOUND"
+    assert str(missing) not in detected.value.message
     with pytest.raises(kordoc.InputFileNotFoundError) as parsed:
         kordoc.parse(missing)
     assert parsed.value.code == "FILE_NOT_FOUND"
@@ -117,6 +128,37 @@ def test_try_parse_result_is_frozen_slotted_and_supports_both_shapes() -> None:
             "error": "empty",
             "markdown": "mixed",
         },
+        {"success": True, "fileType": "nope", "markdown": "", "blocks": []},
+        {
+            "success": True,
+            "fileType": "pdf",
+            "markdown": "",
+            "blocks": [],
+            "pageCount": -1,
+        },
+        {
+            "success": True,
+            "fileType": "pdf",
+            "markdown": "",
+            "blocks": [],
+            "pageCount": True,
+        },
+        {
+            "success": True,
+            "fileType": "pdf",
+            "markdown": "",
+            "blocks": [],
+            "isImageBased": 0,
+        },
+        {
+            "success": True,
+            "fileType": "pdf",
+            "markdown": "",
+            "blocks": [],
+            "metadata": [],
+        },
+        {"success": True, "fileType": "pdf", "markdown": "", "blocks": [None]},
+        {"success": False, "fileType": "unknown", "error": "empty", "code": "NOPE"},
     ]
     for value in invalid_values:
         with pytest.raises((TypeError, ValueError)):
@@ -158,6 +200,20 @@ def test_try_parse_result_covers_success_projection_and_serializes_nested_bytes(
     import json
 
     assert json.loads(json.dumps(data)) == data
+
+
+@pytest.mark.parametrize("nested", [None, object(), {1: "non-string key"}])
+def test_try_parse_result_rejects_non_json_nested_values(nested: object) -> None:
+    result = TryParseResult.from_dict(
+        {
+            "success": True,
+            "fileType": "pdf",
+            "markdown": "",
+            "blocks": [{"type": "image", "imageData": {"data": nested}}],
+        }
+    )
+    with pytest.raises((TypeError, ValueError)):
+        result.to_dict()
 
 
 def test_try_parse_preserves_detected_type_for_unsupported_parser() -> None:
@@ -219,6 +275,8 @@ def test_non_none_options_are_not_silently_ignored() -> None:
         kordoc.try_parse(PDF, options={"pages": "1"})
     with pytest.raises(NotImplementedError):
         kordoc.parse(PDF, options={"pages": "1"})
+    with pytest.raises(NotImplementedError):
+        kordoc.try_parse(PDF, {"pages": "1"})
 
 
 @pytest.mark.parametrize(
@@ -254,6 +312,22 @@ def test_file_like_read_is_bounded_and_stream_is_not_closed() -> None:
     assert not stream.closed
 
 
+def test_file_like_short_reads_are_collected_until_eof() -> None:
+    class ChunkedReader:
+        def __init__(self, data: bytes) -> None:
+            self.data = data
+            self.requests: list[int] = []
+
+        def read(self, size: int = -1) -> bytes:
+            self.requests.append(size)
+            chunk, self.data = self.data[:2], self.data[2:]
+            return chunk
+
+    stream = ChunkedReader(PDF)
+    assert _normalize_input(stream, max_bytes=100) == PDF
+    assert stream.requests == [101, 99, 97, 95, 93, 92]
+
+
 def test_file_like_input_honors_current_position() -> None:
     source = b"ignore%PDF-1.7\n"
     stream = BytesIO(source)
@@ -270,6 +344,25 @@ def test_malicious_file_like_cannot_return_more_than_the_configured_cap() -> Non
 
     with pytest.raises(kordoc.OutputTooLargeError):
         _normalize_input(OversizedReader(), max_bytes=4)
+
+
+def test_file_like_memoryview_uses_nbytes_for_the_cap() -> None:
+    class ViewReader:
+        def __init__(self, content: memoryview) -> None:
+            self.content = content
+            self.consumed = False
+
+        def read(self, size: int = -1) -> memoryview:
+            if self.consumed:
+                return memoryview(b"")
+            self.consumed = True
+            return self.content
+
+    in_limit = memoryview(b"1234").cast("I")
+    assert len(in_limit) == 1 and in_limit.nbytes == 4
+    assert _normalize_input(ViewReader(in_limit), max_bytes=4) == b"1234"
+    with pytest.raises(kordoc.OutputTooLargeError):
+        _normalize_input(ViewReader(memoryview(b"12345678").cast("I")), max_bytes=4)
 
 
 def test_text_stream_is_rejected_without_encoding() -> None:
