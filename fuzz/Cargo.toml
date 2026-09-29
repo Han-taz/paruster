@@ -13,7 +13,7 @@ libfuzzer-sys = "0.4"
 kordoc-core = { path = "../crates/kordoc-core", features = ["fuzzing"] }
 kordoc-ir = { path = "../crates/kordoc-ir" }
 serde = "1.0"
-serde_json = "1.0"
+serde_json = { version = "1.0", features = ["unbounded_depth"] }
 
 [[bin]]
 name = "detect_format"
