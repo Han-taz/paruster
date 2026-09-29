@@ -2,7 +2,7 @@
 
 ## Current policy: candidates only, no publication
 
-The release workflow is triggered only by `workflow_dispatch` and is a non-publishing rebuild and verification of one requested source revision. It has no PyPI publish job or credential. A candidate run does not authorize a release, and no package may be uploaded to an index from this workflow.
+The release workflow is triggered only by `workflow_dispatch` and is a non-publishing rebuild and verification of the current `main` revision. It has no PyPI publish job or credential. A candidate run does not authorize a release, and no package may be uploaded to an index from this workflow.
 
 Release eligibility is blocked until all of the following hold:
 
@@ -16,7 +16,7 @@ These are cumulative gates. The compatibility manifest and MCP status are review
 
 ## Candidate procedure
 
-1. Select a fully tested commit and dispatch the release-candidate workflow with its full 40-character commit SHA in `ref`. The workflow resolves the selected ref once, records the immutable commit, and rebuilds distributions from that checkout rather than selecting artifacts from an earlier run.
+1. Confirm that the fully tested commit is the current `main` commit, select `main`, and dispatch the release-candidate workflow. The workflow rejects dispatches from any other branch, checks out the immutable dispatch-time `github.sha`, records its full 40-character commit SHA, and rebuilds distributions from that checkout rather than accepting an arbitrary revision input or selecting artifacts from an earlier run.
 2. Confirm all candidate builds, artifact scans, clean-install smoke tests, and checksum/SBOM/attestation jobs succeeded. Repeat the entire workflow once more for the same source SHA; both runs must complete successfully and consecutively before release eligibility can be considered.
 3. Retain and review the exact artifacts and evidence bundle by digest. Any rebuild or source change produces a different candidate and restarts the two-run gate.
 

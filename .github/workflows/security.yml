@@ -80,8 +80,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Review pull request dependencies
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.base_ref == github.event.repository.default_branch
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+      - name: Explain dependency-review scope
+        if: github.event_name != 'pull_request' || github.base_ref != github.event.repository.default_branch
+        run: echo "Dependency review only runs for pull requests targeting the default branch."
 
   actionlint:
     runs-on: ubuntu-24.04
@@ -114,12 +117,20 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install zizmor 1.30.1
-        uses: taiki-e/install-action@6c6fd71fe4fb72c3697d269963d0e15df8adedad # v2.85.10
-        with:
-          tool: zizmor@1.30.1
-          checksum: true
-          fallback: none
+      - name: Install zizmor 1.30.1 from checksum-verified release artifact
+        env:
+          ZIZMOR_VERSION: 1.30.1
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/zizmor-x86_64-unknown-linux-gnu.tar.gz"
+          destination="$RUNNER_TEMP/zizmor"
+          curl --fail --location --silent --show-error \
+            "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor-x86_64-unknown-linux-gnu.tar.gz" \
+            --output "$archive"
+          echo "e65324f4430c2717591937edcec90ccbefaf14c174f8ec9415e03ca875b46e1a  $archive" | sha256sum --check --status
+          mkdir -p "$destination"
+          tar --extract --gzip --file "$archive" --directory "$destination" zizmor
+          echo "$destination" >> "$GITHUB_PATH"
       - name: Audit workflows
         run: zizmor .github/workflows
 

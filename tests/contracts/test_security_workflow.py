@@ -50,14 +50,23 @@ def test_security_workflow_and_dependency_policy_are_pinned_and_gated() -> None:
     assert "build-mode: none" in codeql_job
     assert "autobuild" not in codeql_job
     assert not re.search(r"cargo\s+install|curl[^\n]*\|\s*(?:sh|bash)", workflow)
-    assert workflow.count("checksum: true") == 3
-    assert workflow.count("fallback: none") == 3
+    assert workflow.count("checksum: true") == 2
+    assert workflow.count("fallback: none") == 2
     assert "sha256sum --check --status" in workflow
+    assert (
+        "e65324f4430c2717591937edcec90ccbefaf14c174f8ec9415e03ca875b46e1a" in workflow
+    )
 
     dependency_review_job = workflow.split("  dependency-review:", maxsplit=1)[1].split(
         "  actionlint:", maxsplit=1
     )[0]
-    assert "if: github.event_name == 'pull_request'" in dependency_review_job
+    assert "github.base_ref == github.event.repository.default_branch" in (
+        dependency_review_job
+    )
+    assert (
+        "Dependency review only runs for pull requests targeting the default branch"
+        in (dependency_review_job)
+    )
 
     for requirement in (
         "version = 2",

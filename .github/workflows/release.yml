@@ -2,18 +2,12 @@ name: Release candidate
 
 on:
   workflow_dispatch:
-    inputs:
-      ref:
-        description: Commit, tag, or branch to rebuild
-        required: true
-        default: main
-        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-candidate-${{ github.event.inputs.ref }}
+  group: release-candidate-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
@@ -23,9 +17,11 @@ jobs:
     outputs:
       commit: ${{ steps.commit.outputs.sha }}
     steps:
+      - name: Require dispatch from the main branch
+        run: test "$GITHUB_REF" = refs/heads/main
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
       - name: Freeze requested ref to one immutable commit
         id: commit
@@ -226,7 +222,9 @@ jobs:
           assert actual_sboms == expected_sboms, (actual_sboms, expected_sboms)
           PY
           printf '%s\n' "$SOURCE_COMMIT" > SOURCE_COMMIT
-          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+          manifest="$RUNNER_TEMP/SHA256SUMS"
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > "$manifest"
+          mv "$manifest" SHA256SUMS
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: rc-checksums-${{ needs.resolve.outputs.commit }}

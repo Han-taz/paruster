@@ -85,7 +85,8 @@ def test_release_guide_states_nonpublishing_compatibility_and_evidence_gates() -
         "protected `pypi` environment",
         "trusted publishing",
         "same immutable source commit",
-        "40-character commit sha",
+        "current `main` commit",
+        "rejects dispatches from any other branch",
         "release-candidate workflow installs and smoke-tests each target wheel on cpython 3.14",
         "native wheels ci smoke-tests cpython 3.10 and 3.14",
     )

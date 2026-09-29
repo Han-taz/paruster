@@ -22,6 +22,9 @@ def test_release_candidate_is_manual_non_publishing_and_reproducible() -> None:
     assert "syft-version: v1.52.0" in text
     assert "resolve:" in text
     assert "git rev-parse HEAD" in text
+    assert "github.event.inputs.ref" not in text
+    assert "ref: ${{ github.sha }}" in text
+    assert 'test "$GITHUB_REF" = refs/heads/main' in text
     assert text.count("ref: ${{ needs.resolve.outputs.commit }}") >= 3
     assert "publish" not in "\n".join(
         line for line in text.splitlines() if re.match(r"^  [a-z].*:$", line)
@@ -50,6 +53,7 @@ def test_release_candidate_rebuilds_and_verifies_every_distribution() -> None:
     assert "expected_sboms" in text
     assert "len(distributions) == 7" in text
     assert "sha256sum -c SHA256SUMS" in text
+    assert "$RUNNER_TEMP/SHA256SUMS" in text
     for artifact in (
         "rc-wheel-linux-x86_64",
         "rc-wheel-linux-aarch64",
