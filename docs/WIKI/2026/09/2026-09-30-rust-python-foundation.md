@@ -34,7 +34,7 @@ PR [#4](https://github.com/Han-taz/paruster/pull/4) delivers the first executabl
 
 - Independent SOL specification/quality reviews approved Tasks 4 through 7.
 - `uv run --python 3.10 pytest -q`: 87 passed.
-- Ruff check and format, mypy, locked Rust workspace tests, strict Clippy, Cargo formatting, and diff checks passed.
+- Ruff check and format, mypy, locked Rust workspace tests, strict Clippy, Cargo formatting, and `git diff --check main...HEAD` passed. The fixed-width PDF xref fixture is classified as binary so its required record terminators are not misreported as source whitespace.
 - Release-mode abi3 wheel SHA-256: `bb0a1924705a95f012bacca5c9145d75319c8a242be76f862f8a7e6e33bd6d4a`.
 - Source distribution SHA-256: `530d1816ed35023717a7c2f0be10ea876c87c636029751915ef7c757bd2e938b`.
 - Wheel contains the native extension, Python sources, typing marker/stub, license, metadata, and CycloneDX SBOM; wheel and sdist contain no TypeScript, `node_modules`, or ignored oracle source.
