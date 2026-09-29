@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -41,6 +42,46 @@ MCP_TOOLS = [
     "extract_profile",
     "generate_document",
 ]
+
+ORACLE_TOOL_DESCRIPTION_SHA256 = {
+    "parse_document": "ddf0d5216dc573bffd50c50a44208645fb0b1b807b6f7486ac31bdb1f6820b5c",
+    "detect_format": "5fd493dd17119b9d6924ccf66a2c96e540ae6463ddd67ed1586b704d7913c970",
+    "parse_metadata": "8d8b97b7b87c53cc199ccd35dbac033856cf69e5e0b446fbab3a85d431a0edda",
+    "parse_pages": "1e02ff0c93e74c2c6c3bc6fc714292b6b872aa34e92992115f22569254bd5162",
+    "parse_table": "51e7be07942e2683e493927e17b144d8867f9379be9223932c56ea402a6fc548",
+    "compare_documents": "5b48e597de1ebcc15afe9afe1dd37f71d0046c4e3e561667d308d2f5f36f2cf8",
+    "parse_chunks": "6923ca6800092214de3cfedc63b437540f9735dd8179ec2c3513c3807a7fe910",
+    "parse_form": "b1f210e6b4791399651b4bfae4d1249dddd69d5f8a8f30b54c1f23128d0174b5",
+    "fill_form": "f16f12186b3a995b8e90c48ffba624ab2798eba0fd6a64193224f45d687810cb",
+    "place_seal": "c6af3c92ad745b6ac0505778e651d728f4c7280104486df3ec389000bf1f76cd",
+    "patch_document": "e6259561127038a9558d99e6ecc162059f42c0bdc79d629b3920d97c88c2195a",
+    "redact_document": "5d8c610db0bf80ee9543a088a9b84fe9d7823eb7252d97cc8ca29a6e99ba3549",
+    "render_document": "1a66e1698ec8c1dc44a6d22d2620249ac7bc3a8c4157d2093ea1da871583b266",
+    "crop_regions": "82a3eaceed44b92971aa66170dbad4370e0673ec4511111d7d7afa443863f0fc",
+    "extract_tables": "5bca2090a011127bd8aef0e1c0507ecdf985f0ce672fab19203c93d83db611b5",
+    "extract_profile": "8a211c314bd25eeba3d2db65322906555eb95183c28f1486a74bb1b2dc7860bc",
+    "generate_document": "e9f9f9f2d2d74d725f0db596706d79186ccc85e721d16b6a090962f3e6244c4c",
+}
+
+ORACLE_FIELD_DESCRIPTION_SHA256 = {
+    "parse_document": "364f5adc865f13b485cacba8c44dafe3a9fb48094e852615954c4b156949ee81",
+    "detect_format": "afa9071da56571fcb8cb27869d74bc9686e27ec14df4903bc9401f8f741386d5",
+    "parse_metadata": "3e4538f00a8fab8338e1fab362643cfc59069724adc7f23f8d477fca8c364041",
+    "parse_pages": "2a1391a5896d2f291a18744ce5bcfeac3fb3c6495fe468767ad4d8ccab19c2ce",
+    "parse_table": "8fb1f2c5c855b603cc12873d53fcee3d9fb1f92c1af323e9ba329c969ae5d342",
+    "compare_documents": "c8a0e439f209acac4c6b452f577c95da2e69bb3eadb4e17d1112312f980fb226",
+    "parse_chunks": "b86230add42c31720c3caf2a233d6b3115ba7612b8f004d8a53de025f60178e5",
+    "parse_form": "46fdc36e2fd1e9fbd060dd645d7a09fa4b846c32f46dc778d0a117739588c3a5",
+    "fill_form": "59a6af3051782bb90f2ae24ca8318b7b4b96f58d939423cf9dd0bcd0ba73806c",
+    "place_seal": "11ce40f134063b28e618d09fdff5169db464a7e5d942ad1ab49e045cb502e9d1",
+    "patch_document": "d78f57a46406b669e206cf6b431051df27c8b017b48090ffd2d5239e849f783c",
+    "redact_document": "b2ad6a08cb0813ab07361b0d0fe050cad81d66928244c9acde256016420951d9",
+    "render_document": "0c9a9fd79be920c7442c956f6da9fe5cdf1a9659b51f590af3fa24d29a521152",
+    "crop_regions": "cf7873aef39ab58e44a83dbb314d65dd903e8acb673ca4dc3e36f2be71e4d08d",
+    "extract_tables": "3321226c06faeae721f8045a2cc35a026dc958f855c69d0078578c4a741ca3d2",
+    "extract_profile": "4222c154d08686ca9615602edd5d9c9d5af51b833ae1ce304fdfff9e1b416c58",
+    "generate_document": "84cb8a5e327cc1d06844221d161c9493f105f9f974ff7b06e948004d09839e94",
+}
 
 
 def load(name: str) -> dict:
@@ -106,6 +147,43 @@ def test_mcp_inventory_is_exact_and_ordered() -> None:
     assert all(tool["source"].startswith("src/mcp/") for tool in tools)
 
 
+def test_tool_and_input_field_descriptions_match_frozen_oracle_digests() -> None:
+    tools = load("mcp-tools.json")["tools"]
+    protocol = load("mcp-protocol.json")
+    evidence = protocol["description_evidence"]
+    assert evidence["algorithm"] == {
+        "tool_description": "SHA-256 of exact UTF-8 server.tool description string",
+        "field_descriptions": "SHA-256 of compact UTF-8 JSON object, ensure_ascii=false, sorted keys, mapping field names to exact .describe strings",
+    }
+    assert evidence["tool_description_sha256"] == ORACLE_TOOL_DESCRIPTION_SHA256
+    assert evidence["input_field_description_sha256"] == ORACLE_FIELD_DESCRIPTION_SHA256
+    assert evidence["oracle_cwd"] == "kordoc"
+    assert len(tools) == 17
+    assert sum(evidence["input_field_description_counts"].values()) == 109
+    for tool in tools:
+        name = tool["name"]
+        description = tool["description"]
+        assert isinstance(description, str) and description
+        assert hashlib.sha256(description.encode("utf-8")).hexdigest() == ORACLE_TOOL_DESCRIPTION_SHA256[name]
+        fields = {
+            field_name: field["description"]
+            for field_name, field in protocol["input_schemas"][name]["properties"].items()
+            if "description" in field
+        }
+        digest = hashlib.sha256(
+            json.dumps(fields, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        assert digest == ORACLE_FIELD_DESCRIPTION_SHA256[name], name
+        assert evidence["input_field_description_counts"][name] == len(fields), name
+
+
+def test_foundation_plan_uses_non_stale_task_one_test_expectation() -> None:
+    plan = (ROOT / "docs/SSOT/migration/plans/2026-09-29-foundation-implementation-plan.md").read_text(encoding="utf-8")
+    assert "Expected: `all Task 1 inventory tests pass`." in plan
+    assert "--with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py -q" in plan
+    assert plan.count("--with jsonschema==4.25.1") >= 2
+
+
 def test_mcp_protocol_covers_every_tool_and_shared_limit() -> None:
     inventory = load("mcp-tools.json")["tools"]
     protocol = load("mcp-protocol.json")
@@ -128,7 +206,7 @@ def test_every_input_schema_is_a_unique_described_json_schema() -> None:
         assert schema["properties"], name
         assert schema.get("additionalProperties") is False, name
         assert all(
-            isinstance(field.get("description"), str) and field["description"]
+            "description" not in field or (isinstance(field["description"], str) and field["description"])
             for field in schema["properties"].values()
         ), name
         assert set(schema.get("required", [])) <= set(schema["properties"]), name
@@ -268,9 +346,21 @@ def test_transport_security_and_limits_are_normative() -> None:
         {"action": "require_absolute_canonical_path"},
         {"action": "assert_within_root", "condition": "KORDOC_ROOT_non_empty"},
         {"action": "check_operation_extension_allowlist"},
-        {"action": "stat_and_enforce_operation_size_limit"},
-        {"action": "read_file"},
     ]
+    assert security["read_profiles"] == {
+        "read_validated_file": {
+            "size_check": "stat_before_full_read",
+            "max_bytes_by_policy": {"document": 524_288_000, "metadata": 52_428_800},
+        },
+        "detect_format": {
+            "initial_read": {"type": "header", "max_bytes": 512, "full_file_size_check": False},
+            "container_inspection": {
+                "only_when_header_format_is": ["hwpx", "hwp"],
+                "method": "read_validated_file",
+                "max_bytes": 524_288_000,
+            },
+        },
+    }
     assert security["output_path_resolution"]["steps"] == [
         {"action": "reject_empty_path"},
         {"action": "resolve_path"},
@@ -321,6 +411,8 @@ def test_transport_security_and_limits_are_normative() -> None:
     mcp_doc = (ROOT / "docs/SSOT/contracts/mcp.md").read_text(encoding="utf-8")
     assert "KORDOC_OFFLINE alone does not enable root confinement" in mcp_doc
     assert "Only `redact_document` rejects a same-file input/output path" in mcp_doc
+    assert "The shared path resolver does not apply a universal size/stat check" in mcp_doc
+    assert "`detect_format` first reads a 512-byte header" in mcp_doc
 
 
 def test_response_caps_and_image_limits_match_per_tool_behavior() -> None:
@@ -421,13 +513,11 @@ def test_dynamic_generation_schema_preserves_source_enums_ranges_and_key_sets() 
         "dae", "cham", "chapter", "coverTitle", "coverSub", "tocLabel", "tocRoman", "tocItem", "table", "bodyTitle"
     }
     assert fields["approval"]["maxItems"] == 6
-    assert "today" in fields["date"]["description"]
-    assert "gaejosik" in fields["toc"]["description"] and "press" in fields["toc"]["description"]
-    assert "gaejosik" in fields["cover"]["description"]
-    assert "org, date" in fields["cover"]["description"]
-    assert "report" in fields["page_numbers"]["description"] and "plan" in fields["page_numbers"]["description"]
-    assert "heading" in fields["fonts"]["description"] and "body only" in fields["fonts"]["description"]
-    assert "all four roles" in fields["fonts"]["description"]
+    assert fields["date"]["description"] == "표지 날짜 ('YYYY. M. D.' 표기 권장). 미지정 시 오늘 날짜"
+    assert fields["toc"]["description"] == "목차 페이지 생성 여부 — h2 목록을 Ⅰ Ⅱ Ⅲ 장으로 자동 구성. 전 프리셋 사용 가능(보도자료 제외). 미지정 시 개조식 프리셋만 켜짐"
+    assert fields["cover"]["description"] == "표지 페이지 생성 여부 — 첫 h1을 제목으로 파랑 장식 표지. 전 프리셋 사용 가능(보도자료 제외 — 머리박스 서식과 양립 불가). 미지정 시 개조식 프리셋만 켜짐 (org/date 지정 시 자동 켜짐)"
+    assert fields["page_numbers"]["description"] == "쪽번호(하단 중앙 '- 1 -', 표지·목차 카운트 제외). 미지정 시 개조식·보고서·계획서 켜짐"
+    assert fields["fonts"]["description"] == "요소별 글꼴 오버라이드(공문서 모드) — body=본문(○·-)/heading=제목 계열(□·장헤더·표지·목차)/ref=※ 참고/table=표 셀. 개조식·보고서·계획서는 네 역할 전부, 그 외 프리셋은 body만 적용"
     behavior = load("mcp-protocol.json")["generation_behavior"]
     assert behavior["preset_defaults"]["official"] == {
         "body_pt": 12, "line_spacing": 160, "cover": False, "toc": False,

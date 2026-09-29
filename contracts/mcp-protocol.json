@@ -32,42 +32,117 @@
     },
     "input_path_resolution": {
       "steps": [
-        {"action": "reject_empty_path"},
-        {"action": "resolve_path"},
-        {"action": "realpath_input", "follows_symlinks": true},
-        {"action": "require_absolute_canonical_path"},
-        {"action": "assert_within_root", "condition": "KORDOC_ROOT_non_empty"},
-        {"action": "check_operation_extension_allowlist"},
-        {"action": "stat_and_enforce_operation_size_limit"},
-        {"action": "read_file"}
+        {
+          "action": "reject_empty_path"
+        },
+        {
+          "action": "resolve_path"
+        },
+        {
+          "action": "realpath_input",
+          "follows_symlinks": true
+        },
+        {
+          "action": "require_absolute_canonical_path"
+        },
+        {
+          "action": "assert_within_root",
+          "condition": "KORDOC_ROOT_non_empty"
+        },
+        {
+          "action": "check_operation_extension_allowlist"
+        }
       ],
       "access_root_resolution": "realpath configured KORDOC_ROOT; if it does not exist, retain its resolved absolute path so access checks fail closed",
       "follows_input_symlinks_before_root_check": true
     },
+    "read_profiles": {
+      "read_validated_file": {
+        "size_check": "stat_before_full_read",
+        "max_bytes_by_policy": {
+          "document": 524288000,
+          "metadata": 52428800
+        }
+      },
+      "detect_format": {
+        "initial_read": {
+          "type": "header",
+          "max_bytes": 512,
+          "full_file_size_check": false
+        },
+        "container_inspection": {
+          "only_when_header_format_is": [
+            "hwpx",
+            "hwp"
+          ],
+          "method": "read_validated_file",
+          "max_bytes": 524288000
+        }
+      }
+    },
     "output_path_resolution": {
       "steps": [
-        {"action": "reject_empty_path"},
-        {"action": "resolve_path"},
-        {"action": "check_output_extension_allowlist"},
-        {"action": "lstat_final_leaf", "reject_if_symlink": true},
-        {"action": "find_nearest_existing_ancestor"},
-        {"action": "realpath_ancestor_and_append_remaining_segments"},
-        {"action": "assert_within_root", "condition": "KORDOC_ROOT_non_empty"},
-        {"action": "recheck_real_parent_and_assert_root", "condition": "after_processing"},
-        {"action": "open_final_leaf", "flags": ["O_NOFOLLOW"]}
+        {
+          "action": "reject_empty_path"
+        },
+        {
+          "action": "resolve_path"
+        },
+        {
+          "action": "check_output_extension_allowlist"
+        },
+        {
+          "action": "lstat_final_leaf",
+          "reject_if_symlink": true
+        },
+        {
+          "action": "find_nearest_existing_ancestor"
+        },
+        {
+          "action": "realpath_ancestor_and_append_remaining_segments"
+        },
+        {
+          "action": "assert_within_root",
+          "condition": "KORDOC_ROOT_non_empty"
+        },
+        {
+          "action": "recheck_real_parent_and_assert_root",
+          "condition": "after_processing"
+        },
+        {
+          "action": "open_final_leaf",
+          "flags": [
+            "O_NOFOLLOW"
+          ]
+        }
       ],
       "dangling_symlink_ancestor": "realpath failure rejects output path"
     },
     "symlink_rules": {
-      "input_paths": {"realpath_follows_symlinks_before_root_check": true},
-      "output_leaf": {"lstat_before_write": true, "reject_symlink": true},
-      "output_ancestors": {"resolve_nearest_existing_ancestor_with_realpath": true, "reject_dangling_symlink": true},
-      "write_race": {"recheck_real_parent": true, "open_flags": ["O_NOFOLLOW"]},
+      "input_paths": {
+        "realpath_follows_symlinks_before_root_check": true
+      },
+      "output_leaf": {
+        "lstat_before_write": true,
+        "reject_symlink": true
+      },
+      "output_ancestors": {
+        "resolve_nearest_existing_ancestor_with_realpath": true,
+        "reject_dangling_symlink": true
+      },
+      "write_race": {
+        "recheck_real_parent": true,
+        "open_flags": [
+          "O_NOFOLLOW"
+        ]
+      },
       "generation_assets": {
         "resolve_image_dir_and_target": true,
         "remain_within_image_dir": true,
         "remain_within_configured_root_when_set": true,
-        "open_leaf_flags": ["O_NOFOLLOW"]
+        "open_leaf_flags": [
+          "O_NOFOLLOW"
+        ]
       }
     },
     "error_sanitization": {
@@ -76,15 +151,25 @@
         "isError": true
       },
       "categories": {
-        "KordocError": {"action": "pass_message_through", "may_include_path": true},
+        "KordocError": {
+          "action": "pass_message_through",
+          "may_include_path": true
+        },
         "filesystem_error": {
-          "branch": {"error_code_pattern": "^E[A-Z]+$"},
+          "branch": {
+            "error_code_pattern": "^E[A-Z]+$"
+          },
           "action": "emit_code_specific_hint",
           "include_raw_os_message": false,
           "include_raw_path": false
         },
-        "parse_error": {"classification": "PARSE_ERROR", "action": "sanitize_error"},
-        "other_error": {"action": "emit_classified_category_without_native_details"}
+        "parse_error": {
+          "classification": "PARSE_ERROR",
+          "action": "sanitize_error"
+        },
+        "other_error": {
+          "action": "emit_classified_category_without_native_details"
+        }
       }
     },
     "extension_allowlists": {
@@ -115,23 +200,74 @@
       ]
     },
     "same_file_policy": {
-      "parse_document": {"checked": false, "reject_if_same_resolved_file": false},
-      "detect_format": {"checked": false, "reject_if_same_resolved_file": false},
-      "parse_metadata": {"checked": false, "reject_if_same_resolved_file": false},
-      "parse_pages": {"checked": false, "reject_if_same_resolved_file": false},
-      "parse_table": {"checked": false, "reject_if_same_resolved_file": false},
-      "compare_documents": {"checked": false, "reject_if_same_resolved_file": false},
-      "parse_chunks": {"checked": false, "reject_if_same_resolved_file": false},
-      "parse_form": {"checked": false, "reject_if_same_resolved_file": false},
-      "fill_form": {"checked": false, "reject_if_same_resolved_file": false},
-      "place_seal": {"checked": false, "reject_if_same_resolved_file": false},
-      "patch_document": {"checked": false, "reject_if_same_resolved_file": false},
-      "redact_document": {"checked": true, "reject_if_same_resolved_file": true},
-      "render_document": {"checked": false, "reject_if_same_resolved_file": false},
-      "crop_regions": {"checked": false, "reject_if_same_resolved_file": false},
-      "extract_tables": {"checked": false, "reject_if_same_resolved_file": false},
-      "extract_profile": {"checked": false, "reject_if_same_resolved_file": false},
-      "generate_document": {"checked": false, "reject_if_same_resolved_file": false}
+      "parse_document": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "detect_format": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "parse_metadata": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "parse_pages": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "parse_table": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "compare_documents": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "parse_chunks": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "parse_form": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "fill_form": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "place_seal": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "patch_document": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "redact_document": {
+        "checked": true,
+        "reject_if_same_resolved_file": true
+      },
+      "render_document": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "crop_regions": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "extract_tables": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "extract_profile": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      },
+      "generate_document": {
+        "checked": false,
+        "reject_if_same_resolved_file": false
+      }
     },
     "stdout_logging": "Console output is routed to stderr before server startup; stdout is reserved for JSON-RPC framing.",
     "import_behavior": "Importing src/mcp.ts from another entry point does not auto-start stdio; direct execution auto-starts, and startMcpServer is idempotent."
@@ -147,7 +283,7 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute document path; HWP, HWPX, PDF, XLSX, DOCX, PNG, JPG, or WebP."
+          "description": "파싱할 문서 파일의 절대 경로 (HWP, HWPX, PDF, XLSX, DOCX, PNG/JPG/WebP)"
         },
         "ocr": {
           "anyOf": [
@@ -159,51 +295,51 @@
               "type": "string"
             }
           ],
-          "description": "OCR scanned or image PDF pages; true handles pages without usable text, force re-recognizes every page."
+          "description": "스캔/이미지 PDF 텍스트 OCR (내장 PP-OCRv5 korean, 첫 사용 시 ~18MB 자동 다운로드). true=텍스트층이 없거나 깨진 페이지만 인식하고 정상 페이지는 그대로 둡니다. \"force\"=텍스트층이 있어도 무시하고 전 페이지 강제 재인식. parse 결과에 NEEDS_OCR 경고가 있으면 이 옵션으로 재시도하세요"
         },
         "remove_header_footer": {
           "type": "boolean",
-          "description": "Remove repeating PDF headers and footers; source default is true."
+          "description": "PDF 머리글/바닥글 자동 제거 (기본 true — false로 끄기, CLI --no-header-footer 대응)"
         },
         "formula_ocr": {
           "type": "boolean",
-          "description": "Enable PDF formula OCR; model weights may be downloaded on first use."
+          "description": "PDF 수식 OCR 활성화 (MFD+MFR ONNX, 첫 사용 시 모델 ~155MB 자동 다운로드, CLI --formula-ocr 대응)"
         },
         "dedupe_running_headers": {
           "type": "boolean",
-          "description": "Remove repeated running headers in HWP5 layout tables; default off."
+          "description": "HWP5 레이아웃 표 페이지 반복 러닝 헤더 중복 제거 (기본 off — 붙임별 재번호 오삭제 주의, CLI --dedupe-headers 대응)"
         },
         "keep_trailing_empty_cols": {
           "type": "boolean",
-          "description": "Preserve trailing empty table columns; default off."
+          "description": "표 오른쪽 끝 빈 열(서식 입력란) 보존 (#47, 기본 off: 후행 빈 열 트림, CLI --keep-empty-cols 대응)"
         },
         "keep_empty_paragraphs": {
           "type": "boolean",
-          "description": "Preserve empty body paragraphs and table-cell lines; default off."
+          "description": "빈 문단 보존 — 본문은 빈 paragraph 블록, 표 셀은 빈 줄 (#57, 기본 off, CLI --keep-empty-paragraphs 대응)"
         },
         "include_field_placeholders": {
           "type": "boolean",
-          "description": "Include unfilled HWP field placeholder instructions; default off."
+          "description": "미기입 누름틀 안내문도 출력 — 빈 서식 문서의 칸 용도 보존 (#92, 기본 off, CLI --include-field-placeholders 대응)"
         },
         "html_tables": {
           "type": "boolean",
-          "description": "Render all tables as indented HTML tables; default off."
+          "description": "모든 표를 HTML 로 — 파이프 표도 HTML 표로, 태그마다 한 줄씩 들여써 냄 (기본 off, CLI --html-tables 대응)"
         },
         "script_tags": {
           "type": "boolean",
-          "description": "Emit superscript and subscript markup; parser format defaults vary, false emits plain text."
+          "description": "위·아래첨자를 <sup>·<sub> 로 표기(\"10⁴ m²\" 가 \"104 m2\" 로 펴지지 않게) — 기본: HWPX·HWP·DOCX 켬, PDF 끔(논문·수식 PDF 는 true 권장), false 면 모두 평문. CLI --script-tags / --no-script-tags 대응"
         },
         "plain": {
           "type": "boolean",
-          "description": "Emit plain Markdown without image placeholders, link URLs, underline, or bold markup; default off."
+          "description": "평문 Markdown — 그림 자리 표시·링크 URL·밑줄/굵게 표기를 빼고 글만 (제목·목록·표 구조는 유지, 기본 off, CLI --plain 대응)"
         },
         "password": {
           "type": "string",
-          "description": "Password for supported encrypted HWPX, HWP3, or HWP5 files; does not bypass DRM."
+          "description": "암호로 보호된 문서의 열기 암호 (#59, HWPX·HWP3·HWP5 지원. 파싱이 ENCRYPTED로 실패하면 이 옵션으로 재시도하세요. 한컴 DRM 보호 문서는 해당 없음)"
         },
         "tables": {
           "type": "boolean",
-          "description": "Enable PDF table detection; source default is true."
+          "description": "PDF 표 감지 (기본 true — false로 끄기, CLI --no-tables 대응). 테두리 박스를 표로 오인해 읽기 순서가 뒤집히는 문서(2단 시험지 등)에서 자연 읽기순 텍스트만 뽑습니다 (#64)"
         }
       }
     },
@@ -217,7 +353,7 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of the file to identify."
+          "description": "감지할 파일의 절대 경로"
         }
       }
     },
@@ -231,7 +367,7 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of the document whose metadata is extracted."
+          "description": "메타데이터를 추출할 문서 파일의 절대 경로"
         }
       }
     },
@@ -246,12 +382,12 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute document path."
+          "description": "파싱할 문서 파일의 절대 경로"
         },
         "pages": {
           "type": "string",
           "minLength": 1,
-          "description": "1-based page selection, for example 1-3 or 1,3,5-7."
+          "description": "페이지 범위 (예: '1-3', '1,3,5-7')"
         }
       }
     },
@@ -266,12 +402,12 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute document path."
+          "description": "파싱할 문서 파일의 절대 경로"
         },
         "table_index": {
           "type": "integer",
           "minimum": 0,
-          "description": "Zero-based table index to extract."
+          "description": "추출할 테이블 인덱스 (0부터 시작)"
         }
       }
     },
@@ -286,12 +422,12 @@
         "file_path_a": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of the source document."
+          "description": "비교 원본 문서의 절대 경로"
         },
         "file_path_b": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of the comparison document."
+          "description": "비교 대상 문서의 절대 경로"
         }
       }
     },
@@ -305,7 +441,7 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute document path."
+          "description": "대상 문서의 절대 경로 (HWP/HWPX/PDF/XLSX/DOCX)"
         },
         "granularity": {
           "type": "string",
@@ -314,12 +450,12 @@
             "block"
           ],
           "default": "section",
-          "description": "Merge adjacent text by breadcrumb section or emit one IR block per chunk."
+          "description": "section=같은 breadcrumb 아래 연속 텍스트 병합(기본), block=IRBlock 1개=청크 1개"
         },
         "include_table_cells": {
           "type": "boolean",
           "default": false,
-          "description": "Include each table chunk's two-dimensional cell text array."
+          "description": "표 청크에 셀 텍스트 2차원 배열 포함 여부"
         }
       }
     },
@@ -333,7 +469,7 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of the form document."
+          "description": "서식 문서 파일의 절대 경로"
         }
       }
     },
@@ -347,7 +483,7 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of the form template; omit when using a built-in template."
+          "description": "서식 템플릿 문서의 절대 경로 (HWP, HWPX, PDF, XLSX, DOCX). template 사용 시 생략"
         },
         "template": {
           "type": "string",
@@ -357,29 +493,29 @@
             "일반기안문",
             "간이기안문"
           ],
-          "description": "Built-in standard Korean government form; use instead of file_path."
+          "description": "내장 정부 표준 서식 이름 — file_path 대신 사용. gian=일반기안문(별지 제1호서식), gian-simple=간이기안문(별지 제2호서식)"
         },
         "fields": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Map form labels to values to fill."
+          "description": "채울 필드 맵 (라벨 → 값). 예: {\"성명\": \"홍길동\", \"전화번호\": \"010-1234-5678\"}"
         },
         "formats": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Optional label-to-format map for date, phone, RRN, masking, or custom patterns."
+          "description": "필드별 값 서식 (라벨 → 포맷). 정준값 하나로 서식마다 다른 모양을 채울 때: date:yy.mm.dd / phone:hyphen·dot·digits / rrn:hyphen·masked / mask:###-## / 자유 패턴(yyyy년 m월 d일, ###-####-####)"
         },
         "require_unique": {
           "type": "boolean",
-          "description": "Reject ambiguous labels that match multiple fields; default false."
+          "description": "한 키가 서식의 2곳 이상에 매칭되면 채우지 않고 거부 — 반복 라벨 양식에서 남의 블록 오염 방지 (배열 값은 예외)"
         },
         "mask_values": {
           "type": "boolean",
-          "description": "Hide filled values in the response and show lengths only."
+          "description": "응답에 값 대신 글자수만 표시 — 개인정보 채움 시 값이 대화 로그에 남지 않게"
         },
         "output_format": {
           "type": "string",
@@ -389,11 +525,11 @@
             "hwpx-preserve"
           ],
           "default": "hwpx-preserve",
-          "description": "Choose Markdown, generated HWPX, or HWPX preserving the source style."
+          "description": "출력 포맷: hwpx-preserve (원본 스타일 보존, HWPX 전용), hwpx (새 HWPX 생성), markdown"
         },
         "output_path": {
           "type": "string",
-          "description": "Optional output path; when omitted the result is returned as text."
+          "description": "출력 파일 저장 경로 (선택). 지정 시 파일로 저장, 미지정 시 텍스트로 반환"
         }
       }
     },
@@ -409,28 +545,28 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of the target HWPX document."
+          "description": "대상 HWPX 문서의 절대 경로"
         },
         "image_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of a seal or signature image; transparent PNG is recommended."
+          "description": "도장/서명 이미지 절대 경로 (투명 배경 PNG 권장)"
         },
         "anchor": {
           "type": "string",
           "default": "(인)",
-          "description": "Anchor text above which the seal is placed."
+          "description": "앵커 문구 — 이 문구 기준으로 배치"
         },
         "occurrence": {
           "type": "integer",
           "minimum": 0,
           "default": 0,
-          "description": "Zero-based occurrence when the anchor appears more than once."
+          "description": "같은 앵커가 여럿일 때 0-based 선택"
         },
         "size_mm": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "description": "Seal side length in millimeters; default is line height times 1.6, clamped to 7–18 mm."
+          "description": "도장 한 변 크기 mm (기본: 줄높이×1.6, 7~18 클램프)"
         },
         "mode": {
           "type": "string",
@@ -440,20 +576,20 @@
             "auto"
           ],
           "default": "auto",
-          "description": "Place over the anchor, to its right, or automatically to the right when space permits."
+          "description": "overlap=문구 위 겹침, right=문구 오른쪽 옆, auto=공간 있으면 right"
         },
         "dx_mm": {
           "type": "number",
-          "description": "Horizontal position adjustment in millimeters."
+          "description": "x 미세조정 mm"
         },
         "dy_mm": {
           "type": "number",
-          "description": "Vertical position adjustment in millimeters."
+          "description": "y 미세조정 mm"
         },
         "output_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Output HWPX path."
+          "description": "출력 HWPX 저장 경로"
         }
       }
     },
@@ -469,17 +605,17 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path to the source HWPX or HWP 5.x document."
+          "description": "원본 문서의 절대 경로 (HWPX 또는 HWP 5.x)"
         },
         "edited_markdown": {
           "type": "string",
           "minLength": 1,
-          "description": "Complete edited Markdown from parse_document; preserve block count and order."
+          "description": "parse_document 출력 마크다운을 편집한 전체 마크다운. 바뀐 문단/셀 텍스트만 반영하고 블록 수·순서는 원본과 같게 유지하세요"
         },
         "output_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute output path with the same .hwpx or .hwp extension as the source."
+          "description": "출력 파일 저장 절대 경로 (원본과 같은 확장자: .hwpx 또는 .hwp)"
         }
       }
     },
@@ -493,7 +629,7 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of the document to inspect and redact."
+          "description": "대상 문서의 절대 경로"
         },
         "rules": {
           "type": "array",
@@ -514,23 +650,23 @@
               "address"
             ]
           },
-          "description": "Detection rules; defaults cover rrn, phone, email, card, account, brn, passport, driver. crn, ip, name, and address are opt-in."
+          "description": "적용 룰 (기본: rrn·phone·email·card·account·brn·passport·driver — crn(법인등록번호)·ip·name(인명, 문맥 게이트)·address(주소)는 opt-in)"
         },
         "mask_char": {
           "type": "string",
           "minLength": 1,
           "maxLength": 1,
-          "description": "Single masking character; default is ●."
+          "description": "마스크 문자 1글자 (기본: ●)"
         },
         "output_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Output path; HWPX/HWP uses the same extension, other formats use Markdown; required unless dry_run is true."
+          "description": "출력 경로 (HWPX/HWP는 같은 확장자, 그 외는 .md) — dry_run이 아니면 필수"
         },
         "dry_run": {
           "type": "boolean",
           "default": false,
-          "description": "Return a detection report without creating a file."
+          "description": "탐지 리포트만 반환, 파일 미생성"
         }
       }
     },
@@ -544,7 +680,7 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path to the HWPX or HWP 5.x document to render."
+          "description": "렌더할 HWPX 또는 HWP(5.x) 파일의 절대 경로"
         },
         "format": {
           "type": "string",
@@ -556,12 +692,12 @@
             "pdf"
           ],
           "default": "png",
-          "description": "png/jpeg return images; svg/html/pdf require output_path."
+          "description": "png/jpeg=이미지로 응답에 직접 반환(output_path 는 선택) / svg·html·pdf=output_path 에 파일 저장(필수). svg 는 pages 미지정 HWPX 면 전체 세로 스택 1파일, 그 외 페이지별 파일. html=자급자족 레이아웃 HTML 1파일, pdf=Chromium 필요"
         },
         "output_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Optional destination whose extension matches format; required for svg, html, and pdf."
+          "description": "결과 저장 경로 (확장자는 format 과 일치 — .png/.jpg/.svg/.html/.pdf). 페이지별 산출은 _page_NNN 접미"
         },
         "highlights": {
           "type": "array",
@@ -569,7 +705,7 @@
             "type": "string",
             "minLength": 1
           },
-          "description": "Search terms to highlight in the rendered pages."
+          "description": "형광펜 표시할 검색어 목록 — 채운 값·수정 문구 위치 확인용"
         },
         "reflow_mode": {
           "type": "string",
@@ -578,18 +714,18 @@
             "charAll"
           ],
           "default": "keep",
-          "description": "Reflow by word or by individual character."
+          "description": "reflow 줄바꿈: keep=어절 단위, charAll=글자 단위"
         },
         "pages": {
           "type": "string",
           "minLength": 1,
-          "description": "Optional 1-based page selection; image responses include at most 8 pages."
+          "description": "페이지 선택(1-based: '3', '1-3', '1,3,7-9') — 지정하면 페이지별 산출(이미지 응답은 최대 8쪽). HWPX png/svg 에서 미지정이면 전체를 세로 스택 1장으로"
         },
         "max_width_px": {
           "type": "integer",
           "minimum": 200,
           "maximum": 4000,
-          "description": "Maximum raster image width in pixels."
+          "description": "래스터(png/jpeg) 최대 폭 px — 큰 문서 응답 부피 조절"
         }
       }
     },
@@ -604,12 +740,12 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path to the HWPX or HWP 5.x document."
+          "description": "HWPX 또는 HWP(5.x) 파일 절대 경로"
         },
         "output_dir": {
           "type": "string",
           "minLength": 1,
-          "description": "Directory where crop images and regions.json are written."
+          "description": "crop 파일 저장 디렉토리"
         },
         "target": {
           "type": "array",
@@ -625,7 +761,7 @@
           "default": [
             "table"
           ],
-          "description": "Object types to crop."
+          "description": "잘라낼 개체 유형"
         },
         "format": {
           "type": "string",
@@ -633,20 +769,19 @@
             "png",
             "jpeg"
           ],
-          "default": "png",
-          "description": "Crop image format."
+          "default": "png"
         },
         "pages": {
           "type": "string",
           "minLength": 1,
-          "description": "Optional 1-based page selection."
+          "description": "대상 페이지(1-based 범위)"
         },
         "padding_pt": {
           "type": "number",
           "minimum": 0,
           "maximum": 100,
           "default": 0,
-          "description": "Padding around the bounding box in points."
+          "description": "bbox 둘레 여백 pt"
         }
       }
     },
@@ -660,12 +795,12 @@
         "file_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path to the HWPX or HWP 5.x document."
+          "description": "HWPX 또는 HWP(5.x) 파일 절대 경로"
         },
         "output_dir": {
           "type": "string",
           "minLength": 1,
-          "description": "Directory for crop images and tables.json; required when visual is not none."
+          "description": "crop 파일·tables.json 저장 디렉토리 (visual 이 none 이 아니면 필수)"
         },
         "visual": {
           "type": "string",
@@ -676,7 +811,7 @@
             "all"
           ],
           "default": "none",
-          "description": "Select which table regions to crop while returning classification and bounds."
+          "description": "crop 대상: none=분류·bbox 만 / non-tabular=조직도류만 / non-tabular-and-uncertain(권장) / all"
         },
         "format": {
           "type": "string",
@@ -684,20 +819,19 @@
             "png",
             "jpeg"
           ],
-          "default": "png",
-          "description": "Crop image format."
+          "default": "png"
         },
         "padding_pt": {
           "type": "number",
           "minimum": 0,
           "maximum": 100,
           "default": 0,
-          "description": "Padding around crops in points."
+          "description": "crop 둘레 여백 pt"
         },
         "cells": {
           "type": "boolean",
           "default": false,
-          "description": "Include cell text grids in response JSON."
+          "description": "응답 JSON 에 셀 텍스트 격자 포함"
         }
       }
     },
@@ -712,12 +846,12 @@
         "hwpx_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path to the reference HWPX document."
+          "description": "서식을 추출할 참조 HWPX 파일의 절대 경로"
         },
         "output_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute JSON profile output path."
+          "description": "프로필 JSON 출력 절대 경로 (.json 권장)"
         }
       }
     },
@@ -732,16 +866,16 @@
         "markdown": {
           "type": "string",
           "minLength": 1,
-          "description": "Complete Markdown source to convert to HWPX; tables use GitHub Flavored Markdown."
+          "description": "HWPX로 변환할 마크다운 전문. 표는 GFM 문법 사용 (예: '| 이름 | 부서 |\\n| --- | --- |\\n| 홍길동 | 기획팀 |')"
         },
         "output_path": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path for the generated HWPX file."
+          "description": "출력 HWPX 파일의 절대 경로 (.hwpx 권장)"
         },
         "profile_path": {
           "type": "string",
-          "description": "Optional JSON format profile previously extracted with extract_profile."
+          "description": "서식 프로필 JSON 경로 (extract_profile로 추출) — 참조 문서의 표 테두리·음영·열폭·셀 글꼴을 재현. 표 행·열 수와 첫 셀 텍스트가 일치하는 표에만 적용"
         },
         "preset": {
           "type": "string",
@@ -778,7 +912,7 @@
             "방침서",
             "방침"
           ],
-          "description": "Optional government document style preset or alias; omit for general Markdown conversion."
+          "description": "공문서 프리셋 — 지정 시 한국 행정 공문서 표준 서식 적용. '개조식'=정부 표준 개조식 보고서(표지·목차·로마숫자 장 헤더 자동 + □○-※ 부호별 폰트), '업무보고'=중앙부처 업무보고(##=Ⅰ 장 띠, ###=파란 숫자칸 절, ####=남색 소제목 박스, #####=① 하늘색 항목 띠, > ▪…=연노랑 성과 요약박스, ## 별첨 …=별첨 띠, ❶⇒ 부호 보존, 함초롬바탕 15·각주 맑은 고딕 12), '서울방침'=서울시 방침서(# 제목 뒤 '- 부제 -' 줄=파랑 부제·☎ 줄=담당자 행·> =요약박스, ##=[Ⅰ] 장 상자, ###=파란 번호 절 띠, ####=❶ 과제 소제목, □ HY견고딕 17·ㅇ 한컴돋움 15 굵게·- 휴먼명조 14·▸ 13, 줄간격 200%), '보도자료'=머리박스+제목 25pt+□→ㅇ→*(각주) 체계. 미지정 시 범용 마크다운 변환"
         },
         "font": {
           "type": "string",
@@ -786,35 +920,35 @@
             "myeongjo",
             "gothic"
           ],
-          "description": "Body font override (myeongjo or gothic); defaults to myeongjo when omitted."
+          "description": "본문 글꼴(공문서 모드): myeongjo=명조 계열(개조식·보고서·계획서는 실측 휴먼명조, 그 외 함초롬바탕), gothic=맑은 고딕"
         },
         "body_pt": {
           "type": "integer",
           "minimum": 6,
           "maximum": 40,
-          "description": "Body font size in points; preset defaults: official 12, report 15, plan 15, notice 15, minutes 14, gaejosik 15, press 14, ministry 15, bangchim 15."
+          "description": "본문 글자 크기(pt, 공문서 모드). 기본: 기안문 12, 보고서·계획서·통지 15"
         },
         "line_spacing": {
           "type": "integer",
           "minimum": 50,
           "maximum": 300,
-          "description": "Body line spacing percentage; preset defaults: official 160, report 160, plan 160, notice 160, minutes 130, gaejosik 160, press 160, ministry 145, bangchim 190."
+          "description": "본문 줄간격(%, 공문서 모드). 기본: 프리셋별 실측값(기안문 160, 회의록 130 등)"
         },
         "org": {
           "type": "string",
-          "description": "Organization name for cover or official header."
+          "description": "표지 기관명 (표지를 켜는 모든 프리셋에서 사용 가능). 미지정 시 표지에 기관명 생략"
         },
         "date": {
           "type": "string",
-          "description": "Cover date in YYYY. M. D. format; when omitted, rendering uses today's date."
+          "description": "표지 날짜 ('YYYY. M. D.' 표기 권장). 미지정 시 오늘 날짜"
         },
         "toc": {
           "type": "boolean",
-          "description": "Build a table of contents from h2 headings. Press preset suppresses the table of contents; by default it is enabled only for gaejosik and ministry presets."
+          "description": "목차 페이지 생성 여부 — h2 목록을 Ⅰ Ⅱ Ⅲ 장으로 자동 구성. 전 프리셋 사용 가능(보도자료 제외). 미지정 시 개조식 프리셋만 켜짐"
         },
         "cover": {
           "type": "boolean",
-          "description": "Generate a cover from the first h1. By default it is enabled for gaejosik and ministry, disabled for press, and disabled for other presets; supplying org, date, dept, or cover_label automatically enables it unless cover is explicitly false."
+          "description": "표지 페이지 생성 여부 — 첫 h1을 제목으로 파랑 장식 표지. 전 프리셋 사용 가능(보도자료 제외 — 머리박스 서식과 양립 불가). 미지정 시 개조식 프리셋만 켜짐 (org/date 지정 시 자동 켜짐)"
         },
         "approval": {
           "type": "array",
@@ -822,23 +956,23 @@
             "type": "string"
           },
           "maxItems": 6,
-          "description": "Approval role labels; at most six. Empty or omitted approval creates no approval table."
+          "description": "결재란 직위 라벨 (최대 6개, 예: ['담당','팀장','과장']) — 문서 최상단 우측에 서명 공란 결재 표 생성"
         },
         "page_numbers": {
           "type": "boolean",
-          "description": "Add page numbers excluding cover and table-of-contents pages. By default enabled for gaejosik, ministry, report, plan, and bangchim presets."
+          "description": "쪽번호(하단 중앙 '- 1 -', 표지·목차 카운트 제외). 미지정 시 개조식·보고서·계획서 켜짐"
         },
         "end_mark": {
           "type": "boolean",
-          "description": "Add the administrative closing mark 끝.; defaults on only for official, and off for all other presets."
+          "description": "본문 끝 '끝.' 표시 (행정업무규정). 미지정 시 기안문만 켜짐, 본문이 이미 '끝.'으로 끝나면 중복 생성 안 함"
         },
         "body_title_box": {
           "type": "boolean",
-          "description": "Repeat the title in a box on the first body page; defaults on only for gaejosik when a cover is enabled."
+          "description": "본문 첫 페이지 제목 반복 박스 (개조식 실측 관행). 미지정 시 개조식+표지 조합에서 켜짐"
         },
         "chapter_fit": {
           "type": "boolean",
-          "description": "Fit chapter heading width to its title; default false."
+          "description": "개조식 장 헤더 제목 칸을 글자 폭에 맞춤. 미지정 시 제목 칸이 본문 폭까지"
         },
         "h2_marker": {
           "type": "string",
@@ -849,21 +983,21 @@
             "number",
             "none"
           ],
-          "description": "Chapter heading marker; defaults to band for report/plan, square for bangchim, number for notice, and none for other presets."
+          "description": "h2 장 제목 표기: band=로마자 채움 칸+제목 띠 표(보고서·계획서 기본), roman='Ⅰ. 제목' 텍스트, number='1. 제목'(통지 기본), box=장 없이 □ 대항목으로, none=번호 없음. 기안문 본문의 h2는 항상 법정 '1.' 항목"
         },
         "band_color": {
           "type": "string",
           "pattern": "^#[0-9A-Fa-f]{6}$",
-          "description": "Six-digit hexadecimal chapter-band fill color; defaults to #003366."
+          "description": "띠 제목 번호칸 채움색 #RRGGBB (기본 #003366 실측 최다. 교육청형 밝은 띠는 #DFE6F7 + band_text_color #000000)"
         },
         "band_text_color": {
           "type": "string",
           "pattern": "^#[0-9A-Fa-f]{6}$",
-          "description": "Six-digit hexadecimal chapter-band text color; defaults to #FFFFFF."
+          "description": "띠 제목 번호 글자색 #RRGGBB (기본 #FFFFFF)"
         },
         "summary": {
           "type": "string",
-          "description": "Optional summary text for a report summary box."
+          "description": "보고서 요약 박스 — 제목표 아래 #DFE6F7 음영 상자(서울 실결재 관행). 마크다운 제목 직후 인용문(> …)으로도 지정 가능"
         },
         "doc_info": {
           "type": "object",
@@ -881,11 +1015,11 @@
               "type": "string"
             }
           },
-          "description": "Optional cover document information fields.",
+          "description": "보고서 표지 문서정보표 — docNum=문서번호/date=결재일자/disclosure=공개여부/policyNo=방침번호 (cover=true와 함께)",
           "additionalProperties": false
         },
         "checklist": {
-          "description": "Optional Seoul review checklist: a boolean or an object with not-applicable item numbers and notes.",
+          "description": "서울 사전 검토항목 점검표(표지 다음 쪽, 보고서·계획서·서울방침) — true=표시 없는 빈 서식, {na:[6,7,…]}=적은 문항(1~14)은 해당없음·나머지 검토완료, notes={\"7\":\"교육\"}=비고",
           "oneOf": [
             {
               "type": "boolean"
@@ -912,11 +1046,11 @@
         },
         "dept": {
           "type": "string",
-          "description": "Department name for the cover."
+          "description": "표지 부서명 — 기관명 아래 '(스마트도시과)' (cover와 함께)"
         },
         "cover_label": {
           "type": "string",
-          "description": "Cover handling label such as 대외주의 or 비공개."
+          "description": "표지 우상단 취급 표시 — '대외주의'·'비공개' 빨간 테두리 박스 (업무보고 프리셋 실측, cover와 함께)"
         },
         "fonts": {
           "type": "object",
@@ -934,7 +1068,7 @@
               "type": "string"
             }
           },
-          "description": "Per-role font overrides for body, heading, ref, and table. Report-family presets (gaejosik, report, plan, bangchim) apply all four roles; other presets apply body only.",
+          "description": "요소별 글꼴 오버라이드(공문서 모드) — body=본문(○·-)/heading=제목 계열(□·장헤더·표지·목차)/ref=※ 참고/table=표 셀. 개조식·보고서·계획서는 네 역할 전부, 그 외 프리셋은 body만 적용",
           "additionalProperties": false
         },
         "sizes": {
@@ -991,7 +1125,7 @@
               "maximum": 60
             }
           },
-          "description": "Per-element point-size overrides; supported by report-family presets (gaejosik, report, plan, bangchim).",
+          "description": "개조식 요소별 글자 크기(pt) 오버라이드 — dae=□/cham=※/chapter=장헤더/coverTitle·coverSub=표지/tocLabel·tocRoman·tocItem=목차/table=표 셀/bodyTitle=본문 첫 페이지 제목 반복 박스. 미지정 요소는 body_pt 비례 기본값",
           "additionalProperties": false
         },
         "levels": {
@@ -1015,7 +1149,7 @@
               "additionalProperties": false
             }
           },
-          "description": "Optional typography overrides by list depth 0 through 7.",
+          "description": "항목부호 단계별 위계 타이포(공문서 모드, v4.12.3) — {\"0\":{font:\"HY견고딕\",pt:17,bold:true},\"1\":{font:\"한컴돋움\",bold:true}} 꼴(depth 0~7). 실측: 전자결재 기안문 □/ㅇ/- 계열은 □=HY견고딕 +2~3pt 굵게·ㅇ=한컴돋움 굵게·-=휴먼명조 본문. 법정 8단계(1. 가.)는 본문 동일이 관행이라 기본 미적용",
           "additionalProperties": false
         },
         "bullet2": {
@@ -1024,11 +1158,11 @@
             "ㅇ",
             "○"
           ],
-          "description": "Second-level bullet; defaults to ○ for gaejosik and ㅇ for other presets."
+          "description": "2단계 항목부호 — 'ㅇ'(이응, 전자결재 기안문·공고문 실측 지배) / '○'(원, 보고서 양식). 미지정 시 통지·보도자료 ㅇ, 그 외 ○"
         },
         "suppress_single": {
           "type": "boolean",
-          "description": "Suppress a single sibling marker in standard numbering styles; default false."
+          "description": "단일 형제 항목 부호 생략(편람 규정, 법정 번호 standard 전용 — 불릿 체계인 보고서·계획서·개조식·보도자료엔 무효). 기본 false — 하나뿐인 항목에도 부호(1. 가.)를 부여 (부호 없는 계단 들여쓰기가 실무 눈에 어색)"
         },
         "doc_head": {
           "type": "object",
@@ -1049,7 +1183,7 @@
               "type": "string"
             }
           },
-          "description": "Optional official document header fields.",
+          "description": "기안문 두문표(별지 제1호서식·서울 실결재 6행 표) — org=행정기관명(굴림 20pt bold 자간띄움)/slogan=원훈(상단 10pt)/to=수신('내부결재'면 발신명의 생략)/via=경유/title=제목(미지정 시 첫 h1). 기안문 프리셋 전용",
           "additionalProperties": false
         },
         "doc_foot": {
@@ -1101,12 +1235,12 @@
               "type": "string"
             }
           },
-          "description": "Optional official document footer and contact fields.",
+          "description": "기안문 결문표 — sender=발신명의(18pt bold 중앙)/drafter·reviewer·approver='직위 성명' 결재선/cooperator=협조자/recipients=수신자 목록/docNum=시행 '과-번호 (날짜)'/receive=접수/zip·address·site/phone·fax·email/disclosure=공개구분. 기안문 프리셋 전용",
           "additionalProperties": false
         },
         "report_info": {
           "type": "string",
-          "description": "Optional responsible staff and contact row."
+          "description": "보고서: 제목표 아래 담당자 행 '(2026. 9. 6., 스마트도시과 홍길동, ☎450-1234)' / 기안문: 우상단 12pt 보고정보 행"
         },
         "notice_head": {
           "type": "object",
@@ -1121,7 +1255,7 @@
               "type": "string"
             }
           },
-          "description": "Optional notice number, date, and sender.",
+          "description": "공고문 두문·결문 — no=공고번호(본문 위 bold)/date=날짜(본문 아래 우측)/sender=발신명의(우측 bold). 통지 프리셋 전용",
           "additionalProperties": false
         },
         "press": {
@@ -1155,7 +1289,7 @@
               "additionalProperties": false
             }
           },
-          "description": "Optional press release timing, subtitles, and contact details.",
+          "description": "보도자료 옵션 — release=보도시점/distribute=배포일(머리박스)/sub=부제 배열('- … -')/contact=담당 부서·담당자·연락처 표",
           "additionalProperties": false
         },
         "paper": {
@@ -1167,29 +1301,29 @@
             "B5",
             "Letter"
           ],
-          "description": "Paper size; defaults to A4."
+          "description": "용지 크기 (v4.5.0). 기본 A4"
         },
         "landscape": {
           "type": "boolean",
-          "description": "Use landscape orientation; defaults to portrait."
+          "description": "용지 가로 방향 (v4.5.0). 기본 세로"
         },
         "columns": {
           "type": "integer",
           "minimum": 1,
           "maximum": 8,
-          "description": "Number of text columns; defaults to one."
+          "description": "다단 개수 (v4.5.0). 기본 1단"
         },
         "header": {
           "type": "string",
-          "description": "Header text on each page; inline Markdown is allowed."
+          "description": "머리말 텍스트 — 모든 쪽 상단, 인라인 마크다운 허용 (v4.5.0)"
         },
         "footer": {
           "type": "string",
-          "description": "Footer text on each page."
+          "description": "꼬리말 텍스트 — 모든 쪽 하단 (v4.5.0)"
         },
         "image_dir": {
           "type": "string",
-          "description": "Directory from which referenced PNG, JPEG, GIF, or BMP images are embedded."
+          "description": "마크다운 이미지 참조(![](x.png))를 이 디렉토리에서 읽어 실데이터 임베드 (v4.5.0, PNG/JPEG/GIF/BMP). 미지정 시 참조만 placeholder로 보존"
         }
       }
     }
@@ -2308,6 +2442,71 @@
         ".gif",
         ".bmp"
       ]
+    }
+  },
+  "description_evidence": {
+    "capture_method": "read-only extraction of exact server.tool description literals and top-level Zod .describe string literals from registered schemas; runtime tools/list unavailable because oracle dependencies are absent",
+    "oracle_cwd": "kordoc",
+    "algorithm": {
+      "tool_description": "SHA-256 of exact UTF-8 server.tool description string",
+      "field_descriptions": "SHA-256 of compact UTF-8 JSON object, ensure_ascii=false, sorted keys, mapping field names to exact .describe strings"
+    },
+    "tool_description_sha256": {
+      "parse_document": "ddf0d5216dc573bffd50c50a44208645fb0b1b807b6f7486ac31bdb1f6820b5c",
+      "detect_format": "5fd493dd17119b9d6924ccf66a2c96e540ae6463ddd67ed1586b704d7913c970",
+      "parse_metadata": "8d8b97b7b87c53cc199ccd35dbac033856cf69e5e0b446fbab3a85d431a0edda",
+      "parse_pages": "1e02ff0c93e74c2c6c3bc6fc714292b6b872aa34e92992115f22569254bd5162",
+      "parse_table": "51e7be07942e2683e493927e17b144d8867f9379be9223932c56ea402a6fc548",
+      "compare_documents": "5b48e597de1ebcc15afe9afe1dd37f71d0046c4e3e561667d308d2f5f36f2cf8",
+      "parse_chunks": "6923ca6800092214de3cfedc63b437540f9735dd8179ec2c3513c3807a7fe910",
+      "parse_form": "b1f210e6b4791399651b4bfae4d1249dddd69d5f8a8f30b54c1f23128d0174b5",
+      "fill_form": "f16f12186b3a995b8e90c48ffba624ab2798eba0fd6a64193224f45d687810cb",
+      "place_seal": "c6af3c92ad745b6ac0505778e651d728f4c7280104486df3ec389000bf1f76cd",
+      "patch_document": "e6259561127038a9558d99e6ecc162059f42c0bdc79d629b3920d97c88c2195a",
+      "redact_document": "5d8c610db0bf80ee9543a088a9b84fe9d7823eb7252d97cc8ca29a6e99ba3549",
+      "render_document": "1a66e1698ec8c1dc44a6d22d2620249ac7bc3a8c4157d2093ea1da871583b266",
+      "crop_regions": "82a3eaceed44b92971aa66170dbad4370e0673ec4511111d7d7afa443863f0fc",
+      "extract_tables": "5bca2090a011127bd8aef0e1c0507ecdf985f0ce672fab19203c93d83db611b5",
+      "extract_profile": "8a211c314bd25eeba3d2db65322906555eb95183c28f1486a74bb1b2dc7860bc",
+      "generate_document": "e9f9f9f2d2d74d725f0db596706d79186ccc85e721d16b6a090962f3e6244c4c"
+    },
+    "input_field_description_sha256": {
+      "parse_document": "364f5adc865f13b485cacba8c44dafe3a9fb48094e852615954c4b156949ee81",
+      "detect_format": "afa9071da56571fcb8cb27869d74bc9686e27ec14df4903bc9401f8f741386d5",
+      "parse_metadata": "3e4538f00a8fab8338e1fab362643cfc59069724adc7f23f8d477fca8c364041",
+      "parse_pages": "2a1391a5896d2f291a18744ce5bcfeac3fb3c6495fe468767ad4d8ccab19c2ce",
+      "parse_table": "8fb1f2c5c855b603cc12873d53fcee3d9fb1f92c1af323e9ba329c969ae5d342",
+      "compare_documents": "c8a0e439f209acac4c6b452f577c95da2e69bb3eadb4e17d1112312f980fb226",
+      "parse_chunks": "b86230add42c31720c3caf2a233d6b3115ba7612b8f004d8a53de025f60178e5",
+      "parse_form": "46fdc36e2fd1e9fbd060dd645d7a09fa4b846c32f46dc778d0a117739588c3a5",
+      "fill_form": "59a6af3051782bb90f2ae24ca8318b7b4b96f58d939423cf9dd0bcd0ba73806c",
+      "place_seal": "11ce40f134063b28e618d09fdff5169db464a7e5d942ad1ab49e045cb502e9d1",
+      "patch_document": "d78f57a46406b669e206cf6b431051df27c8b017b48090ffd2d5239e849f783c",
+      "redact_document": "b2ad6a08cb0813ab07361b0d0fe050cad81d66928244c9acde256016420951d9",
+      "render_document": "0c9a9fd79be920c7442c956f6da9fe5cdf1a9659b51f590af3fa24d29a521152",
+      "crop_regions": "cf7873aef39ab58e44a83dbb314d65dd903e8acb673ca4dc3e36f2be71e4d08d",
+      "extract_tables": "3321226c06faeae721f8045a2cc35a026dc958f855c69d0078578c4a741ca3d2",
+      "extract_profile": "4222c154d08686ca9615602edd5d9c9d5af51b833ae1ce304fdfff9e1b416c58",
+      "generate_document": "84cb8a5e327cc1d06844221d161c9493f105f9f974ff7b06e948004d09839e94"
+    },
+    "input_field_description_counts": {
+      "parse_document": 13,
+      "detect_format": 1,
+      "parse_metadata": 1,
+      "parse_pages": 2,
+      "parse_table": 2,
+      "compare_documents": 2,
+      "parse_chunks": 3,
+      "parse_form": 1,
+      "fill_form": 8,
+      "place_seal": 9,
+      "patch_document": 3,
+      "redact_document": 5,
+      "render_document": 7,
+      "crop_regions": 5,
+      "extract_tables": 5,
+      "extract_profile": 2,
+      "generate_document": 40
     }
   }
 }

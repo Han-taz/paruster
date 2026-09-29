@@ -138,7 +138,7 @@ Document in `errors.md` that codes are stable protocol values and that unimpleme
 
 Run: `uv run --python 3.10 --with pytest==8.4.2 --with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py -q`
 
-Expected: `3 passed`.
+Expected: `all Task 1 inventory tests pass`.
 
 - [ ] **Step 5: Commit**
 
