@@ -1,6 +1,9 @@
 use crate::hwpx::sections::{SectionInput, lower_sections, order_section_paths};
 use crate::hwpx::styles::StyleCatalog;
-use kordoc_ir::{IrBlock, IrBlockType, IrCell, IrTable, PageMode, ParseOptions, WarningCode};
+use kordoc_ir::{
+    IrBlock, IrBlockType, IrCell, IrTable, PageMode, PageNumber, PageSelection, ParseOptions,
+    WarningCode,
+};
 
 fn section(path: &str, body: &str) -> SectionInput {
     SectionInput::new(
@@ -130,6 +133,103 @@ fn retains_footnotes_and_endnotes() {
     assert_eq!(output.blocks.len(), 3);
     assert_eq!(output.blocks[1].footnote_text.as_deref(), Some("foot"));
     assert_eq!(output.blocks[2].footnote_text.as_deref(), Some("end"));
+}
+
+#[test]
+fn lowers_inline_notes_in_source_order_and_attaches_them_to_host() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:run><hp:t>A</hp:t><hp:ctrl><hp:footNote><hp:subList><hp:p><hp:run><hp:t>foot</hp:t></hp:run></hp:p></hp:subList></hp:footNote></hp:ctrl><hp:t>B</hp:t><hp:ctrl><hp:endNote><hp:subList><hp:p><hp:run><hp:t>end</hp:t></hp:run></hp:p></hp:subList></hp:endNote></hp:ctrl><hp:t>C</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.blocks.len(), 1);
+    assert_eq!(output.blocks[0].text.as_deref(), Some("ABC"));
+    assert_eq!(output.blocks[0].footnote_text.as_deref(), Some("foot\nend"));
+}
+
+#[test]
+fn derives_layout_pages_from_linesegarray() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>first</hp:t></hp:run></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"3000\"/></hp:linesegarray><hp:run><hp:t>continuation</hp:t></hp:run></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>second page</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.page_mode, Some(PageMode::Layout));
+    assert_eq!(
+        output
+            .blocks
+            .iter()
+            .map(|block| block.page_number)
+            .collect::<Vec<_>>(),
+        [Some(1), Some(1), Some(2)]
+    );
+    let selected = lower_sections(
+        &[section(
+            "Contents/section0.xml",
+            "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"3000\"/></hp:linesegarray><hp:run><hp:t>page one</hp:t></hp:run></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>page two</hp:t></hp:run></hp:p>",
+        )],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions {
+            pages: Some(PageSelection::Numbers(vec![PageNumber::new(2.0).unwrap()])),
+            ..ParseOptions::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(selected.page_mode, Some(PageMode::Layout));
+    assert_eq!(selected.blocks.len(), 1);
+    assert_eq!(selected.blocks[0].text.as_deref(), Some("page two"));
+}
+
+#[test]
+fn honors_keep_empty_paragraphs_only_when_true() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p/><hp:p><hp:run><hp:t>text</hp:t></hp:run></hp:p>",
+    );
+    let omitted = lower_sections(
+        std::slice::from_ref(&input),
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    let disabled = lower_sections(
+        std::slice::from_ref(&input),
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions {
+            keep_empty_paragraphs: Some(false),
+            ..ParseOptions::default()
+        },
+    )
+    .unwrap();
+    let enabled = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions {
+            keep_empty_paragraphs: Some(true),
+            ..ParseOptions::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(omitted.blocks.len(), 1);
+    assert_eq!(disabled.blocks.len(), 1);
+    assert_eq!(enabled.blocks.len(), 2);
+    assert_eq!(enabled.blocks[0].text.as_deref(), Some(""));
 }
 
 #[test]

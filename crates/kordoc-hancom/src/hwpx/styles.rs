@@ -20,13 +20,34 @@ impl StyleCatalog {
         let root = parse_critical(bytes)?;
         let mut catalog = Self::default();
         for node in root.descendants("paraPr") {
-            if let (Some(id), Some(level)) = (node.attr("id"), node.attr("outlineLvl")) {
-                let level = level.parse::<u32>().map_err(|_| {
+            let Some(id) = node.attr("id") else { continue };
+            let attr_level = node
+                .attr("outlineLvl")
+                .map(str::parse::<u32>)
+                .transpose()
+                .map_err(|_| {
                     KordocError::new(ErrorCode::Corrupted, "invalid paragraph outline level")
-                })?;
-                if level > 0 {
-                    catalog.paragraph_levels.insert(id.to_owned(), level);
-                }
+                })?
+                .filter(|level| *level > 0);
+            let heading_level = node
+                .children
+                .iter()
+                .find(|child| child.name == "heading" && child.attr("type") == Some("OUTLINE"))
+                .map(|heading| {
+                    heading
+                        .attr("level")
+                        .and_then(|level| level.parse::<u32>().ok())
+                        .and_then(|level| level.checked_add(1))
+                        .ok_or_else(|| {
+                            KordocError::new(
+                                ErrorCode::Corrupted,
+                                "invalid paragraph outline level",
+                            )
+                        })
+                })
+                .transpose()?;
+            if let Some(level) = attr_level.or(heading_level) {
+                catalog.paragraph_levels.insert(id.to_owned(), level);
             }
         }
         for node in root.descendants("charPr") {
@@ -35,7 +56,7 @@ impl StyleCatalog {
                 bold: parse_flag(node.attr("bold")),
                 italic: parse_flag(node.attr("italic")),
                 underline: parse_flag(node.attr("underline")),
-                strike: parse_flag(node.attr("strikeout").or_else(|| node.attr("strike"))),
+                strike: parse_flag(node.attr("strikeout")),
                 ..InlineStyle::default()
             };
             for child in &node.children {
@@ -43,7 +64,7 @@ impl StyleCatalog {
                     "bold" => style.bold = Some(true),
                     "italic" => style.italic = Some(true),
                     "underline" => style.underline = Some(true),
-                    "strikeout" | "strike" => style.strike = Some(true),
+                    "strikeout" => style.strike = Some(true),
                     _ => {}
                 }
             }

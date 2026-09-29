@@ -42,3 +42,47 @@ fn xml_text_limit_is_a_resource_error() {
     let error = parse_critical(xml.as_bytes()).unwrap_err();
     assert_eq!(error.code, ErrorCode::DecompressionBomb);
 }
+
+#[test]
+fn enforces_xml_tree_node_budget() {
+    let xml = format!("<root>{}</root>", "<x/>".repeat(100_001));
+    assert_eq!(
+        parse_critical(xml.as_bytes()).err().map(|error| error.code),
+        Some(ErrorCode::DecompressionBomb)
+    );
+}
+
+#[test]
+fn enforces_xml_tree_attribute_budget() {
+    let attributes = (0..100_001)
+        .map(|index| format!(" a{index}=\"x\""))
+        .collect::<String>();
+    let xml = format!("<root{attributes}/>");
+    assert_eq!(
+        parse_critical(xml.as_bytes()).err().map(|error| error.code),
+        Some(ErrorCode::DecompressionBomb)
+    );
+}
+
+#[test]
+fn enforces_estimated_xml_tree_byte_budget() {
+    let value = "x".repeat(32 * 1024 * 1024);
+    let xml = format!("<root value=\"{value}\"/>");
+    assert_eq!(
+        parse_critical(xml.as_bytes()).err().map(|error| error.code),
+        Some(ErrorCode::DecompressionBomb)
+    );
+}
+
+#[test]
+fn preserves_mixed_text_and_child_source_order() {
+    let root = parse_critical(b"<x>A<y>B</y>C</x>").unwrap();
+    assert_eq!(root.text_content(), "ABC");
+}
+
+#[test]
+fn accepts_utf8_declaration_with_trailing_standalone_attribute() {
+    let root = parse_critical(br#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><root/>"#)
+        .unwrap();
+    assert_eq!(root.name, "root");
+}

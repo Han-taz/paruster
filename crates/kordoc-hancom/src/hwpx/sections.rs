@@ -11,7 +11,7 @@ use kordoc_ir::{
 };
 
 use crate::hwpx::styles::StyleCatalog;
-use crate::hwpx::xml::{XmlNode, parse};
+use crate::hwpx::xml::{XmlContent, XmlNode, parse};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SectionInput {
@@ -41,6 +41,7 @@ pub(crate) struct SectionOutput {
 struct SectionDelta {
     blocks: Vec<IrBlock>,
     outline: Vec<(usize, OutlineItem)>,
+    layout_positions: Vec<Option<u32>>,
 }
 
 /// Orders already-discovered section member paths. A supplied spine is authoritative and must
@@ -99,7 +100,12 @@ pub(crate) fn lower_sections(
         match parse(&input.bytes) {
             Ok(root) => {
                 let mut delta = SectionDelta::default();
-                lower_content(&root, styles, &mut delta);
+                lower_content(
+                    &root,
+                    styles,
+                    options.keep_empty_paragraphs == Some(true),
+                    &mut delta,
+                );
                 deltas.push(Some(delta));
             }
             Err(error) if error.is_resource_limit() => {
@@ -119,7 +125,8 @@ pub(crate) fn lower_sections(
         }
     }
 
-    let layout_usable = layout_cache.is_some_and(|cache| {
+    let xml_layout_cache = derive_xml_layout_cache(&deltas);
+    let supplied_layout_usable = layout_cache.is_some_and(|cache| {
         cache.len() == deltas.len()
             && deltas.iter().zip(cache).all(|(delta, pages)| {
                 delta.as_ref().is_some_and(|delta| {
@@ -127,6 +134,10 @@ pub(crate) fn lower_sections(
                 })
             })
     });
+    let selected_layout_cache = xml_layout_cache
+        .as_deref()
+        .or_else(|| supplied_layout_usable.then_some(layout_cache).flatten());
+    let layout_usable = selected_layout_cache.is_some();
 
     let mut pages_seen = BTreeSet::new();
     for (index, delta) in deltas.into_iter().enumerate() {
@@ -139,7 +150,7 @@ pub(crate) fn lower_sections(
                 "section count exceeds page limit",
             )
         })?;
-        let cache_pages = layout_usable.then(|| &layout_cache.expect("validated cache")[index]);
+        let cache_pages = selected_layout_cache.map(|cache| &cache[index]);
         for (block_index, block) in delta.blocks.iter_mut().enumerate() {
             let page = cache_pages.map_or(fallback_page, |pages| pages[block_index]);
             assign_page_recursive(block, page);
@@ -213,9 +224,40 @@ fn parse_page_range(value: &str) -> Option<BTreeSet<u32>> {
     Some((start..=end).collect())
 }
 
-fn lower_content(node: &XmlNode, styles: &StyleCatalog, delta: &mut SectionDelta) {
+fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<Vec<Vec<u32>>> {
+    if deltas.is_empty() {
+        return None;
+    }
+    let mut previous_position = None;
+    let mut page = 1u32;
+    let mut cache = Vec::with_capacity(deltas.len());
+    for delta in deltas {
+        let delta = delta.as_ref()?;
+        if delta.layout_positions.len() != delta.blocks.len() {
+            return None;
+        }
+        let mut section_pages = Vec::with_capacity(delta.blocks.len());
+        for position in &delta.layout_positions {
+            let position = (*position)?;
+            if previous_position.is_some_and(|previous| position < previous) {
+                page = page.checked_add(1)?;
+            }
+            previous_position = Some(position);
+            section_pages.push(page);
+        }
+        cache.push(section_pages);
+    }
+    Some(cache)
+}
+
+fn lower_content(
+    node: &XmlNode,
+    styles: &StyleCatalog,
+    keep_empty_paragraphs: bool,
+    delta: &mut SectionDelta,
+) {
     match node.name.as_str() {
-        "p" => lower_paragraph(node, styles, delta),
+        "p" => lower_paragraph(node, styles, keep_empty_paragraphs, delta),
         "footNote" | "endNote" => {
             let text = node.text_content();
             if !text.is_empty() {
@@ -224,48 +266,59 @@ fn lower_content(node: &XmlNode, styles: &StyleCatalog, delta: &mut SectionDelta
                     footnote_text: Some(text),
                     ..IrBlock::default()
                 });
+                delta.layout_positions.push(None);
             }
         }
         _ => {
-            for child in &node.children {
-                lower_content(child, styles, delta);
+            for part in &node.content {
+                if let XmlContent::Child(index) = part {
+                    lower_content(&node.children[*index], styles, keep_empty_paragraphs, delta);
+                }
             }
         }
     }
 }
 
-fn lower_paragraph(node: &XmlNode, styles: &StyleCatalog, delta: &mut SectionDelta) {
+fn lower_paragraph(
+    node: &XmlNode,
+    styles: &StyleCatalog,
+    keep_empty_paragraphs: bool,
+    delta: &mut SectionDelta,
+) {
     let level = styles.paragraph_level(node);
     let mut spans = Vec::new();
-    for run in node.children.iter().filter(|child| child.name == "run") {
-        let text = run_text(run);
-        if text.is_empty() {
-            continue;
+    let mut notes = Vec::new();
+    for part in &node.content {
+        match part {
+            XmlContent::Text { start, end } => {
+                let text = &node.text[*start..*end];
+                if !text.trim().is_empty() {
+                    spans.push(IrSpan {
+                        text: text.to_owned(),
+                        ..IrSpan::default()
+                    });
+                }
+            }
+            XmlContent::Child(index) => {
+                let child = &node.children[*index];
+                match child.name.as_str() {
+                    "run" => append_inline_content(child, None, styles, &mut spans, &mut notes),
+                    "footNote" | "endNote" => push_note(child, &mut notes),
+                    "ctrl" => append_inline_content(child, None, styles, &mut spans, &mut notes),
+                    _ => {}
+                }
+            }
         }
-        let style = styles.character_style(run);
-        spans.push(IrSpan {
-            text,
-            bold: style.and_then(|style| style.bold),
-            italic: style.and_then(|style| style.italic),
-            strike: style.and_then(|style| style.strike),
-            underline: style.and_then(|style| style.underline),
-            ..IrSpan::default()
-        });
     }
-    if spans.is_empty() {
-        let text = node.text_content();
-        if text.is_empty() {
-            return;
-        }
-        spans.push(IrSpan {
-            text,
-            ..IrSpan::default()
-        });
+    if spans.is_empty() && !keep_empty_paragraphs && notes.is_empty() {
+        return;
     }
     let text = spans
         .iter()
         .map(|span| span.text.as_str())
         .collect::<String>();
+    let layout_position = paragraph_layout_position(node);
+    let block_index = delta.blocks.len();
     let block = IrBlock {
         kind: if level.is_some() {
             IrBlockType::Heading
@@ -274,12 +327,13 @@ fn lower_paragraph(node: &XmlNode, styles: &StyleCatalog, delta: &mut SectionDel
         },
         text: Some(text.clone()),
         level,
+        footnote_text: (!notes.is_empty()).then(|| notes.join("\n")),
         spans: Some(spans),
         ..IrBlock::default()
     };
     if let Some(level) = level {
         delta.outline.push((
-            delta.blocks.len(),
+            block_index,
             OutlineItem {
                 level,
                 text,
@@ -288,13 +342,64 @@ fn lower_paragraph(node: &XmlNode, styles: &StyleCatalog, delta: &mut SectionDel
         ));
     }
     delta.blocks.push(block);
+    delta.layout_positions.push(layout_position);
 }
 
-fn run_text(node: &XmlNode) -> String {
-    if node.name == "t" {
-        return node.text.clone();
+fn append_inline_content(
+    node: &XmlNode,
+    style: Option<&kordoc_ir::InlineStyle>,
+    styles: &StyleCatalog,
+    spans: &mut Vec<IrSpan>,
+    notes: &mut Vec<String>,
+) {
+    let active_style = if node.name == "run" {
+        styles.character_style(node).or(style)
+    } else {
+        style
+    };
+    for part in &node.content {
+        match part {
+            XmlContent::Text { start, end } => {
+                let text = &node.text[*start..*end];
+                if !text.is_empty() {
+                    spans.push(IrSpan {
+                        text: text.to_owned(),
+                        bold: active_style.and_then(|style| style.bold),
+                        italic: active_style.and_then(|style| style.italic),
+                        strike: active_style.and_then(|style| style.strike),
+                        underline: active_style.and_then(|style| style.underline),
+                        ..IrSpan::default()
+                    });
+                }
+            }
+            XmlContent::Child(index) => {
+                let child = &node.children[*index];
+                match child.name.as_str() {
+                    "footNote" | "endNote" => push_note(child, notes),
+                    _ => append_inline_content(child, active_style, styles, spans, notes),
+                }
+            }
+        }
     }
-    node.children.iter().map(run_text).collect()
+}
+
+fn push_note(node: &XmlNode, notes: &mut Vec<String>) {
+    let text = node.text_content();
+    let text = text.trim();
+    if !text.is_empty() {
+        notes.push(text.to_owned());
+    }
+}
+
+fn paragraph_layout_position(node: &XmlNode) -> Option<u32> {
+    let line_segments = node
+        .children
+        .iter()
+        .find(|child| child.name == "linesegarray")?;
+    line_segments
+        .descendants("lineseg")
+        .into_iter()
+        .find_map(|line| line.attr("vertpos").and_then(|value| value.parse().ok()))
 }
 
 pub(crate) fn assign_page_recursive(block: &mut IrBlock, page: u32) {
