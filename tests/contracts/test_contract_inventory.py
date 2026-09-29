@@ -855,6 +855,18 @@ def test_ir_schema_validates_recursive_ir_and_parse_result_variants() -> None:
     assert not validator.is_valid({**success, "unknown": True})
     assert not validator.is_valid({**success, "blocks": [{**recursive_block, "unknown": True}]})
     assert not validator.is_valid({**success, "blocks": [{**recursive_block, "type": "invalid"}]})
+    table_block = recursive_block["children"][0]
+    table_without_caption_block_type = {
+        **table_block,
+        "table": {
+            **table_block["table"],
+            "captionBlocks": [{"spans": [{"text": "caption"}]}],
+        },
+    }
+    assert not validator.is_valid({
+        **success,
+        "blocks": [{**recursive_block, "children": [table_without_caption_block_type]}],
+    })
     assert not validator.is_valid({"success": False, "fileType": "unknown", "code": "UNSUPPORTED_FORMAT"})
     assert not validator.is_valid({**failure, "code": "NOT_AN_ERROR_CODE"})
     assert not validator.is_valid({**failure, "unknown": True})
