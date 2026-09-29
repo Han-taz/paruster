@@ -45,6 +45,37 @@ def load(name: str) -> dict:
     return json.loads((ROOT / "contracts" / name).read_text(encoding="utf-8"))
 
 
+def validate_schema(schema: dict, path: str) -> None:
+    if "enum" in schema:
+        assert schema["enum"] and len(schema["enum"]) == len(set(schema["enum"])), path
+    if "required" in schema:
+        assert isinstance(schema["required"], list), path
+        assert set(schema["required"]) <= set(schema.get("properties", {})), path
+    if "properties" in schema or schema.get("type") == "object":
+        assert schema.get("type") == "object", path
+        assert "additionalProperties" in schema, path
+    if "properties" in schema:
+        assert schema["additionalProperties"] is False, path
+    if "patternProperties" in schema:
+        assert schema.get("additionalProperties") is False, path
+        for pattern, child in schema["patternProperties"].items():
+            re.compile(pattern)
+            validate_schema(child, f"{path}.patternProperties[{pattern!r}]")
+    for key, child in schema.get("properties", {}).items():
+        validate_schema(child, f"{path}.properties[{key!r}]")
+    additional = schema.get("additionalProperties")
+    if isinstance(additional, dict):
+        validate_schema(additional, f"{path}.additionalProperties")
+    if isinstance(schema.get("items"), dict):
+        validate_schema(schema["items"], f"{path}.items")
+    for key in ("anyOf", "oneOf", "allOf"):
+        for index, child in enumerate(schema.get(key, [])):
+            validate_schema(child, f"{path}.{key}[{index}]")
+    for low, high in (("minimum", "maximum"), ("minLength", "maxLength"), ("minItems", "maxItems")):
+        if low in schema and high in schema:
+            assert schema[low] <= schema[high], path
+
+
 def test_error_inventory_is_exact() -> None:
     errors = load("errors.json")
     assert errors["schema_version"] == 1
@@ -79,6 +110,7 @@ def test_mcp_protocol_covers_every_tool_and_shared_limit() -> None:
 def test_every_input_schema_is_a_unique_described_json_schema() -> None:
     schemas = load("mcp-protocol.json")["input_schemas"]
     for name, schema in schemas.items():
+        validate_schema(schema, name)
         assert schema["type"] == "object", name
         assert schema["properties"], name
         assert schema.get("additionalProperties") is False, name
@@ -123,16 +155,44 @@ def test_nested_generation_objects_reject_unrecognized_keys() -> None:
 def test_output_envelopes_capture_success_and_error_shapes_for_every_tool() -> None:
     envelopes = load("mcp-protocol.json")["output_envelopes"]
     for name, envelope in envelopes.items():
+        assert set(envelope) == {"success", "error", "response_behavior", "response_character_cap", "truncation"}, name
+        assert set(envelope["success"]) == {"variants"}, name
         variants = envelope["success"]["variants"]
         assert variants, name
         for variant in variants:
+            assert set(variant) <= {"when", "content", "max_image_items"}, name
+            assert isinstance(variant["when"], dict), name
             assert variant["content"], name
-            assert all(item["type"] in {"text", "image"} for item in variant["content"]), name
+            for item in variant["content"]:
+                assert item["type"] in {"text", "image"}, name
+                if item["type"] == "text":
+                    assert set(item) <= {"type", "text", "position"}, name
+                    assert isinstance(item["text"], str), name
+                else:
+                    assert set(item) <= {"type", "data", "mimeType", "min_items", "max_items"}, name
+                    assert item["data"] == "base64", name
+                    assert item["mimeType"] in {"image/png or image/jpeg", "image/png", "image/jpeg"}, name
+                    assert 0 <= item.get("min_items", 1) <= item.get("max_items", 1) <= 8, name
         assert envelope["error"] == {
             "content": [{"type": "text", "text": "operation-specific error message"}],
             "isError": True,
         }, name
         assert envelope["response_behavior"], name
+
+
+def test_output_variant_conditions_reference_and_partition_input_enums() -> None:
+    protocol = load("mcp-protocol.json")
+    for name, envelope in protocol["output_envelopes"].items():
+        schema = protocol["input_schemas"][name]
+        variants = envelope["success"]["variants"]
+        for variant in variants:
+            for field_name, accepted in variant["when"].items():
+                field = schema["properties"][field_name]
+                assert set(accepted) <= set(field["enum"]), (name, field_name)
+        for index, left in enumerate(variants):
+            for right in variants[index + 1:]:
+                for field_name in set(left["when"]) & set(right["when"]):
+                    assert not (set(left["when"][field_name]) & set(right["when"][field_name])), name
 
 
 def test_source_hash_evidence_is_complete_and_reproducible() -> None:
@@ -153,7 +213,10 @@ def test_source_hash_evidence_is_complete_and_reproducible() -> None:
     assert {item["path"] for item in evidence["files"]} == expected
     assert all(re.fullmatch(r"[0-9a-f]{64}", item["sha256"]) for item in evidence["files"])
     assert evidence["extraction_command"]
-    assert evidence["review_command"]
+    assert evidence["cwd"] == "kordoc"
+    review_commands = evidence["review_commands"]
+    assert {command.rsplit(" ", 1)[-1] for command in review_commands} == expected
+    assert all(command.startswith("sed -n '1,$p' ") for command in review_commands)
     assert evidence["oracle_path"] == "kordoc/src/mcp"
     expected_hashes = {
         "src/mcp.ts": "16b373581ec8ef71645febc8e47e0c5312b33848406d04d48aff572cc5f8f0f5",
@@ -179,17 +242,92 @@ def test_transport_security_and_limits_are_normative() -> None:
         "stderr": "diagnostics only",
     }
     security = protocol["security"]
-    assert security["root_confinement"]
-    assert security["symlink_safe_outputs"]
-    assert security["sanitized_errors"]
+    assert security["root_confinement"] == {
+        "enabled_when": {"environment_variable": "KORDOC_ROOT", "condition": "set_and_non_empty"},
+        "offline_independence": {"environment_variable": "KORDOC_OFFLINE", "alone_enables_confinement": False},
+        "scope": ["canonicalized_input_paths", "canonicalized_output_paths"],
+        "boundary_check": {"method": "path_segment_relative", "base": "real_root"},
+    }
+    assert security["input_path_resolution"]["steps"] == [
+        {"action": "reject_empty_path"},
+        {"action": "resolve_path"},
+        {"action": "realpath_input", "follows_symlinks": True},
+        {"action": "require_absolute_canonical_path"},
+        {"action": "assert_within_root", "condition": "KORDOC_ROOT_non_empty"},
+        {"action": "check_operation_extension_allowlist"},
+        {"action": "stat_and_enforce_operation_size_limit"},
+        {"action": "read_file"},
+    ]
+    assert security["output_path_resolution"]["steps"] == [
+        {"action": "reject_empty_path"},
+        {"action": "resolve_path"},
+        {"action": "check_output_extension_allowlist"},
+        {"action": "lstat_final_leaf", "reject_if_symlink": True},
+        {"action": "find_nearest_existing_ancestor"},
+        {"action": "realpath_ancestor_and_append_remaining_segments"},
+        {"action": "assert_within_root", "condition": "KORDOC_ROOT_non_empty"},
+        {"action": "recheck_real_parent_and_assert_root", "condition": "after_processing"},
+        {"action": "open_final_leaf", "flags": ["O_NOFOLLOW"]},
+    ]
+    assert security["symlink_rules"] == {
+        "input_paths": {"realpath_follows_symlinks_before_root_check": True},
+        "output_leaf": {"lstat_before_write": True, "reject_symlink": True},
+        "output_ancestors": {"resolve_nearest_existing_ancestor_with_realpath": True, "reject_dangling_symlink": True},
+        "write_race": {"recheck_real_parent": True, "open_flags": ["O_NOFOLLOW"]},
+        "generation_assets": {
+            "resolve_image_dir_and_target": True,
+            "remain_within_image_dir": True,
+            "remain_within_configured_root_when_set": True,
+            "open_leaf_flags": ["O_NOFOLLOW"],
+        },
+    }
+    assert security["error_sanitization"] == {
+        "mcp_failure_envelope": {"content_type": "text", "isError": True},
+        "categories": {
+            "KordocError": {"action": "pass_message_through", "may_include_path": True},
+            "filesystem_error": {
+                "branch": {"error_code_pattern": "^E[A-Z]+$"},
+                "action": "emit_code_specific_hint",
+                "include_raw_os_message": False,
+                "include_raw_path": False,
+            },
+            "parse_error": {"classification": "PARSE_ERROR", "action": "sanitize_error"},
+            "other_error": {"action": "emit_classified_category_without_native_details"},
+        },
+    }
     assert security["extension_allowlists"]
-    assert security["no_input_overwrite"]
+    assert "no_input_overwrite" not in security
+    assert security["same_file_policy"] == {
+        name: (
+            {"checked": True, "reject_if_same_resolved_file": True}
+            if name == "redact_document"
+            else {"checked": False, "reject_if_same_resolved_file": False}
+        )
+        for name in MCP_TOOLS
+    }
+    mcp_doc = (ROOT / "docs/SSOT/contracts/mcp.md").read_text(encoding="utf-8")
+    assert "KORDOC_OFFLINE alone does not enable root confinement" in mcp_doc
+    assert "Only `redact_document` rejects a same-file input/output path" in mcp_doc
 
 
 def test_response_caps_and_image_limits_match_per_tool_behavior() -> None:
     envelopes = load("mcp-protocol.json")["output_envelopes"]
-    capped = {name for name, item in envelopes.items() if "200000" in item["response_behavior"]}
+    capped = {name for name, item in envelopes.items() if item["response_character_cap"] == 200_000}
     assert capped == {"parse_document", "parse_chunks", "redact_document"}
+    for name, envelope in envelopes.items():
+        if name in capped:
+            assert envelope["truncation"]["enabled"] is True
+            assert envelope["truncation"]["limit_chars"] == 200_000
+            assert envelope["truncation"]["marker_semantics"] == {
+                "append_after_truncated_text": True,
+                "includes_limit": True,
+                "includes_original_length": True,
+            }
+            assert "{limit_formatted}" in envelope["truncation"]["marker_template"]
+            assert "{actual_formatted}" in envelope["truncation"]["marker_template"]
+        else:
+            assert envelope["response_character_cap"] is None
+            assert envelope["truncation"]["enabled"] is False
     assert "up to 8 image items" in envelopes["render_document"]["response_behavior"]
     assert "zero to 8 image content items" in envelopes["extract_tables"]["response_behavior"].lower()
     render = envelopes["render_document"]["success"]["variants"]
@@ -211,6 +349,7 @@ def test_response_caps_and_image_limits_match_per_tool_behavior() -> None:
 
 def test_each_tool_freezes_file_extensions_and_conditional_output_paths() -> None:
     files = load("mcp-protocol.json")["file_behavior"]
+    assert set(files) == set(MCP_TOOLS)
     document = [".hwp", ".hwpx", ".hml", ".pdf", ".xls", ".xlsx", ".docx"]
     parse = document + [".png", ".jpg", ".jpeg", ".webp"]
     for name in ("parse_document", "detect_format", "parse_metadata", "parse_pages", "parse_table", "parse_chunks"):

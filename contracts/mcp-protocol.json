@@ -12,10 +12,81 @@
     "stderr": "diagnostics only"
   },
   "security": {
-    "root_confinement": "When KORDOC_ROOT is configured, resolved input and output paths must remain within that root; offline mode applies its configured access root.",
-    "input_resolution": "Resolve input paths with realpath before checking the extension allowlist and reading the file; reject missing paths and paths outside the configured root.",
-    "output_resolution": "Check the output extension allowlist; reject a symlink at the final path; resolve the nearest existing ancestor and remaining path within the root; recheck the real parent after processing and open the leaf with O_NOFOLLOW.",
-    "symlink_safe_outputs": true,
+    "root_confinement": {
+      "enabled_when": {
+        "environment_variable": "KORDOC_ROOT",
+        "condition": "set_and_non_empty"
+      },
+      "offline_independence": {
+        "environment_variable": "KORDOC_OFFLINE",
+        "alone_enables_confinement": false
+      },
+      "scope": [
+        "canonicalized_input_paths",
+        "canonicalized_output_paths"
+      ],
+      "boundary_check": {
+        "method": "path_segment_relative",
+        "base": "real_root"
+      }
+    },
+    "input_path_resolution": {
+      "steps": [
+        {"action": "reject_empty_path"},
+        {"action": "resolve_path"},
+        {"action": "realpath_input", "follows_symlinks": true},
+        {"action": "require_absolute_canonical_path"},
+        {"action": "assert_within_root", "condition": "KORDOC_ROOT_non_empty"},
+        {"action": "check_operation_extension_allowlist"},
+        {"action": "stat_and_enforce_operation_size_limit"},
+        {"action": "read_file"}
+      ],
+      "access_root_resolution": "realpath configured KORDOC_ROOT; if it does not exist, retain its resolved absolute path so access checks fail closed",
+      "follows_input_symlinks_before_root_check": true
+    },
+    "output_path_resolution": {
+      "steps": [
+        {"action": "reject_empty_path"},
+        {"action": "resolve_path"},
+        {"action": "check_output_extension_allowlist"},
+        {"action": "lstat_final_leaf", "reject_if_symlink": true},
+        {"action": "find_nearest_existing_ancestor"},
+        {"action": "realpath_ancestor_and_append_remaining_segments"},
+        {"action": "assert_within_root", "condition": "KORDOC_ROOT_non_empty"},
+        {"action": "recheck_real_parent_and_assert_root", "condition": "after_processing"},
+        {"action": "open_final_leaf", "flags": ["O_NOFOLLOW"]}
+      ],
+      "dangling_symlink_ancestor": "realpath failure rejects output path"
+    },
+    "symlink_rules": {
+      "input_paths": {"realpath_follows_symlinks_before_root_check": true},
+      "output_leaf": {"lstat_before_write": true, "reject_symlink": true},
+      "output_ancestors": {"resolve_nearest_existing_ancestor_with_realpath": true, "reject_dangling_symlink": true},
+      "write_race": {"recheck_real_parent": true, "open_flags": ["O_NOFOLLOW"]},
+      "generation_assets": {
+        "resolve_image_dir_and_target": true,
+        "remain_within_image_dir": true,
+        "remain_within_configured_root_when_set": true,
+        "open_leaf_flags": ["O_NOFOLLOW"]
+      }
+    },
+    "error_sanitization": {
+      "mcp_failure_envelope": {
+        "content_type": "text",
+        "isError": true
+      },
+      "categories": {
+        "KordocError": {"action": "pass_message_through", "may_include_path": true},
+        "filesystem_error": {
+          "branch": {"error_code_pattern": "^E[A-Z]+$"},
+          "action": "emit_code_specific_hint",
+          "include_raw_os_message": false,
+          "include_raw_path": false
+        },
+        "parse_error": {"classification": "PARSE_ERROR", "action": "sanitize_error"},
+        "other_error": {"action": "emit_classified_category_without_native_details"}
+      }
+    },
     "extension_allowlists": {
       "document": [
         ".hwp",
@@ -43,8 +114,25 @@
         ".json"
       ]
     },
-    "no_input_overwrite": "redact_document explicitly rejects an output resolving to the same file as the input. Other output-producing tools write the caller-supplied output_path; the source has no shared same-file rejection rule for them.",
-    "sanitized_errors": "Error responses use text content with isError=true. Native exceptions are classified and sanitized; filesystem errors use code-specific hints. Explicit KordocError validation messages may include the offending path or extension, as in the source behavior.",
+    "same_file_policy": {
+      "parse_document": {"checked": false, "reject_if_same_resolved_file": false},
+      "detect_format": {"checked": false, "reject_if_same_resolved_file": false},
+      "parse_metadata": {"checked": false, "reject_if_same_resolved_file": false},
+      "parse_pages": {"checked": false, "reject_if_same_resolved_file": false},
+      "parse_table": {"checked": false, "reject_if_same_resolved_file": false},
+      "compare_documents": {"checked": false, "reject_if_same_resolved_file": false},
+      "parse_chunks": {"checked": false, "reject_if_same_resolved_file": false},
+      "parse_form": {"checked": false, "reject_if_same_resolved_file": false},
+      "fill_form": {"checked": false, "reject_if_same_resolved_file": false},
+      "place_seal": {"checked": false, "reject_if_same_resolved_file": false},
+      "patch_document": {"checked": false, "reject_if_same_resolved_file": false},
+      "redact_document": {"checked": true, "reject_if_same_resolved_file": true},
+      "render_document": {"checked": false, "reject_if_same_resolved_file": false},
+      "crop_regions": {"checked": false, "reject_if_same_resolved_file": false},
+      "extract_tables": {"checked": false, "reject_if_same_resolved_file": false},
+      "extract_profile": {"checked": false, "reject_if_same_resolved_file": false},
+      "generate_document": {"checked": false, "reject_if_same_resolved_file": false}
+    },
     "stdout_logging": "Console output is routed to stderr before server startup; stdout is reserved for JSON-RPC framing.",
     "import_behavior": "Importing src/mcp.ts from another entry point does not auto-start stdio; direct execution auto-starts, and startMcpServer is idempotent."
   },
@@ -1130,7 +1218,20 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item, truncated with an explicit marker at 200000 JavaScript characters."
+      "response_behavior": "One text item, truncated with an explicit marker at 200000 JavaScript characters.",
+      "response_character_cap": 200000,
+      "truncation": {
+        "enabled": true,
+        "limit_chars": 200000,
+        "trigger": "response text length exceeds the limit",
+        "operation": "truncate text to the limit and append the marker",
+        "marker_template": "\n\n… [응답이 {limit_formatted}자 상한을 넘어 절단됨 (전체 {actual_formatted}자) — parse_pages로 페이지 범위를 나눠 읽으세요]",
+        "marker_semantics": {
+          "append_after_truncated_text": true,
+          "includes_limit": true,
+          "includes_original_length": true
+        }
+      }
     },
     "detect_format": {
       "success": {
@@ -1155,7 +1256,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item; no response-character cap."
+      "response_behavior": "One text item; no response-character cap.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "parse_metadata": {
       "success": {
@@ -1180,7 +1285,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item; input file limit is 50 MiB; no response-character cap."
+      "response_behavior": "One text item; input file limit is 50 MiB; no response-character cap.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "parse_pages": {
       "success": {
@@ -1205,7 +1314,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item for selected pages; no response-character cap."
+      "response_behavior": "One text item for selected pages; no response-character cap.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "parse_table": {
       "success": {
@@ -1230,7 +1343,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item; no response-character cap."
+      "response_behavior": "One text item; no response-character cap.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "compare_documents": {
       "success": {
@@ -1255,7 +1372,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item; each displayed changed text is clipped to 200 characters; no global response cap."
+      "response_behavior": "One text item; each displayed changed text is clipped to 200 characters; no global response cap.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "parse_chunks": {
       "success": {
@@ -1280,7 +1401,20 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item, truncated with marker at 200000 JavaScript characters."
+      "response_behavior": "One text item, truncated with marker at 200000 JavaScript characters.",
+      "response_character_cap": 200000,
+      "truncation": {
+        "enabled": true,
+        "limit_chars": 200000,
+        "trigger": "response text length exceeds the limit",
+        "operation": "truncate text to the limit and append the marker",
+        "marker_template": "\n\n… [응답이 {limit_formatted}자 상한을 넘어 절단됨 (전체 {actual_formatted}자) — parse_pages로 페이지 범위를 나눠 읽으세요]",
+        "marker_semantics": {
+          "append_after_truncated_text": true,
+          "includes_limit": true,
+          "includes_original_length": true
+        }
+      }
     },
     "parse_form": {
       "success": {
@@ -1305,7 +1439,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item; no response-character cap."
+      "response_behavior": "One text item; no response-character cap.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "fill_form": {
       "success": {
@@ -1330,7 +1468,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "Text content. mask_values hides filled values; Markdown may be returned as preview, HWPX output is written only to output_path."
+      "response_behavior": "Text content. mask_values hides filled values; Markdown may be returned as preview, HWPX output is written only to output_path.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "place_seal": {
       "success": {
@@ -1355,7 +1497,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item; writes HWPX to output_path."
+      "response_behavior": "One text item; writes HWPX to output_path.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "patch_document": {
       "success": {
@@ -1380,7 +1526,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item; writes patched HWPX/HWP to output_path."
+      "response_behavior": "One text item; writes patched HWPX/HWP to output_path.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "redact_document": {
       "success": {
@@ -1405,7 +1555,20 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item, globally truncated at 200000 JavaScript characters; listed findings and residuals are separately capped at 50 lines. Failed residual/unscanned checks set isError=true."
+      "response_behavior": "One text item, globally truncated at 200000 JavaScript characters; listed findings and residuals are separately capped at 50 lines. Failed residual/unscanned checks set isError=true.",
+      "response_character_cap": 200000,
+      "truncation": {
+        "enabled": true,
+        "limit_chars": 200000,
+        "trigger": "response text length exceeds the limit",
+        "operation": "truncate text to the limit and append the marker",
+        "marker_template": "\n\n… [응답이 {limit_formatted}자 상한을 넘어 절단됨 (전체 {actual_formatted}자) — parse_pages로 페이지 범위를 나눠 읽으세요]",
+        "marker_semantics": {
+          "append_after_truncated_text": true,
+          "includes_limit": true,
+          "includes_original_length": true
+        }
+      }
     },
     "render_document": {
       "success": {
@@ -1456,7 +1619,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "Raster PNG/JPEG return up to 8 image items followed by a text summary; svg/html/pdf return one text item after writing output files. No global response-character cap."
+      "response_behavior": "Raster PNG/JPEG return up to 8 image items followed by a text summary; svg/html/pdf return one text item after writing output files. No global response-character cap.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "crop_regions": {
       "success": {
@@ -1481,7 +1648,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item; writes image crops and regions.json to output_dir."
+      "response_behavior": "One text item; writes image crops and regions.json to output_dir.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "extract_tables": {
       "success": {
@@ -1534,7 +1705,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "For visual none, return one text item. For visual crop modes, return zero to 8 image content items followed by one final text item; zero crops therefore produce a text-only response. Crops and tables.json are written to output_dir when enabled. No global response-character cap."
+      "response_behavior": "For visual none, return one text item. For visual crop modes, return zero to 8 image content items followed by one final text item; zero crops therefore produce a text-only response. Crops and tables.json are written to output_dir when enabled. No global response-character cap.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "extract_profile": {
       "success": {
@@ -1559,7 +1734,11 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item; writes JSON profile to output_path."
+      "response_behavior": "One text item; writes JSON profile to output_path.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     },
     "generate_document": {
       "success": {
@@ -1584,13 +1763,16 @@
         ],
         "isError": true
       },
-      "response_behavior": "One text item; writes generated HWPX to output_path."
+      "response_behavior": "One text item; writes generated HWPX to output_path.",
+      "response_character_cap": null,
+      "truncation": {
+        "enabled": false
+      }
     }
   },
   "source_evidence": {
     "oracle_path": "kordoc/src/mcp",
     "extraction_command": "sha256sum src/mcp.ts src/mcp/tools-parse.ts src/mcp/tools-form.ts src/mcp/tools-render.ts src/mcp/tools-generate.ts src/mcp/shared.ts src/shared/offline.ts src/utils.ts src/hwpx/gongmun-surface.ts src/hwpx/gongmun.ts src/shared/generate-images.ts",
-    "review_command": "rg -n -A24 'server\\.tool\\(' src/mcp/tools-{parse,form,render,generate}.ts; rg -n 'MAX_FILE_SIZE|MAX_METADATA_FILE_SIZE|MAX_RESPONSE_CHARS|safePath|safeOutputPath|writeOutputFile|PARSE_EXTENSIONS|IMAGE_EXTENSIONS|PROFILE_EXTENSIONS' src/mcp/shared.ts; sed -n '15,55p' src/hwpx/gongmun-surface.ts; sed -n '272,289p' src/hwpx/gongmun.ts; sed -n '1,60p' src/mcp.ts; sed -n '1,180p' src/shared/offline.ts; sed -n '1,180p' src/utils.ts; sed -n '1,150p' src/shared/generate-images.ts",
     "files": [
       {
         "path": "src/mcp.ts",
@@ -1636,6 +1818,20 @@
         "path": "src/shared/generate-images.ts",
         "sha256": "b8a25ab961c06013d3b4f5f28b0de38a40a3d683873da767aae064856033b33a"
       }
+    ],
+    "cwd": "kordoc",
+    "review_commands": [
+      "sed -n '1,$p' src/mcp.ts",
+      "sed -n '1,$p' src/mcp/tools-parse.ts",
+      "sed -n '1,$p' src/mcp/tools-form.ts",
+      "sed -n '1,$p' src/mcp/tools-render.ts",
+      "sed -n '1,$p' src/mcp/tools-generate.ts",
+      "sed -n '1,$p' src/mcp/shared.ts",
+      "sed -n '1,$p' src/shared/offline.ts",
+      "sed -n '1,$p' src/utils.ts",
+      "sed -n '1,$p' src/hwpx/gongmun-surface.ts",
+      "sed -n '1,$p' src/hwpx/gongmun.ts",
+      "sed -n '1,$p' src/shared/generate-images.ts"
     ]
   },
   "generation_behavior": {
