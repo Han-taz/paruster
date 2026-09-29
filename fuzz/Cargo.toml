@@ -1,0 +1,30 @@
+[package]
+name = "kordoc-core-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+cargo-fuzz-version = "0.13.2"
+
+[dependencies]
+libfuzzer-sys = "0.4"
+kordoc-core = { path = "../crates/kordoc-core", features = ["fuzzing"] }
+
+[[bin]]
+name = "detect_format"
+path = "fuzz_targets/detect_format.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "zip_preflight"
+path = "fuzz_targets/zip_preflight.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]
+members = ["."]

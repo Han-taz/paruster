@@ -5,6 +5,9 @@ edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 
+[features]
+fuzzing = []
+
 [dependencies]
 cfb.workspace = true
 kordoc-ir = { path = "../kordoc-ir" }
