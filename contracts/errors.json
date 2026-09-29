@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "codes": [
+    {"code": "EMPTY_INPUT", "description": "The supplied document input contains no bytes."},
+    {"code": "UNSUPPORTED_FORMAT", "description": "The detected document format is not supported by the requested operation."},
+    {"code": "ENCRYPTED", "description": "The document is encrypted and cannot be opened with the supplied credentials."},
+    {"code": "DRM_PROTECTED", "description": "The document is protected by DRM and cannot be processed."},
+    {"code": "CORRUPTED", "description": "The document container or its required contents are invalid or damaged."},
+    {"code": "DECOMPRESSION_BOMB", "description": "Decompression exceeded a configured safety bound."},
+    {"code": "ZIP_BOMB", "description": "ZIP member sizes or expansion ratios exceeded configured safety bounds."},
+    {"code": "IMAGE_BASED_PDF", "description": "The PDF has no usable text layer and requires OCR."},
+    {"code": "NO_SECTIONS", "description": "The document contains no parseable sections."},
+    {"code": "PARSE_ERROR", "description": "Document parsing failed for an otherwise recognized format."},
+    {"code": "MISSING_DEPENDENCY", "description": "An optional operation requires a dependency that is unavailable."},
+    {"code": "OUTPUT_TOO_LARGE", "description": "The generated output exceeds a configured size limit."},
+    {"code": "FILE_NOT_FOUND", "description": "A requested input file does not exist or cannot be resolved."}
+  ]
+}

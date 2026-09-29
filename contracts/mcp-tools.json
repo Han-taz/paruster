@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "tools": [
+    {"name":"parse_document","source":"src/mcp/tools-parse.ts","status":"planned"},
+    {"name":"detect_format","source":"src/mcp/tools-parse.ts","status":"planned"},
+    {"name":"parse_metadata","source":"src/mcp/tools-parse.ts","status":"planned"},
+    {"name":"parse_pages","source":"src/mcp/tools-parse.ts","status":"planned"},
+    {"name":"parse_table","source":"src/mcp/tools-parse.ts","status":"planned"},
+    {"name":"compare_documents","source":"src/mcp/tools-parse.ts","status":"planned"},
+    {"name":"parse_chunks","source":"src/mcp/tools-parse.ts","status":"planned"},
+    {"name":"parse_form","source":"src/mcp/tools-form.ts","status":"planned"},
+    {"name":"fill_form","source":"src/mcp/tools-form.ts","status":"planned"},
+    {"name":"place_seal","source":"src/mcp/tools-form.ts","status":"planned"},
+    {"name":"patch_document","source":"src/mcp/tools-form.ts","status":"planned"},
+    {"name":"redact_document","source":"src/mcp/tools-form.ts","status":"planned"},
+    {"name":"render_document","source":"src/mcp/tools-render.ts","status":"planned"},
+    {"name":"crop_regions","source":"src/mcp/tools-render.ts","status":"planned"},
+    {"name":"extract_tables","source":"src/mcp/tools-render.ts","status":"planned"},
+    {"name":"extract_profile","source":"src/mcp/tools-generate.ts","status":"planned"},
+    {"name":"generate_document","source":"src/mcp/tools-generate.ts","status":"planned"}
+  ]
+}
