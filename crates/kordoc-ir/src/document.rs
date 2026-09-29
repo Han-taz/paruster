@@ -235,7 +235,7 @@ pub enum ListType {
     Unordered,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IrSpan {
     pub text: String,
@@ -251,20 +251,6 @@ pub struct IrSpan {
     pub code: Option<bool>,
     #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub placeholder: Option<bool>,
-}
-
-impl Default for IrSpan {
-    fn default() -> Self {
-        Self {
-            text: String::new(),
-            bold: None,
-            italic: None,
-            strike: None,
-            underline: None,
-            code: None,
-            placeholder: None,
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -660,6 +646,8 @@ impl ParseFailure {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
+// Keep direct public payloads so callers can construct `ParseResult::Success(value)` without boxing.
+#[allow(clippy::large_enum_variant)]
 pub enum ParseResult {
     Success(ParseSuccess),
     Failure(ParseFailure),
