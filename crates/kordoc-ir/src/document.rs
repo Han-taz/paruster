@@ -460,6 +460,77 @@ pub struct PageMarkdown {
     pub markdown: String,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ChunkGranularity {
+    Block,
+    #[default]
+    Section,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DocChunkType {
+    Text,
+    Table,
+    Heading,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocChunkTable {
+    #[serde(deserialize_with = "deserialize_u32")]
+    pub rows: u32,
+    #[serde(deserialize_with = "deserialize_u32")]
+    pub cols: u32,
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    pub cells: Option<Vec<Vec<String>>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocChunk {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub kind: DocChunkType,
+    pub breadcrumb: Vec<String>,
+    pub text: String,
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_u32",
+        skip_serializing_if = "is_none"
+    )]
+    pub page: Option<u32>,
+    pub block_range: [u32; 2],
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    pub table: Option<DocChunkTable>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ChunkOptions {
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    pub include_table_cells: Option<bool>,
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    pub granularity: Option<ChunkGranularity>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ClassifyContext {
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
+    pub nearby_text: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TableRepresentation {
+    #[default]
+    Gfm,
+    Html,
+    Visual,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ExtractedImage {

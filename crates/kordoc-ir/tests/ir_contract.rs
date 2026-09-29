@@ -1,9 +1,10 @@
 use kordoc_ir::{
-    BoundingBox, DocumentMetadata, DocumentQualitySummary, ErrorCode, ExtractedImage, ImageData,
+    BoundingBox, ChunkGranularity, ChunkOptions, ClassifyContext, DocChunk, DocChunkTable,
+    DocChunkType, DocumentMetadata, DocumentQualitySummary, ErrorCode, ExtractedImage, ImageData,
     InlineStyle, IrBlock, IrBlockType, IrCell, IrSpan, IrTable, KordocError, ListType, OcrReason,
     OutlineItem, PageMarkdown, PageMode, PageQuality, ParseFailure, ParseResult, ParseSuccess,
     ParseWarning, TableClassificationKind, TableClassificationReason, TableClassificationSummary,
-    WarningCode,
+    TableRepresentation, WarningCode,
 };
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -64,6 +65,81 @@ where
             "{field} accepted invalid integer value"
         );
     }
+}
+
+#[test]
+fn doc_chunk_serializes_frozen_keys() {
+    let chunk = DocChunk {
+        id: "c0001".into(),
+        kind: DocChunkType::Table,
+        breadcrumb: vec!["Title".into()],
+        text: "| A |".into(),
+        page: Some(2),
+        block_range: [3, 3],
+        table: Some(DocChunkTable {
+            rows: 1,
+            cols: 1,
+            cells: None,
+        }),
+    };
+
+    let wire = serde_json::to_value(&chunk).unwrap();
+    assert_eq!(wire["type"], "table");
+    assert_eq!(wire["blockRange"], serde_json::json!([3, 3]));
+    assert_eq!(wire["page"], 2);
+    assert_eq!(wire["table"], serde_json::json!({"rows": 1, "cols": 1}));
+    assert_eq!(serde_json::from_value::<DocChunk>(wire).unwrap(), chunk);
+}
+
+#[test]
+fn chunk_options_reject_unknown_and_null() {
+    let options = ChunkOptions {
+        include_table_cells: Some(false),
+        granularity: Some(ChunkGranularity::Section),
+    };
+    assert_eq!(
+        serde_json::to_value(options).unwrap(),
+        serde_json::json!({"includeTableCells": false, "granularity": "section"})
+    );
+    assert!(
+        serde_json::from_value::<ChunkOptions>(serde_json::json!({"granularity": null})).is_err()
+    );
+    assert!(serde_json::from_value::<ChunkOptions>(serde_json::json!({"extra": true})).is_err());
+}
+
+#[test]
+fn p7_table_models_preserve_exact_values_and_reason_order() {
+    let context = ClassifyContext {
+        nearby_text: Some(vec!["layout".into(), "diagram".into()]),
+    };
+    assert_eq!(
+        serde_json::to_value(context).unwrap(),
+        serde_json::json!({"nearbyText": ["layout", "diagram"]})
+    );
+    assert_eq!(
+        serde_json::to_value(TableRepresentation::Visual).unwrap(),
+        "visual"
+    );
+
+    let summary = TableClassificationSummary {
+        kind: TableClassificationKind::Uncertain,
+        confidence: 0.1,
+        semantic_score: 0.4,
+        non_tabular_score: 0.3,
+        reasons: vec![
+            TableClassificationReason::LowEvidence,
+            TableClassificationReason::AmbiguousScores,
+        ],
+    };
+    let wire = serde_json::to_value(&summary).unwrap();
+    assert_eq!(
+        wire["reasons"],
+        serde_json::json!(["low-evidence", "ambiguous-scores"])
+    );
+    assert_eq!(
+        serde_json::from_value::<TableClassificationSummary>(wire).unwrap(),
+        summary
+    );
 }
 
 #[test]
