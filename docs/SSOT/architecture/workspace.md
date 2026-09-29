@@ -1,18 +1,21 @@
 # Workspace architecture
 
-This page records the current foundation and P7 branch implementation. It describes the
+This page records the current foundation, P7 implementation, and first-parser-wave scaffold. It describes the
 working interfaces and boundaries, not completed document-processing parity.
 
 ## Components and data flow
 
-The Rust workspace is split into three crates. `kordoc-ir` defines shared wire
+The Rust workspace contains five crates. `kordoc-ir` defines shared wire
 DTOs plus the Rust-only `ParsedDocument` and `ParseOptions` handoff for future
 format crates. `kordoc-core` owns bounded format detection, container preflight, a
 private injectable registry, panic containment, result assembly, and P7's
 shared Markdown/page/chunk projections, table policy, and one Markdown
 table-unit reader. Format
 crates depend on IR only; core-side adapters call them, preventing a Cargo
-cycle. The production registry remains empty until a real parser passes parity.
+cycle. `kordoc-hancom` and `kordoc-pdf` are registered, compilable scaffold
+crates that depend only on `kordoc-ir`; they intentionally expose no public
+parser or validator entry points and are not registered in production. The
+production registry remains empty until a real parser passes parity.
 `kordoc-python` validates owned options and translates calls and wire results.
 
 The `python/kordoc` Python facade normalizes supported caller inputs—bytes-like
@@ -32,6 +35,16 @@ Python caller
   -> kordoc-ir wire DTOs: serialize the result envelope
   -> Python facade result or typed error
 ```
+
+The parser-wave scaffold pins candidate XML, cryptography, and pure-Rust PDF
+dependencies in the workspace and lockfile so each worker slice is exercised
+by locked workspace CI. A dependency pin is not an implementation or parity
+claim. In particular, `lopdf` is only the P2 substrate-spike candidate: its
+default eager document loader and per-stream decompression limit do not yet
+satisfy the required pre-allocation and cumulative budgets. P2 must reject it
+or wrap/replace it according to the child plan's spike exit criterion before
+semantic work proceeds. PDFium, Node, and pdfjs are absent from the base parser
+dependency graph.
 
 ## Security boundaries
 
