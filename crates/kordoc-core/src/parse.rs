@@ -179,17 +179,28 @@ fn try_parse_with_registry_at_len(
 /// Assemble parser data with the projections produced by the core projection layer.
 pub(crate) fn assemble_success(
     file_type: FileType,
-    parsed: ParsedDocument,
-    markdown: String,
-    pages: Option<Vec<kordoc_ir::PageMarkdown>>,
-) -> kordoc_ir::ParseSuccess {
+    mut parsed: ParsedDocument,
+    options: &ParseOptions,
+) -> Result<kordoc_ir::ParseSuccess, ParseDispatchError> {
+    if options.classify_tables == Some(true) {
+        crate::table::classifier::classify_table_tree(&mut parsed.blocks)
+            .map_err(|error| dispatch_error(file_type, error, options))?;
+    }
+    let markdown = crate::blocks_to_markdown(&parsed.blocks)
+        .map_err(|error| dispatch_error(file_type, error, options))?;
+    let pages = crate::blocks_to_pages(
+        &parsed.blocks,
+        parsed.page_evidence.as_deref(),
+        crate::blocks_to_markdown,
+    )
+    .map_err(|error| dispatch_error(file_type, error, options))?;
     let page_count = parsed.page_count.or_else(|| {
         parsed
             .metadata
             .as_ref()
             .and_then(|metadata| metadata.page_count)
     });
-    kordoc_ir::ParseSuccess {
+    Ok(kordoc_ir::ParseSuccess {
         file_type,
         page_count,
         is_image_based: parsed.is_image_based,
@@ -203,7 +214,7 @@ pub(crate) fn assemble_success(
         pages,
         page_quality: parsed.page_quality,
         quality_summary: parsed.quality_summary,
-    }
+    })
 }
 
 fn dispatch_error(
@@ -514,6 +525,7 @@ mod tests {
         let document = ParsedDocument {
             blocks: vec![
                 kordoc_ir::IrBlock {
+                    page_number: Some(1),
                     children: Some(vec![kordoc_ir::IrBlock::paragraph("nested child")]),
                     ..kordoc_ir::IrBlock::paragraph("outer text")
                 },
@@ -553,25 +565,23 @@ mod tests {
             ]),
             ..ParsedDocument::default()
         };
-        let (markdown, pages) = test_only_markdown_projection(&document);
-
-        let success = assemble_success(FileType::Pdf, document, markdown, pages);
+        let success = assemble_success(FileType::Pdf, document, &ParseOptions::default()).unwrap();
 
         assert_eq!(success.file_type, FileType::Pdf);
         assert!(success.success);
         assert_eq!(success.page_count, Some(2));
         assert_eq!(success.metadata.as_ref().unwrap().page_count, Some(9));
-        assert_eq!(success.markdown, "outer text");
+        assert_eq!(success.markdown, "outer text\n\ncell");
         assert_eq!(
             success.pages,
             Some(vec![
                 PageMarkdown {
                     page_number: 1,
-                    markdown: "page 1".into()
+                    markdown: "outer text\n\ncell".into()
                 },
                 PageMarkdown {
                     page_number: 2,
-                    markdown: "page 2".into()
+                    markdown: "".into()
                 },
             ])
         );
@@ -615,26 +625,5 @@ mod tests {
         );
         let roundtrip: ParseResult = serde_json::from_value(wire).unwrap();
         assert_eq!(roundtrip, result);
-    }
-
-    fn test_only_markdown_projection(
-        document: &ParsedDocument,
-    ) -> (String, Option<Vec<PageMarkdown>>) {
-        let markdown = document
-            .blocks
-            .iter()
-            .filter_map(|block| block.text.as_deref())
-            .collect::<Vec<_>>()
-            .join("\n");
-        let pages = document.page_evidence.as_ref().map(|evidence| {
-            evidence
-                .iter()
-                .map(|page| PageMarkdown {
-                    page_number: page.page_number,
-                    markdown: format!("page {}", page.page_number),
-                })
-                .collect()
-        });
-        (markdown, pages)
     }
 }
