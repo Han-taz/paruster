@@ -13,6 +13,7 @@ crate-type = ["cdylib", "rlib"]
 kordoc-core = { path = "../kordoc-core", version = "=0.1.0" }
 kordoc-ir = { path = "../kordoc-ir", version = "=0.1.0" }
 pyo3 = { workspace = true, features = ["abi3-py310"] }
+serde.workspace = true
 serde_json.workspace = true
 
 [features]

@@ -24,6 +24,176 @@ _FILE_TYPES = {
 _ERROR_CODES = frozenset(_ERROR_TYPES)
 
 
+@dataclass(frozen=True, slots=True)
+class PageMarkdown:
+    """Markdown rendered for one numbered page."""
+
+    page_number: int
+    markdown: str
+
+    def __post_init__(self) -> None:
+        if type(self.page_number) is not int or not 0 <= self.page_number <= 2**32 - 1:
+            raise TypeError("pageNumber must be an unsigned 32-bit integer")
+        if not isinstance(self.markdown, str):
+            raise TypeError("markdown must be a string")
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, Any]) -> PageMarkdown:
+        if not isinstance(value, Mapping):
+            raise TypeError("page markdown must be an object")
+        if set(value) != {"pageNumber", "markdown"}:
+            raise ValueError("page markdown requires exactly pageNumber and markdown")
+        return cls(value["pageNumber"], value["markdown"])
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"pageNumber": self.page_number, "markdown": self.markdown}
+
+
+@dataclass(frozen=True, slots=True)
+class ChunkOptions:
+    """Options for structural document chunk projection."""
+
+    include_table_cells: bool | None = None
+    granularity: str | None = None
+
+    def __post_init__(self) -> None:
+        if (
+            self.include_table_cells is not None
+            and type(self.include_table_cells) is not bool
+        ):
+            raise TypeError("includeTableCells must be a boolean")
+        if self.granularity is not None and self.granularity not in {
+            "block",
+            "section",
+        }:
+            raise ValueError("granularity must be 'block' or 'section'")
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, Any]) -> ChunkOptions:
+        if not isinstance(value, Mapping):
+            raise TypeError("chunk options must be an object")
+        if any(not isinstance(key, str) for key in value):
+            raise TypeError("chunk option names must be strings")
+        unknown = set(value) - {"includeTableCells", "granularity"}
+        if unknown:
+            raise ValueError(f"unknown chunk option: {min(unknown)!r}")
+        if any(value[key] is None for key in value):
+            raise TypeError("chunk options cannot be None; omit optional fields")
+        return cls(value.get("includeTableCells"), value.get("granularity"))
+
+    def to_dict(self) -> dict[str, Any]:
+        output: dict[str, Any] = {}
+        if self.include_table_cells is not None:
+            output["includeTableCells"] = self.include_table_cells
+        if self.granularity is not None:
+            output["granularity"] = self.granularity
+        return output
+
+
+@dataclass(frozen=True, slots=True)
+class DocChunk:
+    """Immutable typed document chunk with exact public wire roundtripping."""
+
+    id: str
+    type: str
+    breadcrumb: tuple[str, ...]
+    text: str
+    block_range: tuple[int, int]
+    page: int | None = None
+    table: Mapping[str, Any] | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.id, str) or not self.id:
+            raise TypeError("id must be a non-empty string")
+        if self.type not in {"text", "table", "heading"}:
+            raise ValueError("type must be text, table, or heading")
+        if not isinstance(self.breadcrumb, (tuple, list)) or any(
+            not isinstance(item, str) for item in self.breadcrumb
+        ):
+            raise TypeError("breadcrumb must be a string sequence")
+        object.__setattr__(self, "breadcrumb", tuple(self.breadcrumb))
+        if not isinstance(self.text, str):
+            raise TypeError("text must be a string")
+        if (
+            not isinstance(self.block_range, (tuple, list))
+            or len(self.block_range) != 2
+        ):
+            raise TypeError("blockRange must contain exactly two integers")
+        if any(
+            type(item) is not int or not 0 <= item <= 2**32 - 1
+            for item in self.block_range
+        ):
+            raise TypeError("blockRange must contain unsigned 32-bit integers")
+        object.__setattr__(self, "block_range", tuple(self.block_range))
+        if self.page is not None and (
+            type(self.page) is not int or not 0 <= self.page <= 2**32 - 1
+        ):
+            raise TypeError("page must be an unsigned 32-bit integer")
+        if self.table is not None:
+            if not isinstance(self.table, Mapping):
+                raise TypeError("table must be an object")
+            _validate_table_wire(self.table)
+            object.__setattr__(self, "table", _freeze_wire(self.table))
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, Any]) -> DocChunk:
+        if not isinstance(value, Mapping):
+            raise TypeError("document chunk must be an object")
+        required = {"id", "type", "breadcrumb", "text", "blockRange"}
+        allowed = required | {"page", "table"}
+        if required - value.keys() or value.keys() - allowed:
+            raise ValueError("document chunk has missing or unknown fields")
+        if any(value.get(name) is None for name in required):
+            raise ValueError("document chunk fields cannot be null")
+        if any(name in value and value[name] is None for name in ("page", "table")):
+            raise ValueError("optional document chunk fields must be omitted, not null")
+        return cls(
+            value["id"],
+            value["type"],
+            tuple(value["breadcrumb"]),
+            value["text"],
+            tuple(value["blockRange"]),
+            value.get("page"),
+            value.get("table"),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        output: dict[str, Any] = {
+            "id": self.id,
+            "type": self.type,
+            "breadcrumb": list(self.breadcrumb),
+            "text": self.text,
+            "blockRange": list(self.block_range),
+        }
+        if self.page is not None:
+            output["page"] = self.page
+        if self.table is not None:
+            output["table"] = _thaw_wire(self.table)
+        return output
+
+
+def _validate_table_wire(table: Mapping[str, Any]) -> None:
+    if any(not isinstance(key, str) for key in table):
+        raise TypeError("table keys must be strings")
+    if not {"rows", "cols"} <= table.keys() or table.keys() - {"rows", "cols", "cells"}:
+        raise ValueError("table requires rows and cols and may contain cells")
+    if any(
+        type(table[key]) is not int or not 0 <= table[key] <= 2**32 - 1
+        for key in ("rows", "cols")
+    ):
+        raise TypeError("table rows and cols must be unsigned 32-bit integers")
+    cells = table.get("cells")
+    if "cells" in table and (
+        not isinstance(cells, (tuple, list))
+        or any(
+            not isinstance(row, (tuple, list))
+            or any(not isinstance(cell, str) for cell in row)
+            for row in cells
+        )
+    ):
+        raise TypeError("table cells must be a two-dimensional sequence")
+
+
 def _check_optional_fields(value: Mapping[str, Any]) -> None:
     for key, item in value.items():
         if key in {"success", "fileType", "markdown", "error", "code"}:

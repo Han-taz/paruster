@@ -211,6 +211,7 @@ dependencies = [
  "kordoc-core",
  "kordoc-ir",
  "pyo3",
+ "serde",
  "serde_json",
 ]
 

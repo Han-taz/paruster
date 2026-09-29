@@ -1,4 +1,7 @@
 from ._api import (
+    blocks_to_chunks,
+    blocks_to_markdown,
+    blocks_to_pages,
     detect_format,
     detect_ole2_format,
     detect_zip_format,
@@ -25,13 +28,15 @@ from ._errors import (
     UnsupportedFormatError,
     ZipBombError,
 )
-from ._models import Document, TryParseResult
+from ._models import ChunkOptions, DocChunk, Document, PageMarkdown, TryParseResult
 from ._native import native_version
 
 __version__ = "0.1.0"
 __all__ = [
+    "ChunkOptions",
     "CorruptedError",
     "DecompressionBombError",
+    "DocChunk",
     "Document",
     "DrmProtectedError",
     "EmptyInputError",
@@ -42,11 +47,15 @@ __all__ = [
     "MissingDependencyError",
     "NoSectionsError",
     "OutputTooLargeError",
+    "PageMarkdown",
     "ParseError",
     "TryParseResult",
     "UnsupportedFormatError",
     "ZipBombError",
     "__version__",
+    "blocks_to_chunks",
+    "blocks_to_markdown",
+    "blocks_to_pages",
     "detect_format",
     "detect_ole2_format",
     "detect_zip_format",

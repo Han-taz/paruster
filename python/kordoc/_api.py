@@ -1,14 +1,21 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from math import isfinite
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, BinaryIO, cast
 
 from . import _native
 from ._errors import KordocError, OutputTooLargeError, typed_error_from_native
-from ._models import TryParseResult
+from ._models import (
+    ChunkOptions,
+    DocChunk,
+    PageMarkdown,
+    TryParseResult,
+    _freeze_wire,
+)
 
 MAX_INPUT_BYTES = _native.max_input_bytes()
 EMPTY_INPUT_MESSAGE = "빈 버퍼이거나 유효하지 않은 입력입니다."
@@ -34,6 +41,251 @@ _OPTION_NAMES = {
 _BOOLEAN_OPTIONS = frozenset(_OPTION_NAMES) - {"pages", "ocr", "password"}
 _MAX_PAGE_SELECTION_ITEMS = 100_000
 _MAX_OPTION_STRING_LENGTH = 65_536
+MAX_MARKDOWN_BYTES = 256 * 1024 * 1024
+_MAX_PROJECTION_DEPTH = 256
+_MAX_PROJECTION_ITEMS = 16_000_000
+
+
+def _normalize_projection_value(
+    value: Any,
+    budget: list[int],
+    depth: int = 0,
+    *,
+    freeze: bool = False,
+    copy: bool = True,
+    native_containers: list[bool] | None = None,
+) -> Any:
+    if depth > _MAX_PROJECTION_DEPTH:
+        raise OutputTooLargeError("Projection input exceeds the nesting limit")
+    budget[0] += 1
+    if budget[0] > _MAX_PROJECTION_ITEMS:
+        raise OutputTooLargeError("Projection input has too many values")
+    budget[1] += 1
+    if budget[1] > budget[2]:
+        raise OutputTooLargeError("Projection input exceeds the byte limit")
+    if value is None:
+        raise TypeError("projection values cannot be None; omit optional fields")
+    if isinstance(value, str):
+        budget[1] += len(value.encode("utf-8"))
+        if budget[1] > budget[2]:
+            raise OutputTooLargeError("Projection input exceeds the byte limit")
+        return value
+    if isinstance(value, bool | int):
+        budget[1] += 8
+        if budget[1] > budget[2]:
+            raise OutputTooLargeError("Projection input exceeds the byte limit")
+        return value
+    if isinstance(value, float):
+        if not isfinite(value):
+            raise TypeError("projection numbers must be finite")
+        budget[1] += 8
+        if budget[1] > budget[2]:
+            raise OutputTooLargeError("Projection input exceeds the byte limit")
+        return value
+    if isinstance(value, Mapping):
+        if native_containers is not None and type(value) is not dict:
+            native_containers[0] = False
+        if len(value) > _MAX_PROJECTION_ITEMS or any(
+            not isinstance(key, str) for key in value
+        ):
+            raise TypeError("projection objects must have string keys")
+        if native_containers is not None and any(type(key) is not str for key in value):
+            native_containers[0] = False
+        output: dict[str, Any] | None = {} if copy else None
+        for key, item in value.items():
+            budget[1] += len(key.encode("utf-8"))
+            if budget[1] > budget[2]:
+                raise OutputTooLargeError("Projection input exceeds the byte limit")
+            normalized_item = _normalize_projection_value(
+                item,
+                budget,
+                depth + 1,
+                freeze=freeze,
+                copy=copy,
+                native_containers=native_containers,
+            )
+            if output is not None:
+                output[key] = normalized_item
+        if output is None:
+            return value
+        return MappingProxyType(output) if freeze else output
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        if native_containers is not None and type(value) not in {list, tuple}:
+            native_containers[0] = False
+        if len(value) > _MAX_PROJECTION_ITEMS:
+            raise OutputTooLargeError("Projection input has too many values")
+        sequence_output = (
+            [
+                _normalize_projection_value(
+                    item,
+                    budget,
+                    depth + 1,
+                    freeze=freeze,
+                    copy=copy,
+                    native_containers=native_containers,
+                )
+                for item in value
+            ]
+            if copy
+            else None
+        )
+        if sequence_output is None:
+            for item in value:
+                _normalize_projection_value(
+                    item,
+                    budget,
+                    depth + 1,
+                    freeze=freeze,
+                    copy=False,
+                    native_containers=native_containers,
+                )
+            return value
+        return tuple(sequence_output) if freeze else sequence_output
+    raise TypeError(f"unsupported projection value: {type(value).__name__}")
+
+
+def _normalize_blocks_with_budget(
+    value: object, max_bytes: int
+) -> list[dict[str, Any]]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
+        raise TypeError("blocks must be a sequence of mappings")
+    if len(value) > _MAX_PROJECTION_ITEMS:
+        raise OutputTooLargeError("Projection input has too many blocks")
+    budget = [0, 0, max_bytes]
+    native_containers = [type(value) in {list, tuple}]
+    for block in value:
+        if not isinstance(block, Mapping):
+            raise TypeError("each block must be a mapping")
+        _normalize_projection_value(
+            block, budget, copy=False, native_containers=native_containers
+        )
+    if native_containers[0]:
+        return value if type(value) is list else list(value)
+    return [_materialize_projection_value(block) for block in value]
+
+
+def _materialize_projection_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {key: _materialize_projection_value(item) for key, item in value.items()}
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return [_materialize_projection_value(item) for item in value]
+    return value
+
+
+def _normalize_blocks(value: object) -> list[dict[str, Any]]:
+    return _normalize_blocks_with_budget(value, MAX_MARKDOWN_BYTES)
+
+
+def _validate_projection_output(value: Any, *, freeze: bool = False) -> Any:
+    return _normalize_projection_value(
+        value, [0, 0, MAX_MARKDOWN_BYTES], freeze=freeze, copy=freeze
+    )
+
+
+def _translate_projection_error(error: ValueError) -> None:
+    translated = typed_error_from_native(error)
+    if translated is not None:
+        raise translated from error
+    raise error
+
+
+def blocks_to_markdown(blocks: object) -> str:
+    """Render an IR block sequence to Markdown."""
+    normalized = _normalize_blocks(blocks)
+    try:
+        result = _native.blocks_to_markdown_wire(normalized)
+    except ValueError as error:
+        _translate_projection_error(error)
+    if not isinstance(result, str):
+        raise TypeError("native Markdown projection must return a string")
+    if len(result.encode("utf-8")) > MAX_MARKDOWN_BYTES:
+        raise OutputTooLargeError("Markdown output exceeds the byte limit")
+    return result
+
+
+def blocks_to_pages(
+    blocks: object, render: Any = None
+) -> tuple[PageMarkdown, ...] | None:
+    """Render page Markdown, optionally using a caller-provided synchronous renderer."""
+    normalized = _normalize_blocks(blocks)
+    if render is not None and not callable(render):
+        raise TypeError("render must be callable or None")
+    original_exception: list[BaseException] = []
+    native_renderer = None
+    if render is not None:
+
+        def native_renderer(page_blocks: Any) -> str:
+            try:
+                if not isinstance(page_blocks, Sequence) or isinstance(
+                    page_blocks, (str, bytes, bytearray)
+                ):
+                    raise TypeError(
+                        "page renderer input must be a sequence of mappings"
+                    )
+                frozen = tuple(_freeze_wire(block) for block in page_blocks)
+                if any(not isinstance(block, Mapping) for block in frozen):
+                    raise TypeError("page renderer input must contain mappings")
+                result = render(frozen)
+                if not isinstance(result, str):
+                    raise TypeError("render callback must return a string")
+                return result
+            except BaseException as error:
+                original_exception.append(error)
+                raise
+
+    try:
+        if native_renderer is None:
+            result = _native.blocks_to_pages_wire(normalized)
+        else:
+            result = _native.blocks_to_pages_wire(normalized, native_renderer)
+    except BaseException as error:
+        if original_exception:
+            raise original_exception[0]
+        if isinstance(error, ValueError):
+            _translate_projection_error(error)
+        raise
+    if result is None:
+        return None
+    if not isinstance(result, Sequence) or isinstance(result, (str, bytes, bytearray)):
+        raise TypeError("native pages projection must return a sequence or None")
+    normalized_result = _validate_projection_output(result)
+    return tuple(PageMarkdown.from_dict(item) for item in normalized_result)
+
+
+def blocks_to_chunks(
+    blocks: object, options: ChunkOptions | Mapping[str, Any] | None = None
+) -> tuple[DocChunk, ...]:
+    """Project IR blocks into typed structural chunks."""
+    normalized = _normalize_blocks(blocks)
+    if options is None:
+        native_options = None
+    elif isinstance(options, ChunkOptions):
+        native_options = options.to_dict()
+    elif isinstance(options, Mapping):
+        native_options = ChunkOptions.from_dict(options).to_dict()
+    else:
+        raise TypeError("options must be ChunkOptions, a mapping, or None")
+    try:
+        result = _native.blocks_to_chunks_wire(normalized, native_options)
+    except ValueError as error:
+        _translate_projection_error(error)
+    if not isinstance(result, Sequence) or isinstance(result, (str, bytes, bytearray)):
+        raise TypeError("native chunks projection must return a sequence")
+    normalized_result = _validate_projection_output(result)
+    return tuple(DocChunk.from_dict(item) for item in normalized_result)
+
+
+def _classify_tables(blocks: object) -> tuple[Mapping[str, Any], ...]:
+    """Return deeply immutable IR blocks with table policy classifications."""
+    normalized = _normalize_blocks(blocks)
+    try:
+        result = _native.classify_tables_wire(normalized)
+    except ValueError as error:
+        _translate_projection_error(error)
+    if not isinstance(result, Sequence) or isinstance(result, (str, bytes, bytearray)):
+        raise TypeError("native table classification must return a sequence")
+    normalized_result = _validate_projection_output(result, freeze=True)
+    return tuple(normalized_result)
 
 
 def _is_finite_number(value: float) -> bool:
