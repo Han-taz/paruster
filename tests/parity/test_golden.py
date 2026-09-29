@@ -1,9 +1,10 @@
-import json
 import hashlib
+import json
 from importlib.util import find_spec
 from pathlib import Path
 
 import kordoc
+import pytest
 
 ROOT = Path(__file__).parents[1]
 
@@ -68,6 +69,39 @@ def test_equal_objects_ignore_key_insertion_order() -> None:
     assert compare_json({"b": 2, "a": 1}, {"a": 1, "b": 2}) is None
 
 
+def test_missing_and_extra_object_keys_report_the_key_pointer() -> None:
+    compare_json = _compare_json()
+
+    missing = compare_json({"a": 1}, {})
+    extra = compare_json({}, {"a": 1})
+    assert missing is not None and missing.pointer == "/a"
+    assert extra is not None and extra.pointer == "/a"
+
+
+def test_list_length_mismatch_reports_the_first_missing_index() -> None:
+    compare_json = _compare_json()
+
+    difference = compare_json(["first"], ["first", "second"])
+    assert difference is not None
+    assert difference.pointer == "/1"
+
+
+def test_root_difference_uses_the_empty_json_pointer() -> None:
+    compare_json = _compare_json()
+
+    difference = compare_json("expected", "actual")
+    assert difference is not None
+    assert difference.pointer == ""
+
+
+def test_json_pointer_escapes_object_keys_per_rfc6901() -> None:
+    compare_json = _compare_json()
+
+    difference = compare_json({"a/b~c": 1}, {"a/b~c": 2})
+    assert difference is not None
+    assert difference.pointer == "/a~1b~0c"
+
+
 def test_timestamp_is_removed_only_at_registered_pointer() -> None:
     normalize = _normalize()
 
@@ -76,6 +110,16 @@ def test_timestamp_is_removed_only_at_registered_pointer() -> None:
     assert normalize(value, zip_timestamp_pointers={"/entries/0/timestamp"}) == {
         "entries": [{"name": "item"}]
     }
+
+
+def test_normalize_sorts_object_keys_and_preserves_array_order() -> None:
+    normalize = _normalize()
+
+    value = {"z": 0, "items": [{"b": 2, "a": 1}, {"d": 4, "c": 3}]}
+    normalized = normalize(value)
+    assert list(normalized) == ["items", "z"]
+    assert [list(item) for item in normalized["items"]] == [["a", "b"], ["c", "d"]]
+    assert [item["a"] if "a" in item else item["c"] for item in normalized["items"]] == [1, 3]
 
 
 def test_xml_normalization_reorders_attributes_only_at_registered_pointer() -> None:
@@ -105,6 +149,13 @@ def test_xml_normalization_preserves_text_and_child_order() -> None:
         normalize(left, xml_attribute_pointers=pointers),
         normalize(changed_children, xml_attribute_pointers=pointers),
     ) is not None
+
+
+def test_malformed_registered_xml_fails_clearly() -> None:
+    normalize = _normalize()
+
+    with pytest.raises(ValueError, match="invalid XML"):
+        normalize({"xml": "<root>"}, xml_attribute_pointers={"/xml"})
 
 
 def test_semantic_document_changes_are_never_normalized() -> None:
