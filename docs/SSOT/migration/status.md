@@ -79,6 +79,14 @@ point and does not advance HWPX capability or parity. H1a package/security and
 H2a XML/section implementation are now unblocked. See the append-only
 [H0 merge record](../../WIKI/2026/09/2026-09-30-hwpx-h0-merge.md).
 
+HWPX H1a merged in PR [#18](https://github.com/Han-taz/paruster/pull/18) as
+`e33eab112999aebcf91e1593814bbec17bd1ea79`. The private package reader now
+enforces the reviewed ZIP/ZIP64, path, record-count, CRC, member-extent,
+plaintext/ciphertext, recovery, and section-order boundaries. It remains
+unregistered and exposes no parser capability. H2a is still under review; H1b
+starts only after their interface join. See the append-only
+[H1a merge record](../../WIKI/2026/09/2026-09-30-hwpx-h1a-merge.md).
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy
