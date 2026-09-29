@@ -15,12 +15,12 @@ This page is the live capability ledger. A capability is complete only after its
 
 The parser seam has only injected/synthetic success evidence; the production registry remains empty and the document harness reports zero successful oracle captures. The earlier 88.63% line coverage and two 30-second fuzz campaigns without crashes describe the initial merged foundation baseline. PR #9 added fresh hosted coverage and fuzz evidence for the parser seam. None of these foundation checks demonstrate document-output parity.
 
-## Locally verified P7 projection branch (not yet merged)
+## Merged P7 shared projections (PR #11)
 
-On `feature/ir-projections`, `kordoc-core` now provides source-neutral Markdown,
+The merged `kordoc-core` implementation provides source-neutral Markdown,
 page and structural chunk projections, bounded table construction and opt-in
 classification, label/visual policy, and a single shared Markdown table-unit
-reader. The Rust/Python public mappings verified locally are
+reader. The merged Rust/Python public mappings are
 `blocks_to_markdown`, `blocks_to_pages`, `blocks_to_chunks`,
 `kordoc.tables.classify_table_tree`, and the `ChunkOptions`, `DocChunk`, and
 `PageMarkdown` models. Other table API exports remain planned. The default
@@ -28,18 +28,24 @@ page renderer detaches from the GIL; the optional synchronous Python callback
 receives deeply immutable blocks and propagates its original exception.
 
 Six generated-IR projection cases have captured answers from the pinned,
-read-only runtime oracle; all six pass exact local comparison without
-normalization. This proves pure projection behavior only. The document-parser
-oracle-success numerator remains **0**, the production parser registry remains
-empty, and no P1-P6 parser or MCP tool is claimed complete. The local P7
-evidence includes 91 core unit tests plus 20 all-feature core integration
-tests, 8 native binding tests, 124 combined Python/parity tests (including 9
-projection parity tests), two bounded proptests, and strict Clippy, Ruff, and
-mypy checks. Dedicated Markdown-unit and projection fuzz targets each passed a
-30-second local campaign and extend hosted CI to four bounded targets. These
-counts describe local verification, not hosted CI, PR approval, or merge. P7
-is not a merged capability until the protected branch gates and review
-complete.
+read-only runtime oracle; all six pass exact comparison without normalization.
+This proves pure projection behavior only. The document-parser oracle-success
+numerator remains **0**, and the production parser registry remains empty; no
+real parser or MCP tool is claimed complete. P7 also has two bounded
+proptests, dedicated Markdown-unit and projection fuzz targets, and local
+Rust/Python quality-gate evidence recorded in the implementation entry.
+
+PR [#11](https://github.com/Han-taz/paruster/pull/11) merged by squash as
+`d473bae79f1de6f1aced29c59609a2cb49f0aa90` after all 33 checks succeeded.
+The hosted [CI](https://github.com/Han-taz/paruster/actions/runs/36622144159),
+[Fuzz](https://github.com/Han-taz/paruster/actions/runs/36622144214),
+[Wheels](https://github.com/Han-taz/paruster/actions/runs/36622144316), and
+[Security/CodeQL](https://github.com/Han-taz/paruster/actions/runs/36622144308)
+runs passed. P7 is now a merged shared capability; P1-P6 are unblocked to
+implement format parsers against its stable projections and add real-document
+fixtures. Their parser parity remains pending until those fixtures pass.
+Detailed merge evidence is in the append-only
+[P7 merge record](../../WIKI/2026/09/2026-09-30-ir-projections-merge.md).
 
 PR #5 implementation head `a9df485` passed the hosted foundation gates: [CI](https://github.com/Han-taz/paruster/actions/runs/36600464167), [Security](https://github.com/Han-taz/paruster/actions/runs/36600464228), [Native wheels](https://github.com/Han-taz/paruster/actions/runs/36600464274), and [Bounded fuzzing](https://github.com/Han-taz/paruster/actions/runs/36600464235). PR #5 documentation head `ad86e43` also passed all four hosted gates: [CI](https://github.com/Han-taz/paruster/actions/runs/36601581589), [Security](https://github.com/Han-taz/paruster/actions/runs/36601581506), [Native wheels](https://github.com/Han-taz/paruster/actions/runs/36601581485), and [Bounded fuzzing](https://github.com/Han-taz/paruster/actions/runs/36601581555). PR #4 remediation head `31212275` passed all four hosted checks: [CI](https://github.com/Han-taz/paruster/actions/runs/36603823278), [Security](https://github.com/Han-taz/paruster/actions/runs/36603823358), [Native wheels](https://github.com/Han-taz/paruster/actions/runs/36603823436), and [Bounded fuzzing](https://github.com/Han-taz/paruster/actions/runs/36603823386). The Security run includes a successful main-target Dependency review, confirming the pytest 9.0.3 remediation. Active protect-main ruleset `24182744` strictly requires `ci-gate`, `security-gate`, `wheels-gate`, `fuzz-gate`, and CodeQL, limits PR merges to squash-only, and states that later heads must pass the required checks. Product parity remains pending as detailed below.
 
