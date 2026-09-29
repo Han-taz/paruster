@@ -63,6 +63,14 @@ points. Neither crate is connected to the production registry or Python API;
 `parse_hwpx`, `validate_hwpx`, and `parse_pdf` remain planned, and the
 real-document oracle-success numerator remains zero.
 
+PR [#14](https://github.com/Han-taz/paruster/pull/14) merged the protected
+parser-wave scaffold as
+`86e4b78ce0fd2f40a238910eca46733fa84d317a`. All required CI, security,
+six-target wheel, bounded-fuzz, and CodeQL checks passed. HWPX H0 and PDF P2a
+may now execute from that merge; this merge does not advance either parser's
+capability or parity status. Detailed hosted evidence is in the append-only
+[scaffold merge record](../../WIKI/2026/09/2026-09-30-parser-wave-scaffold-merge.md).
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy
