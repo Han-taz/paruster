@@ -10,4 +10,6 @@ The value and type export sets in the Python API manifest must equal the oracle 
 
 The oracle directory is a local, read-only research source. Captured JSON is committed evidence and tests validate it without opening the oracle. No new package, runtime, test, or CI dependency may point into `kordoc/`.
 
+The Python `detect_format` translation is intentionally more precise than the oracle's coarse synchronous `detectFormat`: it performs the oracle's separate container refinements in one bounded call and returns the refined HWPX/XLSX/DOCX/PPTX type. A generic ZIP or OLE container remains `unknown`. This approved translation changes detection precision, not the frozen `FileType` protocol strings, and does not imply that the detected parser is implemented.
+
 Updating an inventory or changing a disposition is a shared-contract change and requires coordinator approval. The snapshot's source digest and extraction evidence must be updated whenever the reviewed source changes.

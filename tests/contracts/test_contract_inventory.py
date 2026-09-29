@@ -136,6 +136,10 @@ def test_error_inventory_is_exact() -> None:
     assert {item["code"] for item in errors["codes"]} == ERROR_CODES
     assert len(errors["codes"]) == len(ERROR_CODES)
     assert all(item["description"] for item in errors["codes"])
+    descriptions = {item["code"]: item["description"] for item in errors["codes"]}
+    assert descriptions["OUTPUT_TOO_LARGE"] == (
+        "The supplied input or generated output exceeds a configured payload size limit."
+    )
 
 
 def test_mcp_inventory_is_exact_and_ordered() -> None:

@@ -12,7 +12,7 @@
     {"code": "NO_SECTIONS", "description": "The document contains no parseable sections."},
     {"code": "PARSE_ERROR", "description": "Document parsing failed for an otherwise recognized format."},
     {"code": "MISSING_DEPENDENCY", "description": "An optional operation requires a dependency that is unavailable."},
-    {"code": "OUTPUT_TOO_LARGE", "description": "The generated output exceeds a configured size limit."},
+    {"code": "OUTPUT_TOO_LARGE", "description": "The supplied input or generated output exceeds a configured payload size limit."},
     {"code": "FILE_NOT_FOUND", "description": "A requested input file does not exist or cannot be resolved."}
   ]
 }
