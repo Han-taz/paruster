@@ -125,7 +125,11 @@ def validate_schema(schema: dict, path: str) -> None:
     for key in ("anyOf", "oneOf", "allOf"):
         for index, child in enumerate(schema.get(key, [])):
             validate_schema(child, f"{path}.{key}[{index}]")
-    for low, high in (("minimum", "maximum"), ("minLength", "maxLength"), ("minItems", "maxItems")):
+    for low, high in (
+        ("minimum", "maximum"),
+        ("minLength", "maxLength"),
+        ("minItems", "maxItems"),
+    ):
         if low in schema and high in schema:
             assert schema[low] <= schema[high], path
 
@@ -166,7 +170,9 @@ def test_python_only_foundation_surface_is_explicit() -> None:
     }
     assert len(additions) == len({entry["python_name"] for entry in additions})
     assert all(entry["disposition"] == "foundation" for entry in additions)
-    assert all(entry["kind"] in {"function", "type", "exception"} for entry in additions)
+    assert all(
+        entry["kind"] in {"function", "type", "exception"} for entry in additions
+    )
     assert all(entry["mapping"] and entry["rationale"] for entry in additions)
 
     entries = {entry["source_name"]: entry for entry in manifest["entries"]}
@@ -201,23 +207,35 @@ def test_tool_and_input_field_descriptions_match_frozen_oracle_digests() -> None
         name = tool["name"]
         description = tool["description"]
         assert isinstance(description, str) and description
-        assert hashlib.sha256(description.encode("utf-8")).hexdigest() == ORACLE_TOOL_DESCRIPTION_SHA256[name]
+        assert (
+            hashlib.sha256(description.encode("utf-8")).hexdigest()
+            == ORACLE_TOOL_DESCRIPTION_SHA256[name]
+        )
         fields = {
             field_name: field["description"]
-            for field_name, field in protocol["input_schemas"][name]["properties"].items()
+            for field_name, field in protocol["input_schemas"][name][
+                "properties"
+            ].items()
             if "description" in field
         }
         digest = hashlib.sha256(
-            json.dumps(fields, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            json.dumps(
+                fields, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            ).encode("utf-8")
         ).hexdigest()
         assert digest == ORACLE_FIELD_DESCRIPTION_SHA256[name], name
         assert evidence["input_field_description_counts"][name] == len(fields), name
 
 
 def test_foundation_plan_uses_non_stale_task_one_test_expectation() -> None:
-    plan = (ROOT / "docs/SSOT/migration/plans/2026-09-29-foundation-implementation-plan.md").read_text(encoding="utf-8")
+    plan = (
+        ROOT / "docs/SSOT/migration/plans/2026-09-29-foundation-implementation-plan.md"
+    ).read_text(encoding="utf-8")
     assert "Expected: `all Task 1 inventory tests pass`." in plan
-    assert "--with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py -q" in plan
+    assert (
+        "--with jsonschema==4.25.1 pytest tests/contracts/test_contract_inventory.py -q"
+        in plan
+    )
     assert plan.count("--with jsonschema==4.25.1") >= 2
 
 
@@ -243,7 +261,8 @@ def test_every_input_schema_is_a_unique_described_json_schema() -> None:
         assert schema["properties"], name
         assert schema.get("additionalProperties") is False, name
         assert all(
-            "description" not in field or (isinstance(field["description"], str) and field["description"])
+            "description" not in field
+            or (isinstance(field["description"], str) and field["description"])
             for field in schema["properties"].values()
         ), name
         assert set(schema.get("required", [])) <= set(schema["properties"]), name
@@ -255,7 +274,9 @@ def test_every_input_schema_is_a_unique_described_json_schema() -> None:
 
 
 def test_generated_levels_schema_rejects_keys_outside_zero_to_seven() -> None:
-    levels = load("mcp-protocol.json")["input_schemas"]["generate_document"]["properties"]["levels"]
+    levels = load("mcp-protocol.json")["input_schemas"]["generate_document"][
+        "properties"
+    ]["levels"]
     assert levels["patternProperties"] == {
         "^[0-7]$": {
             "type": "object",
@@ -271,7 +292,9 @@ def test_generated_levels_schema_rejects_keys_outside_zero_to_seven() -> None:
 
 
 def test_nested_generation_objects_reject_unrecognized_keys() -> None:
-    fields = load("mcp-protocol.json")["input_schemas"]["generate_document"]["properties"]
+    fields = load("mcp-protocol.json")["input_schemas"]["generate_document"][
+        "properties"
+    ]
     for name in ("doc_info", "fonts", "sizes", "doc_head", "doc_foot", "notice_head"):
         assert fields[name]["additionalProperties"] is False, name
     assert fields["press"]["additionalProperties"] is False
@@ -283,7 +306,13 @@ def test_nested_generation_objects_reject_unrecognized_keys() -> None:
 def test_output_envelopes_capture_success_and_error_shapes_for_every_tool() -> None:
     envelopes = load("mcp-protocol.json")["output_envelopes"]
     for name, envelope in envelopes.items():
-        assert set(envelope) == {"success", "error", "response_behavior", "response_character_cap", "truncation"}, name
+        assert set(envelope) == {
+            "success",
+            "error",
+            "response_behavior",
+            "response_character_cap",
+            "truncation",
+        }, name
         assert set(envelope["success"]) == {"variants"}, name
         variants = envelope["success"]["variants"]
         assert variants, name
@@ -297,10 +326,22 @@ def test_output_envelopes_capture_success_and_error_shapes_for_every_tool() -> N
                     assert set(item) <= {"type", "text", "position"}, name
                     assert isinstance(item["text"], str), name
                 else:
-                    assert set(item) <= {"type", "data", "mimeType", "min_items", "max_items"}, name
+                    assert set(item) <= {
+                        "type",
+                        "data",
+                        "mimeType",
+                        "min_items",
+                        "max_items",
+                    }, name
                     assert item["data"] == "base64", name
-                    assert item["mimeType"] in {"image/png or image/jpeg", "image/png", "image/jpeg"}, name
-                    assert 0 <= item.get("min_items", 1) <= item.get("max_items", 1) <= 8, name
+                    assert item["mimeType"] in {
+                        "image/png or image/jpeg",
+                        "image/png",
+                        "image/jpeg",
+                    }, name
+                    assert (
+                        0 <= item.get("min_items", 1) <= item.get("max_items", 1) <= 8
+                    ), name
         assert envelope["error"] == {
             "content": [{"type": "text", "text": "operation-specific error message"}],
             "isError": True,
@@ -318,9 +359,11 @@ def test_output_variant_conditions_reference_and_partition_input_enums() -> None
                 field = schema["properties"][field_name]
                 assert set(accepted) <= set(field["enum"]), (name, field_name)
         for index, left in enumerate(variants):
-            for right in variants[index + 1:]:
+            for right in variants[index + 1 :]:
                 for field_name in set(left["when"]) & set(right["when"]):
-                    assert not (set(left["when"][field_name]) & set(right["when"][field_name])), name
+                    assert not (
+                        set(left["when"][field_name]) & set(right["when"][field_name])
+                    ), name
 
 
 def test_source_hash_evidence_is_complete_and_reproducible() -> None:
@@ -339,7 +382,9 @@ def test_source_hash_evidence_is_complete_and_reproducible() -> None:
         "src/shared/generate-images.ts",
     }
     assert {item["path"] for item in evidence["files"]} == expected
-    assert all(re.fullmatch(r"[0-9a-f]{64}", item["sha256"]) for item in evidence["files"])
+    assert all(
+        re.fullmatch(r"[0-9a-f]{64}", item["sha256"]) for item in evidence["files"]
+    )
     assert evidence["extraction_command"]
     assert evidence["cwd"] == "kordoc"
     review_commands = evidence["review_commands"]
@@ -359,7 +404,9 @@ def test_source_hash_evidence_is_complete_and_reproducible() -> None:
         "src/hwpx/gongmun.ts": "3a3fb6a24167f613530d44b069c57fcfb681866d31b8ceaaedda6d8d7ec5af1c",
         "src/shared/generate-images.ts": "b8a25ab961c06013d3b4f5f28b0de38a40a3d683873da767aae064856033b33a",
     }
-    assert {item["path"]: item["sha256"] for item in evidence["files"]} == expected_hashes
+    assert {
+        item["path"]: item["sha256"] for item in evidence["files"]
+    } == expected_hashes
 
 
 def test_transport_security_and_limits_are_normative() -> None:
@@ -371,8 +418,14 @@ def test_transport_security_and_limits_are_normative() -> None:
     }
     security = protocol["security"]
     assert security["root_confinement"] == {
-        "enabled_when": {"environment_variable": "KORDOC_ROOT", "condition": "set_and_non_empty"},
-        "offline_independence": {"environment_variable": "KORDOC_OFFLINE", "alone_enables_confinement": False},
+        "enabled_when": {
+            "environment_variable": "KORDOC_ROOT",
+            "condition": "set_and_non_empty",
+        },
+        "offline_independence": {
+            "environment_variable": "KORDOC_OFFLINE",
+            "alone_enables_confinement": False,
+        },
         "scope": ["canonicalized_input_paths", "canonicalized_output_paths"],
         "boundary_check": {"method": "path_segment_relative", "base": "real_root"},
     }
@@ -390,7 +443,11 @@ def test_transport_security_and_limits_are_normative() -> None:
             "max_bytes_by_policy": {"document": 524_288_000, "metadata": 52_428_800},
         },
         "detect_format": {
-            "initial_read": {"type": "header", "max_bytes": 512, "full_file_size_check": False},
+            "initial_read": {
+                "type": "header",
+                "max_bytes": 512,
+                "full_file_size_check": False,
+            },
             "container_inspection": {
                 "only_when_header_format_is": ["hwpx", "hwp"],
                 "method": "read_validated_file",
@@ -406,13 +463,19 @@ def test_transport_security_and_limits_are_normative() -> None:
         {"action": "find_nearest_existing_ancestor"},
         {"action": "realpath_ancestor_and_append_remaining_segments"},
         {"action": "assert_within_root", "condition": "KORDOC_ROOT_non_empty"},
-        {"action": "recheck_real_parent_and_assert_root", "condition": "after_processing"},
+        {
+            "action": "recheck_real_parent_and_assert_root",
+            "condition": "after_processing",
+        },
         {"action": "open_final_leaf", "flags": ["O_NOFOLLOW"]},
     ]
     assert security["symlink_rules"] == {
         "input_paths": {"realpath_follows_symlinks_before_root_check": True},
         "output_leaf": {"lstat_before_write": True, "reject_symlink": True},
-        "output_ancestors": {"resolve_nearest_existing_ancestor_with_realpath": True, "reject_dangling_symlink": True},
+        "output_ancestors": {
+            "resolve_nearest_existing_ancestor_with_realpath": True,
+            "reject_dangling_symlink": True,
+        },
         "write_race": {"recheck_real_parent": True, "open_flags": ["O_NOFOLLOW"]},
         "generation_assets": {
             "resolve_image_dir_and_target": True,
@@ -431,8 +494,13 @@ def test_transport_security_and_limits_are_normative() -> None:
                 "include_raw_os_message": False,
                 "include_raw_path": False,
             },
-            "parse_error": {"classification": "PARSE_ERROR", "action": "sanitize_error"},
-            "other_error": {"action": "emit_classified_category_without_native_details"},
+            "parse_error": {
+                "classification": "PARSE_ERROR",
+                "action": "sanitize_error",
+            },
+            "other_error": {
+                "action": "emit_classified_category_without_native_details"
+            },
         },
     }
     assert security["extension_allowlists"]
@@ -448,13 +516,19 @@ def test_transport_security_and_limits_are_normative() -> None:
     mcp_doc = (ROOT / "docs/SSOT/contracts/mcp.md").read_text(encoding="utf-8")
     assert "KORDOC_OFFLINE alone does not enable root confinement" in mcp_doc
     assert "Only `redact_document` rejects a same-file input/output path" in mcp_doc
-    assert "The shared path resolver does not apply a universal size/stat check" in mcp_doc
+    assert (
+        "The shared path resolver does not apply a universal size/stat check" in mcp_doc
+    )
     assert "`detect_format` first reads a 512-byte header" in mcp_doc
 
 
 def test_response_caps_and_image_limits_match_per_tool_behavior() -> None:
     envelopes = load("mcp-protocol.json")["output_envelopes"]
-    capped = {name for name, item in envelopes.items() if item["response_character_cap"] == 200_000}
+    capped = {
+        name
+        for name, item in envelopes.items()
+        if item["response_character_cap"] == 200_000
+    }
     assert capped == {"parse_document", "parse_chunks", "redact_document"}
     for name, envelope in envelopes.items():
         if name in capped:
@@ -471,7 +545,10 @@ def test_response_caps_and_image_limits_match_per_tool_behavior() -> None:
             assert envelope["response_character_cap"] is None
             assert envelope["truncation"]["enabled"] is False
     assert "up to 8 image items" in envelopes["render_document"]["response_behavior"]
-    assert "zero to 8 image content items" in envelopes["extract_tables"]["response_behavior"].lower()
+    assert (
+        "zero to 8 image content items"
+        in envelopes["extract_tables"]["response_behavior"].lower()
+    )
     render = envelopes["render_document"]["success"]["variants"]
     assert render[0]["when"] == {"format": ["png", "jpeg"]}
     assert [item["type"] for item in render[0]["content"]] == ["image", "text"]
@@ -481,7 +558,9 @@ def test_response_caps_and_image_limits_match_per_tool_behavior() -> None:
     tables = envelopes["extract_tables"]["success"]["variants"]
     assert tables[0]["when"] == {"visual": ["none"]}
     assert [item["type"] for item in tables[0]["content"]] == ["text"]
-    assert tables[1]["when"] == {"visual": ["non-tabular", "non-tabular-and-uncertain", "all"]}
+    assert tables[1]["when"] == {
+        "visual": ["non-tabular", "non-tabular-and-uncertain", "all"]
+    }
     assert [item["type"] for item in tables[1]["content"]] == ["image", "text"]
     assert tables[1]["content"][0]["min_items"] == 0
     assert tables[1]["content"][0]["max_items"] == 8
@@ -494,32 +573,63 @@ def test_each_tool_freezes_file_extensions_and_conditional_output_paths() -> Non
     assert set(files) == set(MCP_TOOLS)
     document = [".hwp", ".hwpx", ".hml", ".pdf", ".xls", ".xlsx", ".docx"]
     parse = document + [".png", ".jpg", ".jpeg", ".webp"]
-    for name in ("parse_document", "detect_format", "parse_metadata", "parse_pages", "parse_table", "parse_chunks"):
+    for name in (
+        "parse_document",
+        "detect_format",
+        "parse_metadata",
+        "parse_pages",
+        "parse_table",
+        "parse_chunks",
+    ):
         assert files[name]["input_extensions"] == parse
-    for name in ("compare_documents", "parse_form", "fill_form", "place_seal", "redact_document", "extract_profile"):
+    for name in (
+        "compare_documents",
+        "parse_form",
+        "fill_form",
+        "place_seal",
+        "redact_document",
+        "extract_profile",
+    ):
         assert files[name]["input_extensions"] == document
     assert files["compare_documents"]["input_extensions"] == document
-    assert files["place_seal"]["image_extensions"] == [".png", ".jpg", ".jpeg", ".gif", ".bmp"]
+    assert files["place_seal"]["image_extensions"] == [
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".bmp",
+    ]
     assert files["fill_form"]["output_by_format"] == {
         "markdown": [".md", ".markdown", ".txt"],
         "hwpx": [".hwpx"],
         "hwpx-preserve": [".hwpx"],
     }
     assert files["fill_form"]["output_path_required"] is False
-    assert files["fill_form"]["input_source_precedence"] == "template wins when truthy; otherwise file_path is read; absence of both returns an error"
+    assert (
+        files["fill_form"]["input_source_precedence"]
+        == "template wins when truthy; otherwise file_path is read; absence of both returns an error"
+    )
     assert files["place_seal"]["output_extensions"] == [".hwpx"]
     assert files["patch_document"]["input_extensions"] == document
     assert files["patch_document"]["runtime_input_format"] == ["hwpx", "hwp"]
     assert files["patch_document"]["rejects_confirmed_detected_other_formats"] is True
-    assert files["patch_document"]["unknown_detection"] == "defer to the HWPX/HWP patcher"
+    assert (
+        files["patch_document"]["unknown_detection"] == "defer to the HWPX/HWP patcher"
+    )
     assert files["patch_document"]["output_extensions"] == [".hwpx", ".hwp"]
     assert files["patch_document"]["same_extension_as_input_enforced"] is False
     assert files["redact_document"]["output_extensions_by_detected_format"] == {
-        "hwpx": [".hwpx"], "hwp": [".hwp"], "other": [".md", ".markdown", ".txt"]
+        "hwpx": [".hwpx"],
+        "hwp": [".hwp"],
+        "other": [".md", ".markdown", ".txt"],
     }
     assert files["redact_document"]["output_path_required_when_dry_run_false"] is True
     assert files["render_document"]["output_extensions_by_format"] == {
-        "png": [".png"], "jpeg": [".jpg", ".jpeg"], "svg": [".svg"], "html": [".html", ".htm"], "pdf": [".pdf"]
+        "png": [".png"],
+        "jpeg": [".jpg", ".jpeg"],
+        "svg": [".svg"],
+        "html": [".html", ".htm"],
+        "pdf": [".pdf"],
     }
     assert files["crop_regions"]["manifest"] == "regions.json"
     assert files["extract_tables"]["manifest"] == "tables.json"
@@ -534,40 +644,112 @@ def test_dynamic_generation_schema_preserves_source_enums_ranges_and_key_sets() 
     schema = load("mcp-protocol.json")["input_schemas"]["generate_document"]
     fields = schema["properties"]
     assert fields["preset"]["enum"] == [
-        "official", "기안문", "시행문", "공문", "공문서", "report", "보고서", "plan", "계획서", "계획",
-        "notice", "통지", "알림", "안내", "minutes", "회의록", "gaejosik", "개조식", "개조식보고서",
-        "정부보고서", "정부표준개조식보고서", "press", "보도자료", "ministry", "업무보고", "부처업무보고",
-        "중앙부처보고서", "bangchim", "서울방침", "방침서", "방침",
+        "official",
+        "기안문",
+        "시행문",
+        "공문",
+        "공문서",
+        "report",
+        "보고서",
+        "plan",
+        "계획서",
+        "계획",
+        "notice",
+        "통지",
+        "알림",
+        "안내",
+        "minutes",
+        "회의록",
+        "gaejosik",
+        "개조식",
+        "개조식보고서",
+        "정부보고서",
+        "정부표준개조식보고서",
+        "press",
+        "보도자료",
+        "ministry",
+        "업무보고",
+        "부처업무보고",
+        "중앙부처보고서",
+        "bangchim",
+        "서울방침",
+        "방침서",
+        "방침",
     ]
     assert fields["font"]["enum"] == ["myeongjo", "gothic"]
     assert fields["h2_marker"]["enum"] == ["band", "roman", "box", "number", "none"]
     assert fields["bullet2"]["enum"] == ["ㅇ", "○"]
     assert (fields["body_pt"]["minimum"], fields["body_pt"]["maximum"]) == (6, 40)
-    assert (fields["line_spacing"]["minimum"], fields["line_spacing"]["maximum"]) == (50, 300)
-    assert set(fields["doc_info"]["properties"]) == {"docNum", "date", "disclosure", "policyNo"}
+    assert (fields["line_spacing"]["minimum"], fields["line_spacing"]["maximum"]) == (
+        50,
+        300,
+    )
+    assert set(fields["doc_info"]["properties"]) == {
+        "docNum",
+        "date",
+        "disclosure",
+        "policyNo",
+    }
     assert set(fields["fonts"]["properties"]) == {"body", "heading", "ref", "table"}
     assert set(fields["sizes"]["properties"]) == {
-        "dae", "cham", "chapter", "coverTitle", "coverSub", "tocLabel", "tocRoman", "tocItem", "table", "bodyTitle"
+        "dae",
+        "cham",
+        "chapter",
+        "coverTitle",
+        "coverSub",
+        "tocLabel",
+        "tocRoman",
+        "tocItem",
+        "table",
+        "bodyTitle",
     }
     assert fields["approval"]["maxItems"] == 6
-    assert fields["date"]["description"] == "표지 날짜 ('YYYY. M. D.' 표기 권장). 미지정 시 오늘 날짜"
-    assert fields["toc"]["description"] == "목차 페이지 생성 여부 — h2 목록을 Ⅰ Ⅱ Ⅲ 장으로 자동 구성. 전 프리셋 사용 가능(보도자료 제외). 미지정 시 개조식 프리셋만 켜짐"
-    assert fields["cover"]["description"] == "표지 페이지 생성 여부 — 첫 h1을 제목으로 파랑 장식 표지. 전 프리셋 사용 가능(보도자료 제외 — 머리박스 서식과 양립 불가). 미지정 시 개조식 프리셋만 켜짐 (org/date 지정 시 자동 켜짐)"
-    assert fields["page_numbers"]["description"] == "쪽번호(하단 중앙 '- 1 -', 표지·목차 카운트 제외). 미지정 시 개조식·보고서·계획서 켜짐"
-    assert fields["fonts"]["description"] == "요소별 글꼴 오버라이드(공문서 모드) — body=본문(○·-)/heading=제목 계열(□·장헤더·표지·목차)/ref=※ 참고/table=표 셀. 개조식·보고서·계획서는 네 역할 전부, 그 외 프리셋은 body만 적용"
+    assert (
+        fields["date"]["description"]
+        == "표지 날짜 ('YYYY. M. D.' 표기 권장). 미지정 시 오늘 날짜"
+    )
+    assert (
+        fields["toc"]["description"]
+        == "목차 페이지 생성 여부 — h2 목록을 Ⅰ Ⅱ Ⅲ 장으로 자동 구성. 전 프리셋 사용 가능(보도자료 제외). 미지정 시 개조식 프리셋만 켜짐"
+    )
+    assert (
+        fields["cover"]["description"]
+        == "표지 페이지 생성 여부 — 첫 h1을 제목으로 파랑 장식 표지. 전 프리셋 사용 가능(보도자료 제외 — 머리박스 서식과 양립 불가). 미지정 시 개조식 프리셋만 켜짐 (org/date 지정 시 자동 켜짐)"
+    )
+    assert (
+        fields["page_numbers"]["description"]
+        == "쪽번호(하단 중앙 '- 1 -', 표지·목차 카운트 제외). 미지정 시 개조식·보고서·계획서 켜짐"
+    )
+    assert (
+        fields["fonts"]["description"]
+        == "요소별 글꼴 오버라이드(공문서 모드) — body=본문(○·-)/heading=제목 계열(□·장헤더·표지·목차)/ref=※ 참고/table=표 셀. 개조식·보고서·계획서는 네 역할 전부, 그 외 프리셋은 body만 적용"
+    )
     behavior = load("mcp-protocol.json")["generation_behavior"]
     assert behavior["preset_defaults"]["official"] == {
-        "body_pt": 12, "line_spacing": 160, "cover": False, "toc": False,
-        "page_numbers": False, "end_mark": True, "body_title_box": False,
-        "h2_marker": "none", "bullet2": "ㅇ",
+        "body_pt": 12,
+        "line_spacing": 160,
+        "cover": False,
+        "toc": False,
+        "page_numbers": False,
+        "end_mark": True,
+        "body_title_box": False,
+        "h2_marker": "none",
+        "bullet2": "ㅇ",
     }
     assert behavior["preset_defaults"]["gaejosik"]["cover"] is True
     assert behavior["preset_defaults"]["gaejosik"]["body_title_box"] is True
     assert behavior["preset_defaults"]["ministry"]["toc"] is True
     assert behavior["preset_defaults"]["bangchim"]["page_numbers"] is True
     assert behavior["preset_defaults"]["press"]["toc"] is False
-    assert behavior["font_override_applicability"]["all_roles_presets"] == ["gaejosik", "report", "plan", "bangchim"]
-    assert behavior["font_override_applicability"]["body_only_for_other_presets"] is True
+    assert behavior["font_override_applicability"]["all_roles_presets"] == [
+        "gaejosik",
+        "report",
+        "plan",
+        "bangchim",
+    ]
+    assert (
+        behavior["font_override_applicability"]["body_only_for_other_presets"] is True
+    )
 
 
 def test_detect_format_records_header_probe_and_conditional_full_read() -> None:
@@ -590,7 +772,15 @@ def test_contract_pages_and_pull_request_template_cover_review_evidence() -> Non
     assert "compatibility requirements" in mcp
     assert "planned" in mcp
     assert "contracts/errors.md" in index and "contracts/mcp.md" in index
-    for section in ("Scope", "Tests", "Parity evidence", "SSOT impact", "WIKI", "Security impact", "Ownership"):
+    for section in (
+        "Scope",
+        "Tests",
+        "Parity evidence",
+        "SSOT impact",
+        "WIKI",
+        "Security impact",
+        "Ownership",
+    ):
         assert section.lower() in template.lower()
 
 
@@ -608,10 +798,16 @@ def test_every_api_entry_has_a_disposition_and_exact_export_coverage() -> None:
     assert set(values) == set(oracle["named_exports"])
     assert set(types) == set(oracle["type_exports"])
     assert {entry["disposition"] for entry in entries} <= {
-        "foundation", "planned", "removed-node-surface", "internal",
+        "foundation",
+        "planned",
+        "removed-node-surface",
+        "internal",
     }
     assert {entry["disposition"] for entry in type_entries} <= {
-        "foundation", "planned", "removed-node-surface", "internal",
+        "foundation",
+        "planned",
+        "removed-node-surface",
+        "internal",
     }
     for entry in entries:
         assert entry["python_name"]
@@ -624,38 +820,90 @@ def test_every_api_entry_has_a_disposition_and_exact_export_coverage() -> None:
     for entry in type_entries:
         assert entry["mapping"]
         assert entry["rationale"]
-        assert entry["disposition"] in {"foundation", "planned", "removed-node-surface", "internal"}
+        assert entry["disposition"] in {
+            "foundation",
+            "planned",
+            "removed-node-surface",
+            "internal",
+        }
     mapped_names = [entry["python_name"] for entry in entries if entry["python_name"]]
     assert len(mapped_names) == len(set(mapped_names))
-    assert {entry["source_name"]: entry["python_name"] for entry in entries}["parse"] == "parse"
-    assert {entry["source_name"]: entry["disposition"] for entry in entries}["parse"] == "foundation"
+    assert {entry["source_name"]: entry["python_name"] for entry in entries}[
+        "parse"
+    ] == "parse"
+    assert {entry["source_name"]: entry["disposition"] for entry in entries}[
+        "parse"
+    ] == "foundation"
     format_parsers = {
-        "parseHwpx": "parse_hwpx", "parseHwp": "parse_hwp", "parseHwp3": "parse_hwp3",
-        "parsePdf": "parse_pdf", "parseXlsx": "parse_xlsx", "parseXls": "parse_xls",
-        "parseDocx": "parse_docx", "parseHwpml": "parse_hwpml", "parseImage": "parse_image",
+        "parseHwpx": "parse_hwpx",
+        "parseHwp": "parse_hwp",
+        "parseHwp3": "parse_hwp3",
+        "parsePdf": "parse_pdf",
+        "parseXlsx": "parse_xlsx",
+        "parseXls": "parse_xls",
+        "parseDocx": "parse_docx",
+        "parseHwpml": "parse_hwpml",
+        "parseImage": "parse_image",
     }
     by_source = {entry["source_name"]: entry for entry in entries}
-    assert {name: by_source[name]["python_name"] for name in format_parsers} == format_parsers
+    assert {
+        name: by_source[name]["python_name"] for name in format_parsers
+    } == format_parsers
     assert all(by_source[name]["disposition"] == "planned" for name in format_parsers)
     symbol_names = {
-        "BUILTIN_TEMPLATES", "DEFAULT_REDACT_RULES", "HwpxSession", "PRESET_ALIAS",
-        "SPACE_EM_FIXED", "SPACE_EM_FONT", "ValueCursor",
+        "BUILTIN_TEMPLATES",
+        "DEFAULT_REDACT_RULES",
+        "HwpxSession",
+        "PRESET_ALIAS",
+        "SPACE_EM_FIXED",
+        "SPACE_EM_FONT",
+        "ValueCursor",
     }
     assert {name: by_source[name]["python_name"] for name in symbol_names} == {
         name: name for name in symbol_names
     }
-    assert {item["source_name"]: item["disposition"] for item in public_api["excluded_surfaces"]}["filePath"] == "internal"
-    assert {item["source_name"]: item["disposition"] for item in public_api["excluded_surfaces"]}["Node CLI"] == "removed-node-surface"
-    assert {item["source_name"]: item["disposition"] for item in public_api["excluded_surfaces"]}["Node package entry machinery"] == "removed-node-surface"
-    assert {"compare", "diffBlocks", "fillForm", "markdownToHwpx", "patchHwpx", "patchHwp",
-            "validateHwpx", "redactText", "redactMarkdown", "blocksToChunks", "renderDocument",
-            "detectFormat", "blocksToMarkdown", "blocksToPages"} <= set(values)
-    assert len(public_api["excluded_surfaces"]) == len({item["source_name"] for item in public_api["excluded_surfaces"]})
-    assert all(item["disposition"] and item["mapping"] is not None or item["disposition"] in {"internal", "removed-node-surface"}
-               for item in public_api["excluded_surfaces"])
+    assert {
+        item["source_name"]: item["disposition"]
+        for item in public_api["excluded_surfaces"]
+    }["filePath"] == "internal"
+    assert {
+        item["source_name"]: item["disposition"]
+        for item in public_api["excluded_surfaces"]
+    }["Node CLI"] == "removed-node-surface"
+    assert {
+        item["source_name"]: item["disposition"]
+        for item in public_api["excluded_surfaces"]
+    }["Node package entry machinery"] == "removed-node-surface"
+    assert {
+        "compare",
+        "diffBlocks",
+        "fillForm",
+        "markdownToHwpx",
+        "patchHwpx",
+        "patchHwp",
+        "validateHwpx",
+        "redactText",
+        "redactMarkdown",
+        "blocksToChunks",
+        "renderDocument",
+        "detectFormat",
+        "blocksToMarkdown",
+        "blocksToPages",
+    } <= set(values)
+    assert len(public_api["excluded_surfaces"]) == len(
+        {item["source_name"] for item in public_api["excluded_surfaces"]}
+    )
+    assert all(
+        item["disposition"]
+        and item["mapping"] is not None
+        or item["disposition"] in {"internal", "removed-node-surface"}
+        for item in public_api["excluded_surfaces"]
+    )
 
 
-def test_oracle_export_snapshot_is_hashed_and_reproducible_without_runtime_oracle() -> None:
+def test_oracle_export_snapshot_is_hashed_and_reproducible_without_runtime_oracle() -> (
+    None
+):
     snapshot = load("oracle-public-exports.json")
     evidence = snapshot["source_evidence"]
     assert evidence["path"] == "src/index.ts"
@@ -668,10 +916,20 @@ def test_oracle_export_snapshot_is_hashed_and_reproducible_without_runtime_oracl
     assert snapshot["named_exports"] and snapshot["type_exports"]
     assert len(snapshot["named_exports"]) == len(set(snapshot["named_exports"]))
     assert len(snapshot["type_exports"]) == len(set(snapshot["type_exports"]))
-    assert not any("kordoc/" in str(path) for path in (ROOT / "tests/contracts").rglob("*.py"))
-    tracked = __import__("subprocess").run(
-        ["git", "ls-files", "--", "kordoc"], cwd=ROOT, check=True, capture_output=True, text=True
-    ).stdout
+    assert not any(
+        "kordoc/" in str(path) for path in (ROOT / "tests/contracts").rglob("*.py")
+    )
+    tracked = (
+        __import__("subprocess")
+        .run(
+            ["git", "ls-files", "--", "kordoc"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        .stdout
+    )
     assert not tracked.splitlines()
 
 
@@ -683,7 +941,9 @@ def test_contract_tests_and_build_manifests_do_not_depend_on_oracle_checkout() -
     assert has_oracle_checkout_reference("file:///workspace/kor" + "doc/src/index.ts")
 
     paths = list((ROOT / "tests").rglob("*.py"))
-    paths.extend(path for path in (ROOT / "Cargo.toml", ROOT / "pyproject.toml") if path.exists())
+    paths.extend(
+        path for path in (ROOT / "Cargo.toml", ROOT / "pyproject.toml") if path.exists()
+    )
     for path in paths:
         contents = path.read_text(encoding="utf-8")
         assert not has_oracle_checkout_reference(contents), path
@@ -702,13 +962,26 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
     assert {item["source_name"] for item in type_classes} == set(oracle["type_exports"])
     assert len(type_classes) == len({item["source_name"] for item in type_classes})
     assert {item["category"] for item in type_classes} <= {
-        "serializable-object", "serializable-enum", "serializable-union", "input-options", "callable-adapter",
+        "serializable-object",
+        "serializable-enum",
+        "serializable-union",
+        "input-options",
+        "callable-adapter",
     }
     classes_by_name = {item["source_name"]: item for item in type_classes}
-    assert all(item["mapping"] == "#/$defs/" + item["source_name"] for item in type_classes)
+    assert all(
+        item["mapping"] == "#/$defs/" + item["source_name"] for item in type_classes
+    )
     serializable = {
-        name for name, item in classes_by_name.items()
-        if item["category"] in {"serializable-object", "serializable-enum", "serializable-union", "input-options"}
+        name
+        for name, item in classes_by_name.items()
+        if item["category"]
+        in {
+            "serializable-object",
+            "serializable-enum",
+            "serializable-union",
+            "input-options",
+        }
     }
     assert set(contract["wire_types"]) == serializable
     assert set(contract["root_types"]) == serializable
@@ -719,40 +992,73 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
     } == serializable
     for name in serializable:
         kind = schema[name].get("type")
-        assert kind in {"object", "string"} or "oneOf" in schema[name] or "anyOf" in schema[name], name
+        assert (
+            kind in {"object", "string"}
+            or "oneOf" in schema[name]
+            or "anyOf" in schema[name]
+        ), name
         fields = classes_by_name[name].get("fields")
         if fields is not None:
-            assert set(fields) - set(classes_by_name[name].get("excluded_fields", [])) == set(schema[name].get("properties", {})), name
-            assert set(classes_by_name[name]["required_fields"]) == set(schema[name].get("required", [])), name
+            assert set(fields) - set(
+                classes_by_name[name].get("excluded_fields", [])
+            ) == set(schema[name].get("properties", {})), name
+            assert set(classes_by_name[name]["required_fields"]) == set(
+                schema[name].get("required", [])
+            ), name
         if "excluded_fields" in classes_by_name[name]:
-            assert classes_by_name[name]["excluded_fields"] == schema[name]["x-internal-fields"]
+            assert (
+                classes_by_name[name]["excluded_fields"]
+                == schema[name]["x-internal-fields"]
+            )
         if "enum" in schema[name]:
             assert classes_by_name[name]["enum_values"] == schema[name]["enum"], name
         assert classes_by_name[name]["mapping"]
     assert set(classes_by_name["OcrProvider"]["python_adapter_fields"]) == {"ocr"}
     expected_adapters = {
-        "ExtractRegionOptions": {"filter"}, "ExtractedImage": {"data"}, "ExtractedTableCrop": {"data"},
-        "FillFormOutput": {"output"}, "HwpxFillResult": {"buffer"}, "ImageData": {"data"},
-        "MarkdownToHwpxOptions": {"images"}, "ParseOptions": {"ocr", "onProgress"},
-        "PatchResult": {"data"}, "PlaceSealResult": {"buffer"}, "RegionAsset": {"data"},
-        "RenderAsset": {"data"}, "ScanTable": {"cellByAnchor"}, "SceneRenderResult": {"pageSvgs"},
+        "ExtractRegionOptions": {"filter"},
+        "ExtractedImage": {"data"},
+        "ExtractedTableCrop": {"data"},
+        "FillFormOutput": {"output"},
+        "HwpxFillResult": {"buffer"},
+        "ImageData": {"data"},
+        "MarkdownToHwpxOptions": {"images"},
+        "ParseOptions": {"ocr", "onProgress"},
+        "PatchResult": {"data"},
+        "PlaceSealResult": {"buffer"},
+        "RegionAsset": {"data"},
+        "RenderAsset": {"data"},
+        "ScanTable": {"cellByAnchor"},
+        "SceneRenderResult": {"pageSvgs"},
         "SealOp": {"image"},
     }
     for name, definition in schema.items():
         if definition.get("type") != "object":
             continue
         expected = expected_adapters.get(name, set())
-        classified = set(classes_by_name[name].get("adapter_fields", [])) if name in classes_by_name else set()
+        classified = (
+            set(classes_by_name[name].get("adapter_fields", []))
+            if name in classes_by_name
+            else set()
+        )
         assert classified == expected, name
         assert expected <= set(definition.get("properties", {})), name
     assert schema["SceneRenderResult"]["properties"]["pageSvgs"]["type"] == "object"
     assert schema["ScanTable"]["properties"]["cellByAnchor"]["type"] == "object"
     assert schema["ExtractRegionOptions"]["properties"]["filter"]["not"] == {}
-    assert set(contract["supporting_types"]) == set(schema) - set(oracle["type_exports"])
-    assert set(schema) == set(oracle["type_exports"]) | set(contract["supporting_types"])
+    assert set(contract["supporting_types"]) == set(schema) - set(
+        oracle["type_exports"]
+    )
+    assert set(schema) == set(oracle["type_exports"]) | set(
+        contract["supporting_types"]
+    )
     assert contract["$schema"] == "https://json-schema.org/draft/2020-12/schema"
-    assert contract["anyOf"] == [{"$ref": "#/$defs/" + name} for name in contract["root_types"]]
-    assert evidence["type_source_sha256"] == "5b1e4b5793a04bd059600b6daf3b14b1b299958ee9f22633d9027c9d9956110c"
+    assert contract["anyOf"] == [
+        {"$ref": "#/$defs/" + name} for name in contract["root_types"]
+    ]
+    assert (
+        evidence["type_source_sha256"]
+        == "5b1e4b5793a04bd059600b6daf3b14b1b299958ee9f22633d9027c9d9956110c"
+    )
     assert contract["roots"] == {
         "parse_result": {"$ref": "#/$defs/ParseResult"},
         "block": {"$ref": "#/$defs/IRBlock"},
@@ -788,6 +1094,7 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
         reachable.add(name)
         nested: list[str] = []
         collect_refs(schema[name], name)
+
         def gather(value: object, references: list[str] = nested) -> None:
             if isinstance(value, dict):
                 ref = value.get("$ref")
@@ -798,78 +1105,223 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
             elif isinstance(value, list):
                 for child in value:
                     gather(child, references)
+
         gather(schema[name])
         pending.extend(nested)
     assert set(contract["supporting_types"]) <= reachable
     for name, definition in schema.items():
         validate_schema(definition, name)
         if definition.get("type") == "object":
-            assert set(definition.get("required", [])) <= set(definition.get("properties", {})), name
+            assert set(definition.get("required", [])) <= set(
+                definition.get("properties", {})
+            ), name
             assert definition.get("additionalProperties") is False, name
         if "enum" in definition:
-            assert definition["enum"] and len(definition["enum"]) == len(set(definition["enum"])), name
-    assert schema["IRBlock"]["properties"]["children"]["items"] == {"$ref": "#/$defs/IRBlock"}
-    assert schema["IRCell"]["properties"]["blocks"]["items"] == {"$ref": "#/$defs/IRBlock"}
-    assert schema["IRTable"]["properties"]["captionBlocks"]["items"] == {"$ref": "#/$defs/IRBlock"}
-    assert set(schema["ParseSuccess"]["properties"]) >= {
-        "success", "fileType", "markdown", "blocks", "metadata", "outline", "warnings",
-        "images", "pages", "pageQuality", "qualitySummary", "pageCount", "isImageBased",
+            assert definition["enum"] and len(definition["enum"]) == len(
+                set(definition["enum"])
+            ), name
+    assert schema["IRBlock"]["properties"]["children"]["items"] == {
+        "$ref": "#/$defs/IRBlock"
     }
-    assert set(schema["ParseFailure"]["properties"]) == {"success", "fileType", "error", "code", "pageCount", "isImageBased"}
-    assert set(schema["ParseSuccess"]["required"]) == {"success", "fileType", "markdown", "blocks"}
+    assert schema["IRCell"]["properties"]["blocks"]["items"] == {
+        "$ref": "#/$defs/IRBlock"
+    }
+    assert schema["IRTable"]["properties"]["captionBlocks"]["items"] == {
+        "$ref": "#/$defs/IRBlock"
+    }
+    assert set(schema["ParseSuccess"]["properties"]) >= {
+        "success",
+        "fileType",
+        "markdown",
+        "blocks",
+        "metadata",
+        "outline",
+        "warnings",
+        "images",
+        "pages",
+        "pageQuality",
+        "qualitySummary",
+        "pageCount",
+        "isImageBased",
+    }
+    assert set(schema["ParseFailure"]["properties"]) == {
+        "success",
+        "fileType",
+        "error",
+        "code",
+        "pageCount",
+        "isImageBased",
+    }
+    assert set(schema["ParseSuccess"]["required"]) == {
+        "success",
+        "fileType",
+        "markdown",
+        "blocks",
+    }
     assert set(schema["ParseFailure"]["required"]) == {"success", "fileType", "error"}
-    assert schema["ErrorCode"]["enum"] == [item["code"] for item in load("errors.json")["codes"]]
+    assert schema["ErrorCode"]["enum"] == [
+        item["code"] for item in load("errors.json")["codes"]
+    ]
     assert schema["WarningCode"]["enum"] == contract["warning_codes"]
     assert schema["IRBlock"]["properties"]["pageNumber"]["type"] == "integer"
     assert "pageNumber" not in schema["IRBlock"].get("required", [])
     assert "kind" not in schema["IRBlock"]["properties"]
     assert set(schema["IRBlock"]["properties"]) == {
-        "type", "text", "table", "level", "pageNumber", "bbox", "style", "listType", "children", "href",
-        "footnoteText", "imageData", "spans", "quote", "indent", "listDepth",
+        "type",
+        "text",
+        "table",
+        "level",
+        "pageNumber",
+        "bbox",
+        "style",
+        "listType",
+        "children",
+        "href",
+        "footnoteText",
+        "imageData",
+        "spans",
+        "quote",
+        "indent",
+        "listDepth",
     }
     assert set(schema["IRSpan"]["properties"]) == {
-        "text", "bold", "italic", "strike", "underline", "code", "placeholder",
+        "text",
+        "bold",
+        "italic",
+        "strike",
+        "underline",
+        "code",
+        "placeholder",
     }
     assert set(schema["IRTable"]["properties"]) == {
-        "rows", "cols", "cells", "renderAsTable", "hasHeader", "classification", "sourceId", "regions", "caption", "captionBlocks",
+        "rows",
+        "cols",
+        "cells",
+        "renderAsTable",
+        "hasHeader",
+        "classification",
+        "sourceId",
+        "regions",
+        "caption",
+        "captionBlocks",
     }
-    assert set(schema["IRCell"]["properties"]) == {"text", "colSpan", "rowSpan", "blocks", "isHeader"}
+    assert set(schema["IRCell"]["properties"]) == {
+        "text",
+        "colSpan",
+        "rowSpan",
+        "blocks",
+        "isHeader",
+    }
     assert set(schema["DocumentMetadata"]["properties"]) == {
-        "title", "author", "creator", "createdAt", "modifiedAt", "pageCount", "pageMode", "version", "description", "keywords",
+        "title",
+        "author",
+        "creator",
+        "createdAt",
+        "modifiedAt",
+        "pageCount",
+        "pageMode",
+        "version",
+        "description",
+        "keywords",
     }
     assert set(schema["ParseOptions"]["properties"]) == {
-        "pages", "ocr", "onProgress", "removeHeaderFooter", "scriptTags", "plain", "htmlTables", "keepTrailingEmptyCols", "classifyTables",
-        "keepEmptyParagraphs", "includeFieldPlaceholders", "password", "formulaOcr", "dedupeRunningHeaders", "inlineImages", "images", "tables",
+        "pages",
+        "ocr",
+        "onProgress",
+        "removeHeaderFooter",
+        "scriptTags",
+        "plain",
+        "htmlTables",
+        "keepTrailingEmptyCols",
+        "classifyTables",
+        "keepEmptyParagraphs",
+        "includeFieldPlaceholders",
+        "password",
+        "formulaOcr",
+        "dedupeRunningHeaders",
+        "inlineImages",
+        "images",
+        "tables",
     }
     assert "filePath" not in schema["ParseOptions"]["properties"]
     assert schema["ParseOptions"]["properties"]["onProgress"]["not"] == {}
-    assert schema["ParseOptions"]["properties"]["onProgress"]["x-typescript-callable"] is True
-    assert schema["ParseOptions"]["properties"]["onProgress"]["x-python-translation"] == "callable (current, total)"
+    assert (
+        schema["ParseOptions"]["properties"]["onProgress"]["x-typescript-callable"]
+        is True
+    )
+    assert (
+        schema["ParseOptions"]["properties"]["onProgress"]["x-python-translation"]
+        == "callable (current, total)"
+    )
     assert schema["ParseOptions"]["properties"]["ocr"]["oneOf"] == [
-        {"type": "boolean"}, {"const": "force"},
+        {"type": "boolean"},
+        {"const": "force"},
     ]
-    assert schema["ParseOptions"]["properties"]["ocr"]["x-python-callable-adapter"] is True
+    assert (
+        schema["ParseOptions"]["properties"]["ocr"]["x-python-callable-adapter"] is True
+    )
     assert schema["ParseOptions"]["x-internal-fields"] == ["filePath"]
     assert schema["ParseOptions"]["x-python-callable-fields"] == ["onProgress", "ocr"]
     assert schema["ParseOptions"]["x-node-only-fields"] == ["filePath"]
     assert "code" not in schema["ParseFailure"]["required"]
     assert schema["ParseFailure"]["properties"]["code"] == {"$ref": "#/$defs/ErrorCode"}
     assert schema["WarningCode"]["enum"] == [
-        "SKIPPED_IMAGE", "SKIPPED_OLE", "TRUNCATED_TABLE", "OCR_FALLBACK", "UNSUPPORTED_ELEMENT",
-        "BROKEN_ZIP_RECOVERY", "HIDDEN_TEXT_FILTERED", "MALFORMED_XML", "PARTIAL_PARSE", "LENIENT_CFB_RECOVERY",
-        "NEEDS_OCR", "OCR_FAILED", "OCR_APPLIED", "OCR_LOW_CONF", "COM_EMPTY", "DRM_COM_FALLBACK", "PAGE_BOUNDARY_APPROXIMATE",
+        "SKIPPED_IMAGE",
+        "SKIPPED_OLE",
+        "TRUNCATED_TABLE",
+        "OCR_FALLBACK",
+        "UNSUPPORTED_ELEMENT",
+        "BROKEN_ZIP_RECOVERY",
+        "HIDDEN_TEXT_FILTERED",
+        "MALFORMED_XML",
+        "PARTIAL_PARSE",
+        "LENIENT_CFB_RECOVERY",
+        "NEEDS_OCR",
+        "OCR_FAILED",
+        "OCR_APPLIED",
+        "OCR_LOW_CONF",
+        "COM_EMPTY",
+        "DRM_COM_FALLBACK",
+        "PAGE_BOUNDARY_APPROXIMATE",
     ]
-    assert schema["IRBlockType"]["enum"] == ["paragraph", "table", "heading", "list", "image", "separator"]
-    assert schema["TableClassificationKind"]["enum"] == ["semantic-table", "non-tabular-layout", "uncertain"]
+    assert schema["IRBlockType"]["enum"] == [
+        "paragraph",
+        "table",
+        "heading",
+        "list",
+        "image",
+        "separator",
+    ]
+    assert schema["TableClassificationKind"]["enum"] == [
+        "semantic-table",
+        "non-tabular-layout",
+        "uncertain",
+    ]
     assert schema["TableClassificationReason"]["enum"] == [
-        "repeated-row-schema", "grid-regularity", "high-active-density", "column-type-consistency",
-        "nested-structure-wrapper", "span-irregularity", "spacer-bands", "extreme-sparsity",
-        "diagram-context-keyword", "low-evidence", "ambiguous-scores",
+        "repeated-row-schema",
+        "grid-regularity",
+        "high-active-density",
+        "column-type-consistency",
+        "nested-structure-wrapper",
+        "span-irregularity",
+        "spacer-bands",
+        "extreme-sparsity",
+        "diagram-context-keyword",
+        "low-evidence",
+        "ambiguous-scores",
     ]
     assert schema["PageQuality"]["properties"]["ocrReason"]["enum"] == [
-        "vector_text", "low_text", "high_pua", "high_control", "high_replacement", "garbled_hangul",
+        "vector_text",
+        "low_text",
+        "high_pua",
+        "high_control",
+        "high_replacement",
+        "garbled_hangul",
     ]
-    assert contract["source_evidence"]["source_sha256"] == "85943942619d9c2b7ed0855bdb58eb0360fec028e84efdd0f719589ba6ce4e01"
+    assert (
+        contract["source_evidence"]["source_sha256"]
+        == "85943942619d9c2b7ed0855bdb58eb0360fec028e84efdd0f719589ba6ce4e01"
+    )
     assert schema["ImageData"]["properties"]["data"]["x-python-translation"] == "bytes"
     assert all(item.get("type") != "null" for item in schema.values())
 
@@ -879,36 +1331,47 @@ def test_ir_schema_validates_inherited_options_adapters_and_face_class() -> None
     defs = contract["$defs"]
 
     def validator_for(name: str) -> Draft202012Validator:
-        return Draft202012Validator({
-            "$schema": contract["$schema"],
-            "$ref": f"#/$defs/{name}",
-            "$defs": defs,
-        })
+        return Draft202012Validator(
+            {
+                "$schema": contract["$schema"],
+                "$ref": f"#/$defs/{name}",
+                "$defs": defs,
+            }
+        )
 
     Draft202012Validator.check_schema(contract)
     region_options = validator_for("ExtractRegionOptions")
-    assert region_options.is_valid({"pages": "1-3", "reflow": True, "reflowMode": "keep"})
+    assert region_options.is_valid(
+        {"pages": "1-3", "reflow": True, "reflowMode": "keep"}
+    )
 
     image_options = validator_for("MarkdownToHwpxOptions")
     assert image_options.is_valid({"images": {"logo.png": [0, 255]}})
-    image_bytes = defs["MarkdownToHwpxOptions"]["properties"]["images"]["additionalProperties"]
+    image_bytes = defs["MarkdownToHwpxOptions"]["properties"]["images"][
+        "additionalProperties"
+    ]
     assert image_bytes["type"] == "array"
     assert image_bytes["x-typescript-input-types"] == ["Uint8Array", "ArrayBuffer"]
     assert image_bytes["items"] == {"type": "integer", "minimum": 0, "maximum": 255}
 
     face_class = validator_for("FaceClass")
-    assert all(face_class.is_valid(value) for value in ("hcr", "fixedPitch", "gothic", "font:Arial"))
+    assert all(
+        face_class.is_valid(value)
+        for value in ("hcr", "fixedPitch", "gothic", "font:Arial")
+    )
     assert not face_class.is_valid("unrelated")
 
 
 def test_ocr_callable_is_not_json_and_preserves_callable_signature() -> None:
     contract = load("ir-schema.json")
     defs = contract["$defs"]
-    ocr_provider = Draft202012Validator({
-        "$schema": contract["$schema"],
-        "$ref": "#/$defs/OcrProvider",
-        "$defs": defs,
-    })
+    ocr_provider = Draft202012Validator(
+        {
+            "$schema": contract["$schema"],
+            "$ref": "#/$defs/OcrProvider",
+            "$defs": defs,
+        }
+    )
     assert not ocr_provider.is_valid(None)
     assert not ocr_provider.is_valid({})
     assert not ocr_provider.is_valid("callback")
@@ -918,17 +1381,26 @@ def test_ocr_callable_is_not_json_and_preserves_callable_signature() -> None:
         "parameters": [
             {"name": "pageImage", "type": "Uint8Array"},
             {"name": "pageNumber", "type": "number"},
-            {"name": "mimeType", "type": "string", "enum": ["image/png", "image/jpeg", "image/webp"]},
+            {
+                "name": "mimeType",
+                "type": "string",
+                "enum": ["image/png", "image/jpeg", "image/webp"],
+            },
         ],
         "returns": "Promise<string>",
     }
-    assert provider_schema["x-python-translation"] == "Callable[[bytes, int, Literal['image/png', 'image/jpeg', 'image/webp']], Awaitable[str]]"
+    assert (
+        provider_schema["x-python-translation"]
+        == "Callable[[bytes, int, Literal['image/png', 'image/jpeg', 'image/webp']], Awaitable[str]]"
+    )
 
-    parse_options = Draft202012Validator({
-        "$schema": contract["$schema"],
-        "$ref": "#/$defs/ParseOptions",
-        "$defs": defs,
-    })
+    parse_options = Draft202012Validator(
+        {
+            "$schema": contract["$schema"],
+            "$ref": "#/$defs/ParseOptions",
+            "$defs": defs,
+        }
+    )
     assert parse_options.is_valid({"ocr": True})
     assert parse_options.is_valid({"ocr": "force"})
     assert not parse_options.is_valid({"ocr": "callback"})
@@ -947,24 +1419,41 @@ def test_ir_schema_validates_recursive_ir_and_parse_result_variants() -> None:
     recursive_block = {
         "type": "paragraph",
         "text": "outer",
-        "children": [{
-            "type": "table",
-            "table": {
-                "rows": 1,
-                "cols": 1,
-                "cells": [[{
-                    "text": "cell",
-                    "colSpan": 1,
-                    "rowSpan": 1,
-                    "blocks": [{"type": "paragraph", "spans": [{"text": "nested", "bold": True}]}],
-                }]],
-                "hasHeader": False,
-                "captionBlocks": [{"type": "paragraph", "spans": [{"text": "caption", "italic": True}]}],
+        "children": [
+            {
+                "type": "table",
+                "table": {
+                    "rows": 1,
+                    "cols": 1,
+                    "cells": [
+                        [
+                            {
+                                "text": "cell",
+                                "colSpan": 1,
+                                "rowSpan": 1,
+                                "blocks": [
+                                    {
+                                        "type": "paragraph",
+                                        "spans": [{"text": "nested", "bold": True}],
+                                    }
+                                ],
+                            }
+                        ]
+                    ],
+                    "hasHeader": False,
+                    "captionBlocks": [
+                        {
+                            "type": "paragraph",
+                            "spans": [{"text": "caption", "italic": True}],
+                        }
+                    ],
+                },
             },
-        }, {
-            "type": "image",
-            "imageData": {"data": [0, 128, 255], "mimeType": "image/png"},
-        }],
+            {
+                "type": "image",
+                "imageData": {"data": [0, 128, 255], "mimeType": "image/png"},
+            },
+        ],
     }
     success = {
         "success": True,
@@ -983,8 +1472,12 @@ def test_ir_schema_validates_recursive_ir_and_parse_result_variants() -> None:
     assert not validator.is_valid({"success": True, "fileType": "pdf", "blocks": []})
     assert not validator.is_valid({**success, "fileType": "invalid"})
     assert not validator.is_valid({**success, "unknown": True})
-    assert not validator.is_valid({**success, "blocks": [{**recursive_block, "unknown": True}]})
-    assert not validator.is_valid({**success, "blocks": [{**recursive_block, "type": "invalid"}]})
+    assert not validator.is_valid(
+        {**success, "blocks": [{**recursive_block, "unknown": True}]}
+    )
+    assert not validator.is_valid(
+        {**success, "blocks": [{**recursive_block, "type": "invalid"}]}
+    )
     table_block = recursive_block["children"][0]
     table_without_caption_block_type = {
         **table_block,
@@ -993,11 +1486,17 @@ def test_ir_schema_validates_recursive_ir_and_parse_result_variants() -> None:
             "captionBlocks": [{"spans": [{"text": "caption"}]}],
         },
     }
-    assert not validator.is_valid({
-        **success,
-        "blocks": [{**recursive_block, "children": [table_without_caption_block_type]}],
-    })
-    assert not validator.is_valid({"success": False, "fileType": "unknown", "code": "UNSUPPORTED_FORMAT"})
+    assert not validator.is_valid(
+        {
+            **success,
+            "blocks": [
+                {**recursive_block, "children": [table_without_caption_block_type]}
+            ],
+        }
+    )
+    assert not validator.is_valid(
+        {"success": False, "fileType": "unknown", "code": "UNSUPPORTED_FORMAT"}
+    )
     assert not validator.is_valid({**failure, "code": "NOT_AN_ERROR_CODE"})
     assert not validator.is_valid({**failure, "unknown": True})
 
