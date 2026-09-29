@@ -6,6 +6,7 @@ This directory contains the current, normative description of paruster. A code c
 
 - [`migration/2026-09-29-rust-python-port-design.md`](migration/2026-09-29-rust-python-port-design.md): approved product and migration design
 - [`migration/plans/2026-09-29-foundation-implementation-plan.md`](migration/plans/2026-09-29-foundation-implementation-plan.md): executable contract, workspace, binding, parity, and CI foundation plan
+- [`migration/plans/2026-09-30-product-port-implementation-plan.md`](migration/plans/2026-09-30-product-port-implementation-plan.md): full parser, transform, Python, MCP, packaging, and Node-removal execution DAG
 - [`migration/status.md`](migration/status.md): live implementation and parity status
 - [Workspace architecture](architecture/workspace.md): current crate boundaries, data flow, and security boundaries
 - [`contracts/errors.md`](contracts/errors.md): stable shared error code inventory and status semantics
