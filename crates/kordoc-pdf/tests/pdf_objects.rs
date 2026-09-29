@@ -75,9 +75,15 @@ fn uses_latest_incremental_revision() {
 #[test]
 fn rejects_generation_mismatch_and_reference_cycles() {
     let mut mismatch = PdfObjectReader::new(GENERATION).unwrap();
-    assert!(mismatch.resolve((3, 0)).is_err());
+    assert!(matches!(
+        mismatch.resolve((3, 0)),
+        Err(PdfReadError::GenerationMismatch)
+    ));
     let mut cycle = PdfObjectReader::new(CYCLE).unwrap();
-    assert!(cycle.resolve_graph((1, 0)).is_err());
+    assert!(matches!(
+        cycle.resolve_graph((1, 0)),
+        Err(PdfReadError::ReferenceCycle)
+    ));
 }
 
 #[test]
@@ -98,7 +104,10 @@ fn bounds_ascii_hex_decode_while_producing_bytes() {
 #[test]
 fn rejects_malformed_stream_length_and_reports_encryption_without_secret_data() {
     let mut malformed = PdfObjectReader::new(BAD_LENGTH).unwrap();
-    assert!(malformed.read_stream((1, 0)).is_err());
+    assert!(matches!(
+        malformed.read_stream((1, 0)),
+        Err(PdfReadError::Corrupted)
+    ));
     assert!(matches!(
         PdfObjectReader::new(ENCRYPTED),
         Err(PdfReadError::Encrypted)
@@ -131,7 +140,30 @@ fn does_not_mistake_encrypt_text_inside_an_object_for_trailer_encryption() {
     assert!(PdfObjectReader::new(&pdf).is_ok());
 }
 
+#[test]
+fn detects_encrypt_key_after_dictionary_close_text_in_a_literal_string() {
+    let pdf = single_object_pdf_with_trailer(
+        b"<< /Type /Catalog >>",
+        b"/Note (>>) /Encrypt 2 0 R /Root 1 0 R",
+    );
+    assert!(matches!(
+        PdfObjectReader::new(&pdf),
+        Err(PdfReadError::Encrypted)
+    ));
+}
+
+#[test]
+fn does_not_scan_stream_payload_for_object_references() {
+    let pdf = single_object_pdf(b"<< /Length 5 >>\nstream\n1 0 R\nendstream");
+    let mut reader = PdfObjectReader::new(&pdf).unwrap();
+    assert!(reader.resolve_graph((1, 0)).is_ok());
+}
+
 fn single_object_pdf(body: &[u8]) -> Vec<u8> {
+    single_object_pdf_with_trailer(body, b"/Root 1 0 R")
+}
+
+fn single_object_pdf_with_trailer(body: &[u8], trailer: &[u8]) -> Vec<u8> {
     let mut pdf = b"%PDF-1.7\n".to_vec();
     let offset = pdf.len();
     pdf.extend_from_slice(b"1 0 obj\n");
@@ -140,9 +172,9 @@ fn single_object_pdf(body: &[u8]) -> Vec<u8> {
     let xref = pdf.len();
     pdf.extend_from_slice(b"xref\n0 2\n0000000000 65535 f \n");
     pdf.extend_from_slice(format!("{offset:010} 00000 n \n").as_bytes());
-    pdf.extend_from_slice(
-        format!("trailer\n<< /Size 2 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n").as_bytes(),
-    );
+    pdf.extend_from_slice(b"trailer\n<< /Size 2 ");
+    pdf.extend_from_slice(trailer);
+    pdf.extend_from_slice(format!(" >>\nstartxref\n{xref}\n%%EOF\n").as_bytes());
     pdf
 }
 

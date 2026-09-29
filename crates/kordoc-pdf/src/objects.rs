@@ -89,6 +89,13 @@ enum XrefEntry {
     Free,
 }
 
+#[derive(Clone, Copy)]
+enum FilterSpec<'a> {
+    None,
+    Single(&'a [u8]),
+    Array,
+}
+
 pub struct PdfObjectReader<'a> {
     source: &'a [u8],
     objects: HashMap<(u32, u16), RawObject>,
@@ -105,7 +112,7 @@ impl<'a> PdfObjectReader<'a> {
             return Err(PdfReadError::Corrupted);
         }
         let (xref, trailer) = parse_xref(source, &mut budget)?;
-        if trailer_contains(&trailer, b"Encrypt") {
+        if trailer_contains(trailer, b"Encrypt") {
             return Err(PdfReadError::Encrypted);
         }
         if xref.is_empty() {
@@ -210,23 +217,40 @@ impl<'a> PdfObjectReader<'a> {
             return Err(PdfReadError::Corrupted);
         }
         let header = bytes.get(..first).ok_or(PdfReadError::Corrupted)?;
-        let pairs = numbers(header);
-        let at = index.checked_mul(2).ok_or(PdfReadError::Corrupted)?;
-        if pairs.len() < at + 2 || pairs[at] != id.0 as usize {
+        let mut header_values = UnsignedIntIter::new(header);
+        let mut member_id = None;
+        let mut member_offset = None;
+        for _ in 0..=index {
+            member_id = Some(header_values.next_value()?.ok_or(PdfReadError::Corrupted)?);
+            member_offset = Some(header_values.next_value()?.ok_or(PdfReadError::Corrupted)?);
+        }
+        if member_id != Some(usize::try_from(id.0).map_err(|_| PdfReadError::Corrupted)?) {
+            return Err(PdfReadError::Corrupted);
+        }
+        let start_offset = member_offset.ok_or(PdfReadError::Corrupted)?;
+        let end_offset = if index.checked_add(1).is_some_and(|next| next < count) {
+            let _next_id = header_values.next_value()?.ok_or(PdfReadError::Corrupted)?;
+            header_values.next_value()?.ok_or(PdfReadError::Corrupted)?
+        } else {
+            bytes
+                .len()
+                .checked_sub(first)
+                .ok_or(PdfReadError::Corrupted)?
+        };
+        if end_offset < start_offset {
             return Err(PdfReadError::Corrupted);
         }
         let start = first
-            .checked_add(pairs[at + 1])
+            .checked_add(start_offset)
             .ok_or(PdfReadError::Corrupted)?;
-        let end = if index + 1 < count {
-            first
-                .checked_add(*pairs.get(at + 3).ok_or(PdfReadError::Corrupted)?)
-                .ok_or(PdfReadError::Corrupted)?
-        } else {
-            bytes.len()
-        };
+        let end = first
+            .checked_add(end_offset)
+            .ok_or(PdfReadError::Corrupted)?;
         let slice = bytes.get(start..end).ok_or(PdfReadError::Corrupted)?;
-        let owned = trim(slice).to_vec();
+        let member = trim(slice);
+        self.budget.charge_decoded(member.len() as u64)?;
+        let owned = member.to_vec();
+        self.budget.finish_stream();
         if owned.starts_with(b"<<") {
             Ok(PdfValue::OwnedDictionary(owned))
         } else {
@@ -249,8 +273,7 @@ impl<'a> PdfObjectReader<'a> {
         self.budget.enter_object()?;
         let result: Result<(), PdfReadError> = (|| {
             let value = self.resolve_scoped(id, false)?;
-            let refs = references(value.as_bytes());
-            for next in refs {
+            for next in references(structured_bytes(value.as_bytes())) {
                 self.resolve_graph_inner(next, seen)?;
             }
             Ok(())
@@ -275,16 +298,13 @@ impl<'a> PdfObjectReader<'a> {
             .get(data_start..data_end)
             .ok_or(PdfReadError::Corrupted)?;
         self.budget.finish_stream();
-        let filter = filter_names(body);
-        if filter.len() > 1 {
-            return Err(PdfReadError::UnsupportedFilter);
-        }
-        let output = match filter.first().copied() {
-            None => crate::stream::copy_unfiltered(encoded, &mut self.budget)?,
-            Some(b"ASCIIHexDecode") | Some(b"AHx") => {
+        let output = match filter_spec(body)? {
+            FilterSpec::None => crate::stream::copy_unfiltered(encoded, &mut self.budget)?,
+            FilterSpec::Array => return Err(PdfReadError::UnsupportedFilter),
+            FilterSpec::Single(b"ASCIIHexDecode") | FilterSpec::Single(b"AHx") => {
                 crate::stream::decode_ascii_hex(encoded, &mut self.budget)?
             }
-            Some(_) => return Err(PdfReadError::UnsupportedFilter),
+            FilterSpec::Single(_) => return Err(PdfReadError::UnsupportedFilter),
         };
         self.budget.finish_stream();
         Ok(output)
@@ -308,17 +328,17 @@ impl<'a> PdfObjectReader<'a> {
     }
 }
 
-fn parse_xref(
-    source: &[u8],
+fn parse_xref<'a>(
+    source: &'a [u8],
     budget: &mut PdfBudget,
-) -> Result<(HashMap<u32, XrefEntry>, Vec<u8>), PdfReadError> {
+) -> Result<(HashMap<u32, XrefEntry>, &'a [u8]), PdfReadError> {
     let Some(start) = find_last_tail(source, b"startxref", 64 * 1024) else {
         return Err(PdfReadError::Corrupted);
     };
     let offset = direct_integer(&source[start + 9..]).ok_or(PdfReadError::Corrupted)?;
     let mut visited = HashSet::new();
     let mut entries = HashMap::new();
-    let mut trailer = Vec::new();
+    let mut trailer = None;
     parse_xref_at(
         source,
         offset,
@@ -327,16 +347,16 @@ fn parse_xref(
         &mut entries,
         &mut trailer,
     )?;
-    Ok((entries, trailer))
+    Ok((entries, trailer.ok_or(PdfReadError::Corrupted)?))
 }
 
-fn parse_xref_at(
-    source: &[u8],
+fn parse_xref_at<'a>(
+    source: &'a [u8],
     offset: usize,
     budget: &mut PdfBudget,
     visited: &mut HashSet<usize>,
     entries: &mut HashMap<u32, XrefEntry>,
-    trailer: &mut Vec<u8>,
+    trailer: &mut Option<&'a [u8]>,
 ) -> Result<(), PdfReadError> {
     if !visited.insert(offset) || visited.len() > 64 {
         return Err(PdfReadError::Corrupted);
@@ -351,13 +371,13 @@ fn parse_xref_at(
     }
 }
 
-fn parse_classic_xref(
-    source: &[u8],
+fn parse_classic_xref<'a>(
+    source: &'a [u8],
     offset: usize,
     budget: &mut PdfBudget,
     visited: &mut HashSet<usize>,
     output: &mut HashMap<u32, XrefEntry>,
-    trailer: &mut Vec<u8>,
+    trailer: &mut Option<&'a [u8]>,
 ) -> Result<(), PdfReadError> {
     const XREF_SCAN_LIMIT: usize = 32 * 1024 * 1024 + 64 * 1024;
     let section_end = offset.saturating_add(XREF_SCAN_LIMIT).min(source.len());
@@ -368,26 +388,34 @@ fn parse_classic_xref(
         if line.starts_with(b"trailer") {
             let current = trailer_dictionary(section).ok_or(PdfReadError::Corrupted)?;
             let prev = dictionary_integer(current, b"Prev");
-            if trailer.is_empty() {
-                *trailer = current.to_vec();
+            if trailer.is_none() {
+                *trailer = Some(current);
             }
             if let Some(prev) = prev {
                 parse_xref_at(source, prev, budget, visited, output, trailer)?;
             }
             break;
         }
-        let fields: Vec<&[u8]> = line
+        let mut fields = line
             .split(|b| b.is_ascii_whitespace())
-            .filter(|f| !f.is_empty())
-            .collect();
-        if fields.len() == 2 && fields.iter().all(|f| f.iter().all(u8::is_ascii_digit)) {
-            object_id =
-                u32::try_from(parse_usize(fields[0])?).map_err(|_| PdfReadError::Corrupted)?;
-        } else if fields.len() >= 3 && matches!(fields[2], b"n" | b"f") {
-            let file_offset = parse_usize(fields[0])?;
+            .filter(|field| !field.is_empty());
+        let Some(first) = fields.next() else {
+            continue;
+        };
+        let Some(second) = fields.next() else {
+            continue;
+        };
+        let third = fields.next();
+        if third.is_none()
+            && first.iter().all(u8::is_ascii_digit)
+            && second.iter().all(u8::is_ascii_digit)
+        {
+            object_id = u32::try_from(parse_usize(first)?).map_err(|_| PdfReadError::Corrupted)?;
+        } else if let Some(kind) = third.filter(|kind| matches!(*kind, b"n" | b"f")) {
+            let file_offset = parse_usize(first)?;
             let generation =
-                u16::try_from(parse_usize(fields[1])?).map_err(|_| PdfReadError::Corrupted)?;
-            let entry = if fields[2] == b"n" {
+                u16::try_from(parse_usize(second)?).map_err(|_| PdfReadError::Corrupted)?;
+            let entry = if kind == b"n" {
                 XrefEntry::Normal {
                     offset: file_offset,
                     generation,
@@ -395,7 +423,7 @@ fn parse_classic_xref(
             } else {
                 XrefEntry::Free
             };
-            if !output.contains_key(&object_id) && !matches!(entry, XrefEntry::Free) {
+            if !output.contains_key(&object_id) {
                 budget.charge_object()?;
             }
             output.entry(object_id).or_insert(entry);
@@ -405,13 +433,13 @@ fn parse_classic_xref(
     Ok(())
 }
 
-fn parse_xref_stream_at(
-    source: &[u8],
+fn parse_xref_stream_at<'a>(
+    source: &'a [u8],
     offset: usize,
     budget: &mut PdfBudget,
     visited: &mut HashSet<usize>,
     output: &mut HashMap<u32, XrefEntry>,
-    trailer: &mut Vec<u8>,
+    trailer: &mut Option<&'a [u8]>,
 ) -> Result<(), PdfReadError> {
     let raw = parse_raw_at_any_id(source, offset)?;
     let body = &source[raw.start..raw.end];
@@ -421,10 +449,10 @@ fn parse_xref_stream_at(
     let stream_marker = find_pdf_keyword(body, b"stream").ok_or(PdfReadError::Corrupted)?;
     let dictionary = &body[..stream_marker];
     let prev = dictionary_integer(dictionary, b"Prev");
-    if trailer.is_empty() {
-        *trailer = dictionary.to_vec();
+    if trailer.is_none() {
+        *trailer = Some(dictionary);
     }
-    if !filter_names(dictionary).is_empty() {
+    if !matches!(filter_spec(dictionary)?, FilterSpec::None) {
         return Err(PdfReadError::UnsupportedFilter);
     }
     let data_start = stream_marker
@@ -443,18 +471,13 @@ fn parse_xref_stream_at(
         .ok_or(PdfReadError::Corrupted)?;
     budget.charge_decoded(length as u64)?;
     budget.finish_stream();
-    let widths = integer_array(body, b"W").ok_or(PdfReadError::Corrupted)?;
+    let widths = fixed_integer_array::<3>(body, b"W").ok_or(PdfReadError::Corrupted)?;
     let index = if find_dictionary_key(body, b"Index").is_some() {
-        integer_array(body, b"Index").ok_or(PdfReadError::Corrupted)?
+        Some(dictionary_array(body, b"Index").ok_or(PdfReadError::Corrupted)?)
     } else {
-        vec![
-            0,
-            dictionary_integer(body, b"Size").ok_or(PdfReadError::Corrupted)?,
-        ]
+        None
     };
-    if widths.len() != 3 {
-        return Err(PdfReadError::Corrupted);
-    }
+    let default_size = dictionary_integer(body, b"Size").ok_or(PdfReadError::Corrupted)?;
     let stride = widths
         .iter()
         .try_fold(0usize, |sum, width| sum.checked_add(*width))
@@ -462,35 +485,29 @@ fn parse_xref_stream_at(
     if stride == 0 || stride > 16 || widths.iter().any(|width| *width > 8) {
         return Err(PdfReadError::Corrupted);
     }
-    if index.len() % 2 != 0 {
-        return Err(PdfReadError::Corrupted);
+    let mut ranges = IndexRangeIter::new(index, default_size);
+    let mut records = 0usize;
+    let mut previous_end = 0usize;
+    while let Some((start, count)) = ranges.next_range()? {
+        let end = start.checked_add(count).ok_or(PdfReadError::Corrupted)?;
+        if start < previous_end || u32::try_from(end).is_err() {
+            return Err(PdfReadError::Corrupted);
+        }
+        previous_end = end;
+        records = records.checked_add(count).ok_or(PdfReadError::Corrupted)?;
     }
-    let records = index
-        .chunks_exact(2)
-        .try_fold(0usize, |sum, range| {
-            let end = range[0].checked_add(range[1])?;
-            let _ = u32::try_from(end).ok()?;
-            sum.checked_add(range[1])
-        })
-        .ok_or(PdfReadError::Corrupted)?;
     if records
         .checked_mul(stride)
         .is_none_or(|required| required > data.len())
     {
         return Err(PdfReadError::Corrupted);
     }
-    let mut previous_end = 0usize;
     let mut required_objects = 0u64;
     let mut preflight_cursor = 0usize;
-    for range in index.chunks_exact(2) {
-        let range_end = range[0]
-            .checked_add(range[1])
-            .ok_or(PdfReadError::Corrupted)?;
-        if range[0] < previous_end {
-            return Err(PdfReadError::Corrupted);
-        }
-        previous_end = range_end;
-        for object in range[0]..range_end {
+    let mut ranges = IndexRangeIter::new(index, default_size);
+    while let Some((start, count)) = ranges.next_range()? {
+        let range_end = start.checked_add(count).ok_or(PdfReadError::Corrupted)?;
+        for object in start..range_end {
             let record_end = preflight_cursor
                 .checked_add(stride)
                 .ok_or(PdfReadError::Corrupted)?;
@@ -506,7 +523,7 @@ fn parse_xref_stream_at(
                 return Err(PdfReadError::Corrupted);
             }
             let object_id = u32::try_from(object).map_err(|_| PdfReadError::Corrupted)?;
-            if kind != 0 && !output.contains_key(&object_id) {
+            if !output.contains_key(&object_id) {
                 required_objects = required_objects
                     .checked_add(1)
                     .ok_or(PdfReadError::Corrupted)?;
@@ -516,11 +533,10 @@ fn parse_xref_stream_at(
     }
     budget.charge_objects(required_objects)?;
     let mut byte_cursor = 0usize;
-    for range in index.chunks_exact(2) {
-        let range_end = range[0]
-            .checked_add(range[1])
-            .ok_or(PdfReadError::Corrupted)?;
-        for object in range[0]..range_end {
+    let mut ranges = IndexRangeIter::new(index, default_size);
+    while let Some((start, count)) = ranges.next_range()? {
+        let range_end = start.checked_add(count).ok_or(PdfReadError::Corrupted)?;
+        for object in start..range_end {
             let record_end = byte_cursor
                 .checked_add(stride)
                 .ok_or(PdfReadError::Corrupted)?;
@@ -803,38 +819,25 @@ fn trailer_contains_dictionary(dictionary: &[u8], key: &[u8]) -> bool {
 }
 
 fn trailer_dictionary(section: &[u8]) -> Option<&[u8]> {
-    let trailer = find(section, b"trailer")? + 7;
+    let trailer = find_pdf_keyword(section, b"trailer")? + 7;
     let tail = &section[trailer..];
     let start = find(tail, b"<<")?;
-    let mut depth = 0usize;
-    let mut index = start;
-    while index + 1 < tail.len() {
-        if tail[index..].starts_with(b"<<") {
-            depth = depth.checked_add(1)?;
-            index += 2;
-        } else if tail[index..].starts_with(b">>") {
-            depth = depth.checked_sub(1)?;
-            index += 2;
-            if depth == 0 {
-                return Some(&tail[start..index]);
-            }
-        } else {
-            index += 1;
-        }
-    }
-    None
+    let end = dictionary_end(tail, start)?;
+    Some(&tail[start..end])
 }
 
-fn references(bytes: &[u8]) -> Vec<(u32, u16)> {
-    let mut output = Vec::new();
-    let mut index = 0;
-    while index < bytes.len() {
+fn dictionary_end(bytes: &[u8], start: usize) -> Option<usize> {
+    if bytes.get(start..start.checked_add(2)?) != Some(b"<<") {
+        return None;
+    }
+    let mut depth = 1usize;
+    let mut index = start + 2;
+    while index + 1 < bytes.len() {
         match bytes[index] {
             b'%' => {
                 while index < bytes.len() && !matches!(bytes[index], b'\n' | b'\r') {
                     index += 1;
                 }
-                continue;
             }
             b'(' => {
                 index += 1;
@@ -853,96 +856,224 @@ fn references(bytes: &[u8]) -> Vec<(u32, u16)> {
                         _ => index += 1,
                     }
                 }
-                continue;
             }
             b'<' if bytes.get(index + 1) == Some(&b'<') => {
+                depth = depth.checked_add(1)?;
                 index += 2;
-                continue;
             }
-            b'<' if bytes.get(index + 1) != Some(&b'<') => {
+            b'<' => {
                 index += 1;
                 while index < bytes.len() && bytes[index] != b'>' {
                     index += 1;
                 }
                 index = (index + 1).min(bytes.len());
+            }
+            b'>' if bytes.get(index + 1) == Some(&b'>') => {
+                depth = depth.checked_sub(1)?;
+                index += 2;
+                if depth == 0 {
+                    return Some(index);
+                }
+            }
+            _ => index += 1,
+        }
+    }
+    None
+}
+
+fn structured_bytes(bytes: &[u8]) -> &[u8] {
+    stream_marker_after_dictionary(bytes).map_or(bytes, |marker| &bytes[..marker])
+}
+
+struct ReferenceIter<'a> {
+    bytes: &'a [u8],
+    index: usize,
+}
+
+fn references(bytes: &[u8]) -> ReferenceIter<'_> {
+    ReferenceIter { bytes, index: 0 }
+}
+
+impl Iterator for ReferenceIter<'_> {
+    type Item = (u32, u16);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let bytes = self.bytes;
+        while self.index < bytes.len() {
+            match bytes[self.index] {
+                b'%' => {
+                    while self.index < bytes.len() && !matches!(bytes[self.index], b'\n' | b'\r') {
+                        self.index += 1;
+                    }
+                    continue;
+                }
+                b'(' => {
+                    self.index += 1;
+                    let mut nesting = 1usize;
+                    while self.index < bytes.len() && nesting != 0 {
+                        match bytes[self.index] {
+                            b'\\' => self.index = (self.index + 2).min(bytes.len()),
+                            b'(' => {
+                                nesting += 1;
+                                self.index += 1;
+                            }
+                            b')' => {
+                                nesting -= 1;
+                                self.index += 1;
+                            }
+                            _ => self.index += 1,
+                        }
+                    }
+                    continue;
+                }
+                b'<' if bytes.get(self.index + 1) == Some(&b'<') => {
+                    self.index += 2;
+                    continue;
+                }
+                b'<' => {
+                    self.index += 1;
+                    while self.index < bytes.len() && bytes[self.index] != b'>' {
+                        self.index += 1;
+                    }
+                    self.index = (self.index + 1).min(bytes.len());
+                    continue;
+                }
+                _ => {}
+            }
+            if !bytes[self.index].is_ascii_digit()
+                || (self.index > 0 && is_token(bytes[self.index - 1]))
+            {
+                self.index += 1;
                 continue;
             }
-            _ => {}
-        }
-        if !bytes[index].is_ascii_digit() || (index > 0 && is_token(bytes[index - 1])) {
-            index += 1;
-            continue;
-        }
-        let first_start = index;
-        while index < bytes.len() && bytes[index].is_ascii_digit() {
-            index += 1;
-        }
-        let first_end = index;
-        skip_space(bytes, &mut index);
-        let second_start = index;
-        while index < bytes.len() && bytes[index].is_ascii_digit() {
-            index += 1;
-        }
-        if second_start == index {
-            continue;
-        }
-        let second_end = index;
-        skip_space(bytes, &mut index);
-        if bytes.get(index) == Some(&b'R') && bytes.get(index + 1).is_none_or(|b| !is_token(*b)) {
+            let first_start = self.index;
+            while self.index < bytes.len() && bytes[self.index].is_ascii_digit() {
+                self.index += 1;
+            }
+            let first_end = self.index;
+            skip_space(bytes, &mut self.index);
+            let second_start = self.index;
+            while self.index < bytes.len() && bytes[self.index].is_ascii_digit() {
+                self.index += 1;
+            }
+            if second_start == self.index {
+                continue;
+            }
+            let second_end = self.index;
+            skip_space(bytes, &mut self.index);
+            if bytes.get(self.index) != Some(&b'R')
+                || bytes
+                    .get(self.index + 1)
+                    .is_some_and(|byte| is_token(*byte))
+            {
+                continue;
+            }
+            self.index += 1;
             if let (Ok(object), Ok(generation)) = (
                 parse_usize(&bytes[first_start..first_end]),
                 parse_usize(&bytes[second_start..second_end]),
             ) && let (Ok(object), Ok(generation)) =
                 (u32::try_from(object), u16::try_from(generation))
             {
-                output.push((object, generation));
+                return Some((object, generation));
             }
-            index += 1;
         }
+        None
     }
-    output
 }
 
-fn filter_names(dict: &[u8]) -> Vec<&[u8]> {
+fn filter_spec(dict: &[u8]) -> Result<FilterSpec<'_>, PdfReadError> {
     let Some(at) = find_dictionary_key(dict, b"Filter") else {
-        return vec![];
+        return Ok(FilterSpec::None);
     };
     let part = trim(&dict[at..]);
-    let end = part
-        .iter()
-        .position(|b| *b == b']' || b.is_ascii_whitespace())
-        .unwrap_or(part.len());
     if part.first() == Some(&b'[') {
-        let inside = &part[1..];
-        let close = inside
-            .iter()
-            .position(|b| *b == b']')
-            .unwrap_or(inside.len());
-        inside[..close]
-            .split(|b| *b == b'/')
-            .filter(|v| !v.is_empty())
-            .map(|v| v.split(|b| b.is_ascii_whitespace()).next().unwrap_or(v))
-            .collect()
-    } else {
-        let _ = end;
-        vec![
-            part.strip_prefix(b"/")
-                .unwrap_or(part)
-                .split(|b| b.is_ascii_whitespace() || *b == b'>')
-                .next()
-                .unwrap_or(part),
-        ]
+        return Ok(FilterSpec::Array);
     }
+    let name = part.strip_prefix(b"/").ok_or(PdfReadError::Corrupted)?;
+    let end = name
+        .iter()
+        .position(|byte| is_pdf_delimiter(*byte))
+        .unwrap_or(name.len());
+    if end == 0 {
+        return Err(PdfReadError::Corrupted);
+    }
+    Ok(FilterSpec::Single(&name[..end]))
 }
 
 fn dictionary_integer(bytes: &[u8], key: &[u8]) -> Option<usize> {
     direct_integer(&bytes[find_dictionary_key(bytes, key)?..])
 }
-fn integer_array(bytes: &[u8], key: &[u8]) -> Option<Vec<usize>> {
+fn dictionary_array<'a>(bytes: &'a [u8], key: &[u8]) -> Option<&'a [u8]> {
     let at = find_dictionary_key(bytes, key)?;
-    let rest = trim(&bytes[at..]);
-    let inner = rest.strip_prefix(b"[")?.split(|b| *b == b']').next()?;
-    Some(numbers(inner))
+    let rest = trim(&bytes[at..]).strip_prefix(b"[")?;
+    Some(&rest[..rest.iter().position(|byte| *byte == b']')?])
+}
+
+#[derive(Clone)]
+struct UnsignedIntIter<'a> {
+    bytes: &'a [u8],
+    index: usize,
+}
+
+impl<'a> UnsignedIntIter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        Self { bytes, index: 0 }
+    }
+
+    fn next_value(&mut self) -> Result<Option<usize>, PdfReadError> {
+        skip_space(self.bytes, &mut self.index);
+        if self.index == self.bytes.len() {
+            return Ok(None);
+        }
+        let start = self.index;
+        while self.index < self.bytes.len() && self.bytes[self.index].is_ascii_digit() {
+            self.index += 1;
+        }
+        if self.index == start
+            || self
+                .bytes
+                .get(self.index)
+                .is_some_and(|byte| !byte.is_ascii_whitespace())
+        {
+            return Err(PdfReadError::Corrupted);
+        }
+        Ok(Some(parse_usize(&self.bytes[start..self.index])?))
+    }
+}
+
+struct IndexRangeIter<'a> {
+    explicit: Option<UnsignedIntIter<'a>>,
+    default_size: Option<usize>,
+}
+
+impl<'a> IndexRangeIter<'a> {
+    fn new(array: Option<&'a [u8]>, default_size: usize) -> Self {
+        Self {
+            explicit: array.map(UnsignedIntIter::new),
+            default_size: array.is_none().then_some(default_size),
+        }
+    }
+
+    fn next_range(&mut self) -> Result<Option<(usize, usize)>, PdfReadError> {
+        if let Some(iter) = &mut self.explicit {
+            let Some(start) = iter.next_value()? else {
+                return Ok(None);
+            };
+            let count = iter.next_value()?.ok_or(PdfReadError::Corrupted)?;
+            return Ok(Some((start, count)));
+        }
+        Ok(self.default_size.take().map(|size| (0, size)))
+    }
+}
+
+fn fixed_integer_array<const N: usize>(bytes: &[u8], key: &[u8]) -> Option<[usize; N]> {
+    let mut values = UnsignedIntIter::new(dictionary_array(bytes, key)?);
+    let mut output = [0; N];
+    for value in &mut output {
+        *value = values.next_value().ok()??;
+    }
+    values.next_value().ok()?.is_none().then_some(output)
 }
 fn find_dictionary_key(bytes: &[u8], key: &[u8]) -> Option<usize> {
     if !bytes.starts_with(b"<<") {
@@ -1016,23 +1147,6 @@ fn find_dictionary_key(bytes: &[u8], key: &[u8]) -> Option<usize> {
         }
     }
     None
-}
-fn numbers(bytes: &[u8]) -> Vec<usize> {
-    let mut result = Vec::new();
-    let mut current = Vec::new();
-    for byte in bytes.iter().copied().chain(std::iter::once(b' ')) {
-        if byte.is_ascii_digit() {
-            current.push(byte);
-        } else if !current.is_empty() {
-            if let Ok(s) = std::str::from_utf8(&current)
-                && let Ok(n) = s.parse()
-            {
-                result.push(n);
-            }
-            current.clear();
-        }
-    }
-    result
 }
 fn direct_integer(bytes: &[u8]) -> Option<usize> {
     let mut index = 0;

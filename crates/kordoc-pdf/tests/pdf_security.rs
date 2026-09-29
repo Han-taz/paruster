@@ -137,12 +137,80 @@ fn compressed_object_container_cycles_terminate_before_stack_growth() {
 }
 
 #[test]
+fn rejects_extreme_objstm_member_index_without_arithmetic_panic() {
+    let pdf = extreme_objstm_index_pdf();
+    let mut reader = PdfObjectReader::new(&pdf).unwrap();
+    assert!(matches!(
+        reader.resolve((5, 0)),
+        Err(PdfReadError::Corrupted)
+    ));
+}
+
+#[test]
 fn rejects_million_and_first_xref_object_before_map_growth_past_cap() {
     let pdf = oversized_xref_pdf(1_000_002);
     let result = PdfObjectReader::new(&pdf);
     assert!(matches!(
         result,
         Err(PdfReadError::Budget(BudgetError::Objects))
+    ));
+}
+
+#[test]
+fn rejects_more_than_one_million_free_classic_xref_ids() {
+    let pdf = oversized_free_classic_xref(1_000_002);
+    assert!(matches!(
+        PdfObjectReader::new(&pdf),
+        Err(PdfReadError::Budget(BudgetError::Objects))
+    ));
+}
+
+#[test]
+fn rejects_more_than_one_million_free_xref_stream_ids() {
+    let pdf = oversized_free_xref_stream(1_000_002);
+    assert!(matches!(
+        PdfObjectReader::new(&pdf),
+        Err(PdfReadError::Budget(BudgetError::Objects))
+    ));
+}
+
+#[test]
+fn rejects_large_explicit_xref_index_without_range_vector_expansion() {
+    let pdf = oversized_index_free_xref_stream(1_000_002);
+    assert!(matches!(
+        PdfObjectReader::new(&pdf),
+        Err(PdfReadError::Budget(BudgetError::Objects))
+    ));
+}
+
+#[test]
+fn bounds_objstm_member_copy_before_allocating_it() {
+    let pdf = cumulative_objstm_pdf();
+    let mut reader = PdfObjectReader::new(&pdf).unwrap();
+    for _ in 0..7 {
+        let stream = reader.read_stream((1, 0)).unwrap();
+        assert_eq!(stream.len(), 32 * 1024 * 1024);
+    }
+    assert!(matches!(
+        reader.resolve((5, 0)),
+        Err(PdfReadError::Budget(BudgetError::DecodedBytes))
+    ));
+}
+
+#[test]
+fn ignores_long_unrecognized_classic_xref_line_without_token_vec() {
+    let pdf = long_xref_noise_pdf(200_000);
+    let mut reader = PdfObjectReader::new(&pdf).unwrap();
+    assert!(reader.resolve((1, 0)).is_ok());
+}
+
+#[test]
+fn rejects_large_filter_array_without_materializing_filter_names() {
+    let pdf = large_filter_array_stream_pdf(200_000);
+    let mut reader = PdfObjectReader::new(&pdf).unwrap();
+    assert!(matches!(
+        reader.read_stream((1, 0)),
+        Err(PdfReadError::UnsupportedFilter)
     ));
 }
 
@@ -318,6 +386,201 @@ fn oversized_xref_pdf(size: usize) -> Vec<u8> {
     entries.extend_from_slice(&(xref_offset as u32).to_be_bytes());
     entries.extend_from_slice(&[0, 0]);
     pdf.extend_from_slice(&entries);
+    pdf.extend_from_slice(
+        format!("\nendstream\nendobj\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes(),
+    );
+    pdf
+}
+
+fn oversized_free_classic_xref(size: usize) -> Vec<u8> {
+    let mut pdf = b"%PDF-1.7\n".to_vec();
+    let xref_offset = pdf.len();
+    pdf.extend_from_slice(format!("xref\n0 {size}\n").as_bytes());
+    pdf.extend_from_slice(b"0000000000 65535 f \n");
+    for _ in 1..size {
+        pdf.extend_from_slice(b"0000000000 00000 f \n");
+    }
+    pdf.extend_from_slice(
+        format!("trailer\n<< /Size {size} >>\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes(),
+    );
+    pdf
+}
+
+fn oversized_free_xref_stream(size: usize) -> Vec<u8> {
+    let mut records = vec![0; size * 3];
+    records.chunks_exact_mut(3).for_each(|record| record[2] = 0);
+    let mut pdf = b"%PDF-1.7\n".to_vec();
+    let xref_offset = pdf.len();
+    pdf.extend_from_slice(
+        format!(
+            "{} 0 obj\n<< /Type /XRef /Size {size} /W [1 0 2] /Length {} >>\nstream\n",
+            size - 1,
+            records.len()
+        )
+        .as_bytes(),
+    );
+    pdf.extend_from_slice(&records);
+    pdf.extend_from_slice(
+        format!("\nendstream\nendobj\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes(),
+    );
+    pdf
+}
+
+fn oversized_index_free_xref_stream(size: usize) -> Vec<u8> {
+    use std::fmt::Write as _;
+
+    let mut records = vec![0; size * 3];
+    records.chunks_exact_mut(3).for_each(|record| record[2] = 0);
+    let mut index = String::with_capacity(size * 9);
+    index.push('[');
+    for record in 0..size {
+        write!(index, "{} 1 ", record * 2).unwrap();
+    }
+    index.push(']');
+    let mut pdf = b"%PDF-1.7\n".to_vec();
+    let xref_offset = pdf.len();
+    pdf.extend_from_slice(
+        format!(
+            "{} 0 obj\n<< /Type /XRef /Size {} /Index {} /W [1 0 2] /Length {} >>\nstream\n",
+            size * 2 + 1,
+            size * 2,
+            index,
+            records.len()
+        )
+        .as_bytes(),
+    );
+    pdf.extend_from_slice(&records);
+    pdf.extend_from_slice(
+        format!("\nendstream\nendobj\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes(),
+    );
+    pdf
+}
+
+fn cumulative_objstm_pdf() -> Vec<u8> {
+    const STREAM_SIZE: usize = 32 * 1024 * 1024;
+    let mut pdf = b"%PDF-1.7\n".to_vec();
+    let mut offsets = [0u32; 7];
+
+    offsets[1] = pdf.len() as u32;
+    pdf.extend_from_slice(format!("1 0 obj\n<< /Length {STREAM_SIZE} >>\nstream\n").as_bytes());
+    pdf.resize(pdf.len() + STREAM_SIZE, b'x');
+    pdf.extend_from_slice(b"\nendstream\nendobj\n");
+
+    offsets[4] = pdf.len() as u32;
+    let member_size = STREAM_SIZE - 4;
+    pdf.extend_from_slice(
+        format!("4 0 obj\n<< /Type /ObjStm /N 1 /First 4 /Length {STREAM_SIZE} >>\nstream\n")
+            .as_bytes(),
+    );
+    pdf.extend_from_slice(b"5 0 ");
+    pdf.resize(pdf.len() + member_size, b'x');
+    pdf.extend_from_slice(b"\nendstream\nendobj\n");
+
+    offsets[6] = pdf.len() as u32;
+    let xref_offset = pdf.len() as u32;
+    let mut records = Vec::new();
+    for (id, offset) in offsets.iter().enumerate() {
+        match id {
+            1 | 4 | 6 => {
+                records.push(1);
+                records.extend_from_slice(&offset.to_be_bytes());
+                records.extend_from_slice(&[0, 0]);
+            }
+            5 => {
+                records.push(2);
+                records.extend_from_slice(&4u32.to_be_bytes());
+                records.extend_from_slice(&[0, 0]);
+            }
+            _ => records.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0]),
+        }
+    }
+    pdf.extend_from_slice(
+        format!(
+            "6 0 obj\n<< /Type /XRef /Size 7 /Root 4 0 R /W [1 4 2] /Length {} >>\nstream\n",
+            records.len()
+        )
+        .as_bytes(),
+    );
+    pdf.extend_from_slice(&records);
+    pdf.extend_from_slice(
+        format!("\nendstream\nendobj\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes(),
+    );
+    pdf
+}
+
+fn long_xref_noise_pdf(tokens: usize) -> Vec<u8> {
+    let mut pdf = b"%PDF-1.7\n".to_vec();
+    let object_offset = pdf.len();
+    pdf.extend_from_slice(b"1 0 obj\n<< /Root true >>\nendobj\n");
+    let xref_offset = pdf.len();
+    pdf.extend_from_slice(b"xref\n0 2\n0000000000 65535 f \n");
+    pdf.extend_from_slice(format!("{object_offset:010} 00000 n \n").as_bytes());
+    for _ in 0..tokens {
+        pdf.extend_from_slice(b"0 ");
+    }
+    pdf.extend_from_slice(
+        format!("\ntrailer\n<< /Size 2 /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n")
+            .as_bytes(),
+    );
+    pdf
+}
+
+fn large_filter_array_stream_pdf(filters: usize) -> Vec<u8> {
+    let mut pdf = b"%PDF-1.7\n".to_vec();
+    let object_offset = pdf.len();
+    pdf.extend_from_slice(b"1 0 obj\n<< /Length 1 /Filter [");
+    for _ in 0..filters {
+        pdf.extend_from_slice(b"/FlateDecode ");
+    }
+    pdf.extend_from_slice(b"] >>\nstream\nx\nendstream\nendobj\n");
+    let xref_offset = pdf.len();
+    pdf.extend_from_slice(b"xref\n0 2\n0000000000 65535 f \n");
+    pdf.extend_from_slice(format!("{object_offset:010} 00000 n \n").as_bytes());
+    pdf.extend_from_slice(
+        format!("trailer\n<< /Size 2 /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes(),
+    );
+    pdf
+}
+
+fn extreme_objstm_index_pdf() -> Vec<u8> {
+    let mut pdf = b"%PDF-1.7\n".to_vec();
+    let objstm_offset = pdf.len();
+    let objstm = format!(
+        "4 0 obj\n<< /Type /ObjStm /N {} /First 4 /Length 4 >>\nstream\n5 0 \nendstream\nendobj\n",
+        usize::MAX
+    );
+    pdf.extend_from_slice(objstm.as_bytes());
+    let xref_offset = pdf.len();
+    let extreme_index = (usize::MAX - 1) / 2;
+    let mut records = Vec::new();
+    for id in 0..7u32 {
+        if id == 4 {
+            records.push(1);
+            records.extend_from_slice(&(objstm_offset as u32).to_be_bytes());
+            records.extend_from_slice(&[0, 0]);
+            records.extend_from_slice(&[0; 6]);
+        } else if id == 5 {
+            records.push(2);
+            records.extend_from_slice(&4u32.to_be_bytes());
+            records.extend_from_slice(&(extreme_index as u64).to_be_bytes());
+        } else if id == 6 {
+            records.push(1);
+            records.extend_from_slice(&(xref_offset as u32).to_be_bytes());
+            records.extend_from_slice(&[0, 0]);
+            records.extend_from_slice(&[0; 6]);
+        } else {
+            records.push(0);
+            records.extend_from_slice(&[0; 12]);
+        }
+    }
+    pdf.extend_from_slice(
+        format!(
+            "6 0 obj\n<< /Type /XRef /Size 7 /Root 4 0 R /W [1 4 8] /Length {} >>\nstream\n",
+            records.len()
+        )
+        .as_bytes(),
+    );
+    pdf.extend_from_slice(&records);
     pdf.extend_from_slice(
         format!("\nendstream\nendobj\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes(),
     );
