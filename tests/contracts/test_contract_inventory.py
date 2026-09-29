@@ -146,6 +146,7 @@ def test_python_only_foundation_surface_is_explicit() -> None:
     manifest = load("public-api.json")
     additions = manifest["python_only_entries"]
     assert {entry["python_name"] for entry in additions} == {
+        "native_version",
         "try_parse",
         "TryParseResult",
         "KordocError",

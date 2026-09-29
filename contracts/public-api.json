@@ -91,6 +91,7 @@
     {"source_name":"validateHwpx","python_name":"validate_hwpx","disposition":"planned","mapping":"Python kordoc.validate_hwpx","rationale":"HWPX validation remains planned."}
   ],
   "python_only_entries": [
+    {"python_name":"native_version","kind":"function","disposition":"foundation","mapping":"Python kordoc.native_version() -> str","rationale":"The native extension version probe verifies that Python and Rust package components are aligned."},
     {"python_name":"try_parse","kind":"function","disposition":"foundation","mapping":"Python kordoc.try_parse(input, options=None) -> TryParseResult","rationale":"Python adds a non-raising serializable parse boundary for batch and protocol consumers."},
     {"python_name":"TryParseResult","kind":"type","disposition":"foundation","mapping":"Python frozen slotted result model","rationale":"Python-owned model preserves the frozen ParseResult wire keys while parsers are staged."},
     {"python_name":"KordocError","kind":"exception","disposition":"foundation","mapping":"Python base exception with stable code and message","rationale":"Python uses typed exceptions for the stable shared error inventory."},
