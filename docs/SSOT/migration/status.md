@@ -2,7 +2,7 @@
 
 This page is the live capability ledger. A capability is complete only after its implementation, contract/parity evidence, and required quality gates have merged. Contract inventory alone never counts as implementation. Local verification is recorded separately from hosted CI results and repository branch-protection enforcement.
 
-## Locally verified foundation
+## Merged foundation
 
 - Rust workspace and Python 3.10+ abi3 packaging scaffold
 - recursive foundation IR and the 13 stable error codes
@@ -13,9 +13,11 @@ This page is the live capability ledger. A capability is complete only after its
 - immutable Python `Document` projection, bounded serializable option validation, and six legacy detection/refinement compatibility helpers with pinned runtime-oracle evidence
 - provenance-checked full-result harness with source-smoke versus oracle-capture accounting
 
-The parser seam has only injected/synthetic success evidence; the production registry remains empty and the document harness reports zero successful oracle captures. The earlier 88.63% line coverage and two 30-second fuzz campaigns without crashes describe the merged foundation baseline; this branch requires fresh hosted evidence. None of these foundation checks demonstrate document-output parity.
+The parser seam has only injected/synthetic success evidence; the production registry remains empty and the document harness reports zero successful oracle captures. The earlier 88.63% line coverage and two 30-second fuzz campaigns without crashes describe the initial merged foundation baseline. PR #9 added fresh hosted coverage and fuzz evidence for the parser seam. None of these foundation checks demonstrate document-output parity.
 
 PR #5 implementation head `a9df485` passed the hosted foundation gates: [CI](https://github.com/Han-taz/paruster/actions/runs/36600464167), [Security](https://github.com/Han-taz/paruster/actions/runs/36600464228), [Native wheels](https://github.com/Han-taz/paruster/actions/runs/36600464274), and [Bounded fuzzing](https://github.com/Han-taz/paruster/actions/runs/36600464235). PR #5 documentation head `ad86e43` also passed all four hosted gates: [CI](https://github.com/Han-taz/paruster/actions/runs/36601581589), [Security](https://github.com/Han-taz/paruster/actions/runs/36601581506), [Native wheels](https://github.com/Han-taz/paruster/actions/runs/36601581485), and [Bounded fuzzing](https://github.com/Han-taz/paruster/actions/runs/36601581555). PR #4 remediation head `31212275` passed all four hosted checks: [CI](https://github.com/Han-taz/paruster/actions/runs/36603823278), [Security](https://github.com/Han-taz/paruster/actions/runs/36603823358), [Native wheels](https://github.com/Han-taz/paruster/actions/runs/36603823436), and [Bounded fuzzing](https://github.com/Han-taz/paruster/actions/runs/36603823386). The Security run includes a successful main-target Dependency review, confirming the pytest 9.0.3 remediation. Active protect-main ruleset `24182744` strictly requires `ci-gate`, `security-gate`, `wheels-gate`, `fuzz-gate`, and CodeQL, limits PR merges to squash-only, and states that later heads must pass the required checks. Product parity remains pending as detailed below.
+
+PR #9 merged the parser seam as `770ab8c` after [CI](https://github.com/Han-taz/paruster/actions/runs/36612367072), [Security and CodeQL](https://github.com/Han-taz/paruster/actions/runs/36612367082), [Native wheels](https://github.com/Han-taz/paruster/actions/runs/36612367121), and [Bounded fuzzing](https://github.com/Han-taz/paruster/actions/runs/36612367219) passed. The wheel matrix covered six native targets and the Python matrix covered CPython 3.10 through 3.14.
 
 ## Pending product parity
 
