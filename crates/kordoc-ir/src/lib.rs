@@ -2,6 +2,7 @@
 
 mod document;
 mod error;
+mod parsed;
 
 pub use document::{
     BoundingBox, DocumentMetadata, DocumentQualitySummary, ExtractedImage, FileType, ImageData,
@@ -10,3 +11,6 @@ pub use document::{
     TableClassificationKind, TableClassificationReason, TableClassificationSummary, WarningCode,
 };
 pub use error::{ErrorCode, KordocError};
+pub use parsed::{
+    OcrOption, PageEvidence, PageNumber, PageSelection, ParseOptions, ParsedDocument,
+};

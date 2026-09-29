@@ -1,6 +1,9 @@
 use std::io::{Cursor, Write};
 
-use kordoc_core::{FileType, detect_format, try_parse};
+use kordoc_core::{
+    FileType, detect_format, detect_ole2_format, detect_zip_format, is_hwpx_file, is_old_hwp_file,
+    is_pdf_file, is_zip_file, try_parse,
+};
 use kordoc_ir::ErrorCode;
 use zip::ZipWriter;
 use zip::write::SimpleFileOptions;
@@ -193,4 +196,34 @@ fn truncated_signatures_are_not_recognized() {
         FileType::Hwp3
     );
     assert_eq!(detect_format(b"PK\x07\x08").unwrap(), FileType::Unknown);
+}
+
+#[test]
+fn legacy_magic_predicates_use_exact_four_byte_prefixes() {
+    assert!(is_zip_file(b"PK\x03\x04"));
+    assert!(is_hwpx_file(b"PK\x03\x04not-a-package"));
+    assert!(is_old_hwp_file(b"\xd0\xcf\x11\xe0"));
+    assert!(is_pdf_file(b"%PDF"));
+    assert!(!is_zip_file(b"PK\x05\x06"));
+    assert!(!is_old_hwp_file(b"\xd0\xcf\x11"));
+    assert!(!is_pdf_file(b"%PD"));
+}
+
+#[test]
+fn malformed_container_refinement_returns_unknown() {
+    assert_eq!(detect_zip_format(b"PK\x03\x04truncated"), FileType::Unknown);
+    assert_eq!(
+        detect_ole2_format(b"\xd0\xcf\x11\xe0truncated"),
+        FileType::Unknown
+    );
+}
+
+#[test]
+fn legacy_ole_refinement_accepts_section_names_at_any_location() {
+    let root_section = compound_with_stream("/SectionX");
+    assert_eq!(detect_ole2_format(&root_section), FileType::Hwp);
+    assert_eq!(detect_format(&root_section).unwrap(), FileType::Unknown);
+
+    let nested_section = compound_with_stream("/ObjectPool/SectionCustom");
+    assert_eq!(detect_ole2_format(&nested_section), FileType::Hwp);
 }

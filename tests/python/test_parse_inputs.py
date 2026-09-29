@@ -322,13 +322,28 @@ def test_parse_raises_the_matching_typed_error() -> None:
     assert caught.value.message == "빈 버퍼이거나 유효하지 않은 입력입니다."
 
 
-def test_non_none_options_are_not_silently_ignored() -> None:
-    with pytest.raises(NotImplementedError):
-        kordoc.try_parse(PDF, options={"pages": "1"})
-    with pytest.raises(NotImplementedError):
-        kordoc.parse(PDF, options={"pages": "1"})
-    with pytest.raises(NotImplementedError):
-        kordoc.try_parse(PDF, {"pages": "1"})
+def test_parse_options_are_translated_and_not_silently_ignored(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[bytes, dict[str, object] | None]] = []
+
+    def native_parse(data: bytes, options: dict[str, object] | None = None):
+        calls.append((data, options))
+        return {
+            "success": False,
+            "fileType": "pdf",
+            "error": "Parsing is not implemented for this format",
+            "code": "UNSUPPORTED_FORMAT",
+        }
+
+    monkeypatch.setattr(_native, "try_parse_bytes", native_parse)
+    assert kordoc.try_parse(PDF, options={"pages": "1"}).code == "UNSUPPORTED_FORMAT"
+    with pytest.raises(kordoc.UnsupportedFormatError):
+        kordoc.parse(PDF, {"pages": "1"})
+    assert calls == [
+        (PDF, {"pages": "1"}),
+        (PDF, {"pages": "1"}),
+    ]
 
 
 @pytest.mark.parametrize(

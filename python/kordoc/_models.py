@@ -51,17 +51,28 @@ def _check_optional_fields(value: Mapping[str, Any]) -> None:
             raise TypeError(f"{key} must be an array of objects")
 
 
-def _freeze_wire(value: Any) -> Any:
+def _freeze_wire(
+    value: Any, *, image_object: bool = False, image_array: bool = False
+) -> Any:
     if isinstance(value, bytes | bytearray | memoryview):
         return bytes(value)
     if isinstance(value, Mapping):
         if any(not isinstance(key, str) for key in value):
             raise TypeError("wire object keys must be strings")
         return MappingProxyType(
-            {key: _freeze_wire(item) for key, item in value.items()}
+            {
+                key: _freeze_wire(
+                    item,
+                    image_object=(key == "imageData" or image_array),
+                    image_array=(key == "images"),
+                )
+                if key != "data" or not image_object
+                else _freeze_byte_array(item)
+                for key, item in value.items()
+            }
         )
     if isinstance(value, (list, tuple)):
-        return tuple(_freeze_wire(item) for item in value)
+        return tuple(_freeze_wire(item, image_object=image_array) for item in value)
     if value is None:
         raise ValueError("wire values must omit null fields")
     if isinstance(value, (str, bool, int)):
@@ -69,6 +80,16 @@ def _freeze_wire(value: Any) -> Any:
     if isinstance(value, float) and isfinite(value):
         return value
     raise TypeError(f"unsupported wire value type: {type(value).__name__}")
+
+
+def _freeze_byte_array(value: Any) -> bytes:
+    if isinstance(value, bytes | bytearray | memoryview):
+        return bytes(value)
+    if not isinstance(value, (list, tuple)):
+        raise TypeError("image data must be bytes or an array of byte integers")
+    if any(type(item) is not int or not 0 <= item <= 255 for item in value):
+        raise TypeError("image data must contain unsigned byte integers")
+    return bytes(value)
 
 
 def _thaw_wire(value: Any) -> Any:
@@ -183,7 +204,11 @@ class TryParseResult:
                 }
                 and item is not None
             ):
-                object.__setattr__(self, field.name, _freeze_wire(item))
+                object.__setattr__(
+                    self,
+                    field.name,
+                    _freeze_wire(item, image_array=field.name == "images"),
+                )
 
     def _wire_mapping(self) -> dict[str, Any]:
         mapping = {
@@ -223,3 +248,109 @@ class TryParseResult:
         wire = self._wire_mapping()
         _validate_wire(wire, self._KEYS)
         return {key: _thaw_wire(value) for key, value in wire.items()}
+
+    @property
+    def document(self) -> Document | None:
+        """Typed immutable document projection, available only for success."""
+        if not self.success:
+            return None
+        return Document.from_result(self)
+
+
+@dataclass(frozen=True, slots=True)
+class Document:
+    """Immutable projection of the successful parse-result document fields."""
+
+    file_type: str
+    markdown: str
+    blocks: Sequence[Mapping[str, Any]]
+    page_count: int | None = None
+    is_image_based: bool | None = None
+    metadata: Mapping[str, Any] | None = None
+    outline: Sequence[Mapping[str, Any]] | None = None
+    warnings: Sequence[Mapping[str, Any]] | None = None
+    images: Sequence[Mapping[str, Any]] | None = None
+    pages: Sequence[Mapping[str, Any]] | None = None
+    page_quality: Sequence[Mapping[str, Any]] | None = None
+    quality_summary: Mapping[str, Any] | None = None
+
+    _FIELD_NAMES: ClassVar[dict[str, str]] = {
+        "fileType": "file_type",
+        "pageCount": "page_count",
+        "isImageBased": "is_image_based",
+        "pageQuality": "page_quality",
+        "qualitySummary": "quality_summary",
+    }
+
+    def __post_init__(self) -> None:
+        validated = TryParseResult(
+            success=True,
+            file_type=self.file_type,
+            markdown=self.markdown,
+            blocks=self.blocks,
+            page_count=self.page_count,
+            is_image_based=self.is_image_based,
+            metadata=self.metadata,
+            outline=self.outline,
+            warnings=self.warnings,
+            images=self.images,
+            pages=self.pages,
+            page_quality=self.page_quality,
+            quality_summary=self.quality_summary,
+        )
+        for name in (
+            "blocks",
+            "metadata",
+            "outline",
+            "warnings",
+            "images",
+            "pages",
+            "page_quality",
+            "quality_summary",
+        ):
+            object.__setattr__(self, name, getattr(validated, name))
+
+    @classmethod
+    def from_result(cls, result: TryParseResult) -> Document:
+        if not result.success:
+            raise ValueError("a failed parse result has no document")
+        assert result.markdown is not None and result.blocks is not None
+        return cls(
+            file_type=result.file_type,
+            markdown=result.markdown,
+            blocks=result.blocks,
+            page_count=result.page_count,
+            is_image_based=result.is_image_based,
+            metadata=result.metadata,
+            outline=result.outline,
+            warnings=result.warnings,
+            images=result.images,
+            pages=result.pages,
+            page_quality=result.page_quality,
+            quality_summary=result.quality_summary,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        output = TryParseResult(
+            success=True,
+            file_type=self.file_type,
+            markdown=self.markdown,
+            blocks=self.blocks,
+            page_count=self.page_count,
+            is_image_based=self.is_image_based,
+            metadata=self.metadata,
+            outline=self.outline,
+            warnings=self.warnings,
+            images=self.images,
+            pages=self.pages,
+            page_quality=self.page_quality,
+            quality_summary=self.quality_summary,
+        ).to_dict()
+        output.pop("success")
+        return output
+
+    def __getattr__(self, name: str) -> Any:
+        """Support the frozen wire's camelCase names alongside Python names."""
+        if name in self._FIELD_NAMES:
+            return object.__getattribute__(self, self._FIELD_NAMES[name])
+        raise AttributeError(name)

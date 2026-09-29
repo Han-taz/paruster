@@ -53,7 +53,7 @@ uv run mypy python/kordoc scripts
 
 # Build both distribution forms and inspect their contents without extraction
 uv run maturin build --release --locked --out target/wheels
-uv run maturin sdist --locked --out target/wheels
+uv run maturin sdist --out target/wheels
 uv run python scripts/check_artifacts.py target/wheels/*.whl target/wheels/*.tar.gz
 uv run python scripts/check_docs.py
 

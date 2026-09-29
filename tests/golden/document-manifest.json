@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "oracle": {
+    "repository": "local ignored migration oracle",
+    "commit": "bb71f7fb0bf51dd456d27505a8c04772df182144",
+    "source_file": "src/index.ts",
+    "source_sha256": "85943942619d9c2b7ed0855bdb58eb0360fec028e84efdd0f719589ba6ce4e01",
+    "oracle_capture_command": "From the ignored oracle directory kordoc/: node --import tsx -e 'import { parse } from \"./src/index.ts\"; console.log(JSON.stringify(await parse(new ArrayBuffer(0))))'"
+  },
+  "summary": {
+    "oracle_capture_cases": 0,
+    "parity_numerator_cases": 0,
+    "successful_oracle_cases": 0,
+    "parity_status": "pending"
+  },
+  "cases": [
+    {
+      "id": "empty-input",
+      "input": "fixtures/empty-input.bin",
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "expected": "expected/empty-input.json",
+      "expected_sha256": "981ae68816a4abf6ddaf06bb000742d26c09badf5336b49ac7f895802ed9fefc",
+      "license": "CC0-1.0",
+      "generator": "Source-derived expected response for the empty-input contract branch; not an oracle runtime capture",
+      "options": {},
+      "dimensions": ["success", "fileType", "error", "code"],
+      "evidence_kind": "source_contract_smoke",
+      "oracle_execution": "unavailable",
+      "parity_numerator": false,
+      "normalization": {
+        "zip_timestamp_pointers": [],
+        "xml_attribute_pointers": []
+      }
+    }
+  ]
+}

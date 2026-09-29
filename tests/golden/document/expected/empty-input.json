@@ -1,0 +1,6 @@
+{
+  "success": false,
+  "fileType": "unknown",
+  "error": "빈 버퍼이거나 유효하지 않은 입력입니다.",
+  "code": "EMPTY_INPUT"
+}

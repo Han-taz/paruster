@@ -153,6 +153,7 @@ def test_python_only_foundation_surface_is_explicit() -> None:
         "native_version",
         "try_parse",
         "TryParseResult",
+        "Document",
         "KordocError",
         "EmptyInputError",
         "UnsupportedFormatError",
@@ -179,6 +180,15 @@ def test_python_only_foundation_surface_is_explicit() -> None:
     assert entries["VERSION"]["disposition"] == "foundation"
     assert entries["detectFormat"]["disposition"] == "foundation"
     assert entries["parse"]["disposition"] == "foundation"
+    for helper in (
+        "detectOle2Format",
+        "detectZipFormat",
+        "isHwpxFile",
+        "isOldHwpFile",
+        "isPdfFile",
+        "isZipFile",
+    ):
+        assert entries[helper]["disposition"] == "foundation"
 
 
 def test_mcp_inventory_is_exact_and_ordered() -> None:

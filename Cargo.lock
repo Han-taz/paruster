@@ -191,6 +191,7 @@ dependencies = [
  "cfb",
  "kordoc-ir",
  "proptest",
+ "serde_json",
  "zip",
 ]
 

@@ -1,0 +1,130 @@
+{
+  "empty": {
+    "is_zip_file": false,
+    "is_hwpx_file": false,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "unknown"
+  },
+  "short-pdf": {
+    "is_zip_file": false,
+    "is_hwpx_file": false,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "unknown"
+  },
+  "pdf-signature": {
+    "is_zip_file": false,
+    "is_hwpx_file": false,
+    "is_old_hwp_file": false,
+    "is_pdf_file": true,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "unknown"
+  },
+  "pdf-near-miss": {
+    "is_zip_file": false,
+    "is_hwpx_file": false,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "unknown"
+  },
+  "cfb-prefix-malformed": {
+    "is_zip_file": false,
+    "is_hwpx_file": false,
+    "is_old_hwp_file": true,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "unknown"
+  },
+  "cfb-short-magic": {
+    "is_zip_file": false,
+    "is_hwpx_file": false,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "unknown"
+  },
+  "zip-prefix-malformed": {
+    "is_zip_file": true,
+    "is_hwpx_file": true,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "unknown"
+  },
+  "zip-empty-eocd": {
+    "is_zip_file": false,
+    "is_hwpx_file": false,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "unknown"
+  },
+  "zip-xlsx": {
+    "is_zip_file": true,
+    "is_hwpx_file": true,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "xlsx"
+  },
+  "zip-docx": {
+    "is_zip_file": true,
+    "is_hwpx_file": true,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "docx"
+  },
+  "zip-pptx": {
+    "is_zip_file": true,
+    "is_hwpx_file": true,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "pptx"
+  },
+  "zip-hwpx": {
+    "is_zip_file": true,
+    "is_hwpx_file": true,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "hwpx"
+  },
+  "zip-generic": {
+    "is_zip_file": true,
+    "is_hwpx_file": true,
+    "is_old_hwp_file": false,
+    "is_pdf_file": false,
+    "detect_ole2_format": "unknown",
+    "detect_zip_format": "unknown"
+  },
+  "cfb-workbook": {
+    "is_zip_file": false,
+    "is_hwpx_file": false,
+    "is_old_hwp_file": true,
+    "is_pdf_file": false,
+    "detect_ole2_format": "xls",
+    "detect_zip_format": "unknown"
+  },
+  "cfb-book": {
+    "is_zip_file": false,
+    "is_hwpx_file": false,
+    "is_old_hwp_file": true,
+    "is_pdf_file": false,
+    "detect_ole2_format": "xls",
+    "detect_zip_format": "unknown"
+  },
+  "cfb-fileheader": {
+    "is_zip_file": false,
+    "is_hwpx_file": false,
+    "is_old_hwp_file": true,
+    "is_pdf_file": false,
+    "detect_ole2_format": "hwp",
+    "detect_zip_format": "unknown"
+  }
+}
