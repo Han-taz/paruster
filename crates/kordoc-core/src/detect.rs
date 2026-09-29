@@ -3,6 +3,8 @@ use std::io::Cursor;
 use kordoc_ir::{ErrorCode, FileType, KordocError, ParseSuccess};
 
 use crate::limits::{MAX_ARCHIVE_ENTRIES, MAX_UNCOMPRESSED_BYTES, validate_input_len};
+use crate::parse::{ParserRegistry, assemble_success, try_parse_with_registry};
+use kordoc_ir::ParseOptions;
 
 const EOCD_SIGNATURE: u32 = 0x0605_4b50;
 const ZIP64_EOCD_SIGNATURE: u32 = 0x0606_4b50;
@@ -445,6 +447,26 @@ fn refine_ole(bytes: &[u8]) -> FileType {
     }
 }
 
+fn refine_ole_legacy(bytes: &[u8]) -> FileType {
+    let Ok(compound) = cfb::CompoundFile::open(Cursor::new(bytes)) else {
+        return FileType::Unknown;
+    };
+    let mut xls = false;
+    let mut hwp = false;
+    for entry in compound.walk() {
+        let name = entry.name();
+        xls |= name == "Workbook" || name == "Book";
+        hwp |= name == "FileHeader" || name == "DocInfo" || name.starts_with("Section");
+    }
+    if xls {
+        FileType::Xls
+    } else if hwp {
+        FileType::Hwp
+    } else {
+        FileType::Unknown
+    }
+}
+
 pub fn detect_format(bytes: &[u8]) -> Result<FileType, KordocError> {
     validate_input_len(bytes.len())?;
     if bytes.starts_with(b"HWP Document File V3.00") {
@@ -479,6 +501,42 @@ pub fn detect_format(bytes: &[u8]) -> Result<FileType, KordocError> {
     Ok(FileType::Unknown)
 }
 
+/// Legacy four-byte ZIP signature predicate retained for API compatibility.
+pub fn is_zip_file(bytes: &[u8]) -> bool {
+    bytes.starts_with(b"PK\x03\x04")
+}
+
+/// Legacy HWPX predicate. This is intentionally a ZIP-signature alias.
+pub fn is_hwpx_file(bytes: &[u8]) -> bool {
+    is_zip_file(bytes)
+}
+
+/// Legacy four-byte OLE2 signature predicate retained for compatibility.
+pub fn is_old_hwp_file(bytes: &[u8]) -> bool {
+    bytes.starts_with(b"\xd0\xcf\x11\xe0")
+}
+
+/// Legacy four-byte PDF signature predicate retained for compatibility.
+pub fn is_pdf_file(bytes: &[u8]) -> bool {
+    bytes.starts_with(b"%PDF")
+}
+
+/// Refine an OLE2 container while mapping malformed containers to `unknown`.
+pub fn detect_ole2_format(bytes: &[u8]) -> FileType {
+    if !is_old_hwp_file(bytes) {
+        return FileType::Unknown;
+    }
+    refine_ole_legacy(bytes)
+}
+
+/// Refine a ZIP container while mapping malformed containers to `unknown`.
+pub fn detect_zip_format(bytes: &[u8]) -> FileType {
+    if !is_zip_file(bytes) {
+        return FileType::Unknown;
+    }
+    refine_zip(bytes).unwrap_or(FileType::Unknown)
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseDispatchError {
     pub file_type: FileType,
@@ -505,20 +563,18 @@ impl From<KordocError> for ParseDispatchError {
 }
 
 pub fn try_parse(bytes: &[u8]) -> Result<ParseSuccess, ParseDispatchError> {
-    if bytes.is_empty() {
-        return Err(ParseDispatchError {
-            file_type: FileType::Unknown,
-            code: ErrorCode::EmptyInput,
-            message: "빈 버퍼이거나 유효하지 않은 입력입니다.".into(),
-        });
-    }
-    validate_input_len(bytes.len()).map_err(ParseDispatchError::from)?;
-    let file_type = detect_format(bytes).map_err(ParseDispatchError::from)?;
-    Err(ParseDispatchError {
-        file_type,
-        code: ErrorCode::UnsupportedFormat,
-        message: "Parsing is not implemented for this format".into(),
-    })
+    try_parse_with_options(bytes, &ParseOptions::default())
+}
+
+pub fn try_parse_with_options(
+    bytes: &[u8],
+    options: &ParseOptions,
+) -> Result<ParseSuccess, ParseDispatchError> {
+    // Real parsers are registered by the coordinator as their format crates land. Keeping this
+    // registry empty preserves the foundation's existing unsupported-format behavior.
+    let registry = ParserRegistry::default();
+    try_parse_with_registry(bytes, &registry, options)
+        .map(|(file_type, parsed)| assemble_success(file_type, parsed, String::new(), None))
 }
 
 #[cfg(test)]

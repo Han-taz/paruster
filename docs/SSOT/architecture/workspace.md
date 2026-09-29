@@ -5,12 +5,13 @@ working interfaces and boundaries, not completed document-processing parity.
 
 ## Components and data flow
 
-The Rust workspace is split into three crates. `kordoc-ir` defines the shared
-serializable wire DTOs, including document structures, file types, parse result
-envelopes, and error codes. `kordoc-core` owns bounded format detection,
-container preflight, and the current parse-dispatch boundary. It does not yet
-contain real document parsers. `kordoc-python` is the PyO3 extension that
-translates calls and wire results between Rust and Python.
+The Rust workspace is split into three crates. `kordoc-ir` defines shared wire
+DTOs plus the Rust-only `ParsedDocument` and `ParseOptions` handoff for future
+format crates. `kordoc-core` owns bounded format detection, container preflight, a
+private injectable registry, panic containment, and result assembly. Format
+crates depend on IR only; core-side adapters call them, preventing a Cargo
+cycle. The production registry remains empty until a real parser passes parity.
+`kordoc-python` validates owned options and translates calls and wire results.
 
 The `python/kordoc` Python facade normalizes supported caller inputs—bytes-like
 values, filesystem paths, and binary streams—into bounded bytes before calling
@@ -22,7 +23,8 @@ translated into the facade's immutable Python result and typed-error surface.
 Python caller
   -> Python facade: normalize bytes / filesystem paths / binary streams
   -> PyO3 extension: detach core operation from the GIL
-  -> kordoc-core: detect and dispatch within input/container bounds
+  -> kordoc-core: validate, detect, dispatch, contain panics, project result
+  -> format adapter: return source-neutral ParsedDocument (future)
   -> kordoc-ir wire DTOs: serialize the result envelope
   -> Python facade result or typed error
 ```
@@ -39,6 +41,11 @@ The Python facade enforces the same input-size limit for in-memory inputs and
 bounded reads from paths and binary streams. Path handling opens files in
 binary mode. Text streams and reads that exceed the bound are rejected before
 the native call.
+
+Parser callbacks run behind an unwind boundary. Panic payloads and configured
+passwords do not cross public errors, and the detected file type is retained.
+Options are converted while the GIL is held; only owned bytes and options enter
+detached native work.
 
 The separate `fuzz/` directory is a standalone `fuzz/` workspace. Its
 `detect_format` and `zip_preflight` targets exercise bounded safety properties;

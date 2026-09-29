@@ -26,3 +26,4 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 - [`2026/09/2026-09-30-rust-python-foundation.md`](2026/09/2026-09-30-rust-python-foundation.md)
 - [`2026/09/2026-09-30-foundation-execution.md`](2026/09/2026-09-30-foundation-execution.md)
 - [`2026/09/2026-09-30-product-port-planning.md`](2026/09/2026-09-30-product-port-planning.md)
+- [`2026/09/2026-09-30-parser-seam.md`](2026/09/2026-09-30-parser-seam.md)

@@ -2,9 +2,14 @@
 
 mod detect;
 mod limits;
+mod options;
+mod parse;
 
-pub use detect::{ParseDispatchError, detect_format, try_parse};
-pub use kordoc_ir::FileType;
+pub use detect::{
+    ParseDispatchError, detect_format, detect_ole2_format, detect_zip_format, is_hwpx_file,
+    is_old_hwp_file, is_pdf_file, is_zip_file, try_parse, try_parse_with_options,
+};
+pub use kordoc_ir::{FileType, OcrOption, PageNumber, PageSelection, ParseOptions};
 pub use limits::{MAX_ARCHIVE_ENTRIES, MAX_INPUT_BYTES, MAX_UNCOMPRESSED_BYTES};
 
 #[cfg(feature = "fuzzing")]

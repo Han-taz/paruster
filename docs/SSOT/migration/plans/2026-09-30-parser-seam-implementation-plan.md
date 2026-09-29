@@ -15,15 +15,15 @@
 - [ ] Write failing tests importing `ParsedDocument`, `PageEvidence`, `ParseOptions`, and `PageSelection`. Cover recursive blocks/cells/captions, metadata, images, warnings, page evidence, page quality, quality summary, JSON roundtrip, omitted options versus explicit `false`, and rejection of `null`/unknown fields.
 - [ ] Run `PYO3_PYTHON=.venv/bin/python3 cargo test -p kordoc-ir --test parsed_contract --locked`; expected failure is an unresolved import.
 - [ ] Implement non-wire `ParsedDocument` without `file_type`, `success`, or `markdown`. It contains required blocks and optional page count/image-based/metadata/outline/warnings/images/page evidence/page quality/quality summary.
-- [ ] Implement serializable internal options preserving `pages` as bounded integer indices or the original range string and every oracle boolean as `Option<bool>`. Include password and non-callback OCR modes. Do not add `filePath`; callable OCR/progress adapters remain at the Python boundary.
+- [ ] Implement serializable internal options preserving `pages` as finite numeric values or the original range string and every oracle boolean as `Option<bool>`. Do not round or force integer pages before the document page count is known; the later page-range projector applies the oracle's `Math.round` semantics. Include password and non-callback OCR modes. Do not add `filePath`; callable OCR/progress adapters remain at the Python boundary.
 - [ ] Re-run the focused test and commit `feat: add internal parser data contracts`.
 
 ## Commit 2: Injectable core dispatch and option validation
 
-**Files:** Create `crates/kordoc-core/src/{parse,options}.rs`; modify `crates/kordoc-core/src/{lib,detect}.rs`; create `crates/kordoc-core/tests/parse_seam.rs`.
+**Files:** Create `crates/kordoc-core/src/{parse,options}.rs`; modify `crates/kordoc-core/src/{lib,detect}.rs`. Keep injection/projector tests as private unit tests in `parse.rs`; use integration tests only for intentionally public production behavior.
 
-- [ ] Write failing tests for exact detected-format registry selection, unregistered format, all option names/defaults/unknowns, metadata override absence/presence, error propagation, panic sanitization, and validation ordering before parser invocation.
-- [ ] Run `PYO3_PYTHON=.venv/bin/python3 cargo test -p kordoc-core --test parse_seam --locked`; expected failure is missing parser/registry APIs.
+- [ ] Write failing private unit tests for exact detected-format registry selection, unregistered format, all option names/defaults/unknowns, metadata override absence/presence, error propagation, panic sanitization, and validation ordering before parser invocation. Test-only injection remains private and never expands the public Rust API.
+- [ ] Run `PYO3_PYTHON=.venv/bin/python3 cargo test -p kordoc-core --locked parse::tests`; expected failure is missing parser/registry APIs.
 - [ ] Define a core-side parser adapter returning `ParsedDocument` and optional `extract_metadata`. Provide injected registry APIs for tests; format crates never implement or depend on the core trait.
 - [ ] Keep the production registry empty. Empty input, 500 MiB limit, archive preflight, detection, detected `file_type`, and `UNSUPPORTED_FORMAT` behavior remain unchanged.
 - [ ] Catch parser panics at the dispatch boundary, discard payloads, and return sanitized `PARSE_ERROR`. A test-only projector assembles exact `ParseSuccess`; P7 replaces it with real Markdown/pages projection.

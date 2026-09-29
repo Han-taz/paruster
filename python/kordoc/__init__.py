@@ -1,4 +1,14 @@
-from ._api import detect_format, parse, try_parse
+from ._api import (
+    detect_format,
+    detect_ole2_format,
+    detect_zip_format,
+    is_hwpx_file,
+    is_old_hwp_file,
+    is_pdf_file,
+    is_zip_file,
+    parse,
+    try_parse,
+)
 from ._errors import (
     CorruptedError,
     DecompressionBombError,
@@ -15,13 +25,14 @@ from ._errors import (
     UnsupportedFormatError,
     ZipBombError,
 )
-from ._models import TryParseResult
+from ._models import Document, TryParseResult
 from ._native import native_version
 
 __version__ = "0.1.0"
 __all__ = [
     "CorruptedError",
     "DecompressionBombError",
+    "Document",
     "DrmProtectedError",
     "EmptyInputError",
     "EncryptedError",
@@ -37,6 +48,12 @@ __all__ = [
     "ZipBombError",
     "__version__",
     "detect_format",
+    "detect_ole2_format",
+    "detect_zip_format",
+    "is_hwpx_file",
+    "is_old_hwp_file",
+    "is_pdf_file",
+    "is_zip_file",
     "native_version",
     "parse",
     "try_parse",
