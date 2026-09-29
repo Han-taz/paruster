@@ -111,7 +111,7 @@ jobs:
         with:
           command: sdist
           maturin-version: v1.15.0
-          args: --locked --out dist
+          args: --out dist
       - name: Scan and install the exact source distribution
         run: |
           python scripts/check_artifacts.py dist/*.tar.gz

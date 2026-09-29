@@ -44,6 +44,11 @@ def test_release_candidate_rebuilds_and_verifies_every_distribution() -> None:
         assert runner in text
         assert target in text
     assert "command: sdist" in text
+    sdist_job = text.split("  build-sdist:", maxsplit=1)[1].split(
+        "  sboms:", maxsplit=1
+    )[0]
+    assert "args: --out dist" in sdist_job
+    assert "args: --locked" not in sdist_job
     assert "scripts/check_artifacts.py" in text
     assert "cp310-abi3" in text
     assert "spdx-json" in text
