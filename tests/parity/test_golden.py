@@ -7,6 +7,7 @@ import kordoc
 import pytest
 
 ROOT = Path(__file__).parents[1]
+GOLDEN_ROOT = ROOT / "golden"
 
 
 def _normalize():
@@ -39,24 +40,34 @@ def test_committed_golden_cases() -> None:
             "sha256",
             "covered_contract",
         }
-        raw = (ROOT / "golden" / case["input"]).read_bytes()
+        assert case["license"] == "CC0-1.0"
+        assert case["generator"].strip()
+        assert case["covered_contract"].startswith("docs/SSOT/components/detection.md:")
+        assert "detector-only" in case["covered_contract"]
+        input_path = _manifest_path(case["input"])
+        expected_path = _manifest_path(case["expected"])
+        raw = input_path.read_bytes()
         assert hashlib.sha256(raw).hexdigest() == case["sha256"]
         actual = {"fileType": kordoc.detect_format(raw)}
-        expected = json.loads(
-            (ROOT / "golden" / case["expected"]).read_text(encoding="utf-8")
-        )
+        expected = json.loads(expected_path.read_text(encoding="utf-8"))
         compare_json = _compare_json()
         normalize = _normalize()
         difference = compare_json(normalize(expected), normalize(actual))
         assert difference is None
 
 
+def _manifest_path(relative_path: str) -> Path:
+    path = Path(relative_path)
+    assert not path.is_absolute()
+    resolved = (GOLDEN_ROOT / path).resolve()
+    assert resolved.is_relative_to(GOLDEN_ROOT.resolve())
+    return resolved
+
+
 def test_first_difference_is_a_stable_json_pointer() -> None:
     compare_json = _compare_json()
 
-    difference = compare_json(
-        {"z": 0, "a": {"b": 1}}, {"a": {"b": 2}, "z": 0}
-    )
+    difference = compare_json({"z": 0, "a": {"b": 1}}, {"a": {"b": 2}, "z": 0})
     assert difference is not None
     assert difference.pointer == "/a/b"
     assert difference.expected == 1
@@ -112,6 +123,15 @@ def test_timestamp_is_removed_only_at_registered_pointer() -> None:
     }
 
 
+def test_timestamp_allowlist_cannot_remove_semantic_fields() -> None:
+    normalize = _normalize()
+
+    with pytest.raises(
+        ValueError, match="ZIP timestamp pointer must end in /timestamp"
+    ):
+        normalize({"markdown": "keep me"}, zip_timestamp_pointers={"/markdown"})
+
+
 def test_normalize_sorts_object_keys_and_preserves_array_order() -> None:
     normalize = _normalize()
 
@@ -119,7 +139,9 @@ def test_normalize_sorts_object_keys_and_preserves_array_order() -> None:
     normalized = normalize(value)
     assert list(normalized) == ["items", "z"]
     assert [list(item) for item in normalized["items"]] == [["a", "b"], ["c", "d"]]
-    assert [item["a"] if "a" in item else item["c"] for item in normalized["items"]] == [1, 3]
+    assert [
+        item["a"] if "a" in item else item["c"] for item in normalized["items"]
+    ] == [1, 3]
 
 
 def test_xml_normalization_reorders_attributes_only_at_registered_pointer() -> None:
@@ -141,14 +163,38 @@ def test_xml_normalization_preserves_text_and_child_order() -> None:
     left = {"xml": '<root z="2" a="1"><first/>text</root>'}
     changed_text = {"xml": '<root a="1" z="2"><first/>text </root>'}
     changed_children = {"xml": '<root a="1" z="2">text<first/></root>'}
-    assert compare_json(
-        normalize(left, xml_attribute_pointers=pointers),
-        normalize(changed_text, xml_attribute_pointers=pointers),
-    ) is not None
-    assert compare_json(
-        normalize(left, xml_attribute_pointers=pointers),
-        normalize(changed_children, xml_attribute_pointers=pointers),
-    ) is not None
+    assert (
+        compare_json(
+            normalize(left, xml_attribute_pointers=pointers),
+            normalize(changed_text, xml_attribute_pointers=pointers),
+        )
+        is not None
+    )
+    assert (
+        compare_json(
+            normalize(left, xml_attribute_pointers=pointers),
+            normalize(changed_children, xml_attribute_pointers=pointers),
+        )
+        is not None
+    )
+
+
+def test_xml_normalization_preserves_lexical_non_attribute_content() -> None:
+    normalize = _normalize()
+
+    xml = (
+        '<?xml version="1.0"?>\n'
+        '<!DOCTYPE root [<!ENTITY label "KEEP">]>\n'
+        "<root z='2' a='1'>  <!--keep--><?target data?>"
+        "<![CDATA[<x>&]]>&label;\n</root>"
+    )
+    expected = (
+        '<?xml version="1.0"?>\n'
+        '<!DOCTYPE root [<!ENTITY label "KEEP">]>\n'
+        "<root a='1' z='2'>  <!--keep--><?target data?>"
+        "<![CDATA[<x>&]]>&label;\n</root>"
+    )
+    assert normalize({"xml": xml}, xml_attribute_pointers={"/xml"}) == {"xml": expected}
 
 
 def test_malformed_registered_xml_fails_clearly() -> None:
