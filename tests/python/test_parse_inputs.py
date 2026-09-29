@@ -204,16 +204,68 @@ def test_try_parse_result_covers_success_projection_and_serializes_nested_bytes(
 
 @pytest.mark.parametrize("nested", [None, object(), {1: "non-string key"}])
 def test_try_parse_result_rejects_non_json_nested_values(nested: object) -> None:
-    result = TryParseResult.from_dict(
+    with pytest.raises((TypeError, ValueError)):
+        TryParseResult.from_dict(
+            {
+                "success": True,
+                "fileType": "pdf",
+                "markdown": "",
+                "blocks": [{"type": "image", "imageData": {"data": nested}}],
+            }
+        )
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"success": False, "file_type": "bogus"},
+        {"success": False, "file_type": "unknown"},
+        {"success": True, "file_type": "pdf"},
         {
             "success": True,
-            "fileType": "pdf",
+            "file_type": "pdf",
             "markdown": "",
-            "blocks": [{"type": "image", "imageData": {"data": nested}}],
-        }
-    )
+            "blocks": [],
+            "error": "mixed",
+        },
+        {
+            "success": True,
+            "file_type": "pdf",
+            "markdown": "",
+            "blocks": [],
+            "page_count": -1,
+        },
+    ],
+)
+def test_direct_try_parse_result_construction_enforces_wire_contract(
+    fields: dict[str, object],
+) -> None:
     with pytest.raises((TypeError, ValueError)):
-        result.to_dict()
+        TryParseResult(**fields)  # type: ignore[arg-type]
+
+
+def test_try_parse_result_snapshots_nested_wire_values_immutably() -> None:
+    blocks = [{"type": "paragraph", "children": [{"type": "paragraph"}]}]
+    metadata = {"title": "original"}
+    result = TryParseResult(
+        success=True,
+        file_type="pdf",
+        markdown="",
+        blocks=blocks,
+        metadata=metadata,
+        page_count=None,
+    )
+    blocks.append({"type": "invalid"})
+    metadata["title"] = "mutated"
+    assert result.to_dict()["blocks"] == [
+        {"type": "paragraph", "children": [{"type": "paragraph"}]}
+    ]
+    assert result.to_dict()["metadata"] == {"title": "original"}
+    assert "pageCount" not in result.to_dict()
+    with pytest.raises((AttributeError, TypeError)):
+        result.blocks[0]["children"].append(None)  # type: ignore[index,union-attr]
+    with pytest.raises((AttributeError, TypeError)):
+        result.metadata["title"] = "mutated"  # type: ignore[index]
 
 
 def test_try_parse_preserves_detected_type_for_unsupported_parser() -> None:
