@@ -25,6 +25,13 @@ def _assert_gate_rejects_non_success(text: str, gate: str, needs: str) -> None:
     assert '.result == "success"' in gate_body
 
 
+def test_checkouts_never_persist_credentials() -> None:
+    for workflow in WORKFLOWS.glob("*.yml"):
+        text = workflow.read_text(encoding="utf-8")
+        checkout_count = text.count("uses: actions/checkout@")
+        assert text.count("persist-credentials: false") == checkout_count, workflow
+
+
 def test_ci_workflow_has_stable_required_gate_and_supported_python_matrix() -> None:
     text = _workflow("ci.yml")
     _assert_actions_are_pinned(text)
