@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema_version": 1,
+  "source_evidence": {
+    "source_path": "src/index.ts",
+    "source_sha256": "85943942619d9c2b7ed0855bdb58eb0360fec028e84efdd0f719589ba6ce4e01",
+    "type_source_path": "src/types.ts",
+    "type_source_sha256": "5b1e4b5793a04bd059600b6daf3b14b1b299958ee9f22633d9027c9d9956110c",
+    "cwd": "kordoc",
+    "extraction_command": "sed -n '1,$p' src/index.ts src/types.ts",
+    "review_command": "sed -n '1,$p' src/types.ts"
+  },
+  "roots": {
+    "parse_result": {"$ref":"#/$defs/ParseResult"},
+    "block": {"$ref":"#/$defs/IRBlock"},
+    "warning": {"$ref":"#/$defs/ParseWarning"},
+    "error_code": {"$ref":"#/$defs/ErrorCode"}
+  },
+  "wire_types": [
+    "CellContext", "IRBlockType", "IRBlock", "IRTable", "IRCell", "ImageData", "BoundingBox", "InlineStyle",
+    "DocumentMetadata", "ParseWarning", "WarningCode", "OutlineItem", "ErrorCode", "FileType", "ParseResult",
+    "ParseSuccess", "ParseFailure", "PageMarkdown", "PageQuality", "DocumentQualitySummary", "ExtractedImage",
+    "DiffChangeType", "BlockDiff", "CellDiff", "DiffResult", "PatchSkip", "PatchOptions", "PatchResult",
+    "FormField", "FormResult", "FillOutputFormat", "FillFormOutput", "ParseOptions"
+  ],
+  "supporting_types": ["IRSpan", "TableClassificationKind", "TableClassificationReason", "TableClassificationSummary", "ParseResultBase"],
+  "warning_codes": [
+    "SKIPPED_IMAGE", "SKIPPED_OLE", "TRUNCATED_TABLE", "OCR_FALLBACK", "UNSUPPORTED_ELEMENT",
+    "BROKEN_ZIP_RECOVERY", "HIDDEN_TEXT_FILTERED", "MALFORMED_XML", "PARTIAL_PARSE", "LENIENT_CFB_RECOVERY",
+    "NEEDS_OCR", "OCR_FAILED", "OCR_APPLIED", "OCR_LOW_CONF", "COM_EMPTY", "DRM_COM_FALLBACK",
+    "PAGE_BOUNDARY_APPROXIMATE"
+  ],
+  "$defs": {
+    "CellContext": {"type":"object","additionalProperties":false,"required":["text","colSpan","rowSpan"],"properties":{"text":{"type":"string"},"colSpan":{"type":"number"},"rowSpan":{"type":"number"},"colAddr":{"type":"number"},"rowAddr":{"type":"number"}}},
+    "IRBlockType": {"type":"string","enum":["paragraph","table","heading","list","image","separator"]},
+    "IRSpan": {"type":"object","additionalProperties":false,"required":["text"],"properties":{"text":{"type":"string"},"bold":{"type":"boolean"},"italic":{"type":"boolean"},"strike":{"type":"boolean"},"underline":{"type":"boolean"},"code":{"type":"boolean"},"placeholder":{"type":"boolean"}}},
+    "IRBlock": {"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"$ref":"#/$defs/IRBlockType"},"text":{"type":"string"},"table":{"$ref":"#/$defs/IRTable"},"level":{"type":"number","minimum":1,"maximum":6},"pageNumber":{"type":"number"},"bbox":{"$ref":"#/$defs/BoundingBox"},"style":{"$ref":"#/$defs/InlineStyle"},"listType":{"type":"string","enum":["ordered","unordered"]},"children":{"type":"array","items":{"$ref":"#/$defs/IRBlock"}},"href":{"type":"string"},"footnoteText":{"type":"string"},"imageData":{"$ref":"#/$defs/ImageData"},"spans":{"type":"array","items":{"$ref":"#/$defs/IRSpan"}},"quote":{"type":"boolean"},"indent":{"type":"number"},"listDepth":{"type":"number","minimum":1,"maximum":7}}},
+    "ImageData": {"type":"object","additionalProperties":false,"required":["data","mimeType"],"properties":{"data":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255},"x-typescript-type":"Uint8Array"},"mimeType":{"type":"string"},"filename":{"type":"string"}},"x-python-translation":{"data":"bytes; its JSON representation is an integer array"}},
+    "BoundingBox": {"type":"object","additionalProperties":false,"required":["page","x","y","width","height"],"properties":{"page":{"type":"number"},"x":{"type":"number"},"y":{"type":"number"},"width":{"type":"number"},"height":{"type":"number"}}},
+    "InlineStyle": {"type":"object","additionalProperties":false,"properties":{"bold":{"type":"boolean"},"italic":{"type":"boolean"},"strike":{"type":"boolean"},"underline":{"type":"boolean"},"fontSize":{"type":"number"},"fontName":{"type":"string"}}},
+    "TableClassificationKind": {"type":"string","enum":["semantic-table","non-tabular-layout","uncertain"]},
+    "TableClassificationReason": {"type":"string","enum":["repeated-row-schema","grid-regularity","high-active-density","column-type-consistency","nested-structure-wrapper","span-irregularity","spacer-bands","extreme-sparsity","diagram-context-keyword","low-evidence","ambiguous-scores"]},
+    "TableClassificationSummary": {"type":"object","additionalProperties":false,"required":["kind","confidence","semanticScore","nonTabularScore","reasons"],"properties":{"kind":{"$ref":"#/$defs/TableClassificationKind"},"confidence":{"type":"number"},"semanticScore":{"type":"number"},"nonTabularScore":{"type":"number"},"reasons":{"type":"array","items":{"$ref":"#/$defs/TableClassificationReason"}}}},
+    "IRTable": {"type":"object","additionalProperties":false,"required":["rows","cols","cells","hasHeader"],"properties":{"rows":{"type":"number"},"cols":{"type":"number"},"cells":{"type":"array","items":{"type":"array","items":{"$ref":"#/$defs/IRCell"}}},"renderAsTable":{"type":"boolean"},"hasHeader":{"type":"boolean"},"classification":{"$ref":"#/$defs/TableClassificationSummary"},"sourceId":{"type":"string"},"regions":{"type":"array","items":{"$ref":"#/$defs/BoundingBox"}},"caption":{"type":"string"},"captionBlocks":{"type":"array","items":{"$ref":"#/$defs/IRBlock"}}}},
+    "IRCell": {"type":"object","additionalProperties":false,"required":["text","colSpan","rowSpan"],"properties":{"text":{"type":"string"},"colSpan":{"type":"number"},"rowSpan":{"type":"number"},"blocks":{"type":"array","items":{"$ref":"#/$defs/IRBlock"}},"isHeader":{"type":"boolean"}}},
+    "DocumentMetadata": {"type":"object","additionalProperties":false,"properties":{"title":{"type":"string"},"author":{"type":"string"},"creator":{"type":"string"},"createdAt":{"type":"string"},"modifiedAt":{"type":"string"},"pageCount":{"type":"number"},"pageMode":{"type":"string","enum":["layout","section"]},"version":{"type":"string"},"description":{"type":"string"},"keywords":{"type":"array","items":{"type":"string"}}}},
+    "ParseOptions": {"type":"object","additionalProperties":false,"properties":{"pages":{"oneOf":[{"type":"array","items":{"type":"number"}},{"type":"string"}]},"ocr":{"oneOf":[{"type":"boolean"},{"const":"force"}],"x-callable-accepted":true},"removeHeaderFooter":{"type":"boolean"},"scriptTags":{"type":"boolean"},"plain":{"type":"boolean"},"htmlTables":{"type":"boolean"},"keepTrailingEmptyCols":{"type":"boolean"},"classifyTables":{"type":"boolean"},"keepEmptyParagraphs":{"type":"boolean"},"includeFieldPlaceholders":{"type":"boolean"},"password":{"type":"string"},"formulaOcr":{"type":"boolean"},"dedupeRunningHeaders":{"type":"boolean"},"inlineImages":{"type":"boolean"},"images":{"type":"boolean"},"tables":{"type":"boolean"}},"x-internal-fields":["filePath"],"x-node-only-fields":["filePath","onProgress"],"x-python-translation":{"onProgress":"Python callable receiving current and total; callback failures propagate as Python exceptions","ocr":"Python callable is adapted to OcrProvider"}},
+    "ParseWarning": {"type":"object","additionalProperties":false,"required":["message","code"],"properties":{"page":{"type":"number"},"message":{"type":"string"},"code":{"$ref":"#/$defs/WarningCode"}}},
+    "WarningCode": {"type":"string","enum":["SKIPPED_IMAGE","SKIPPED_OLE","TRUNCATED_TABLE","OCR_FALLBACK","UNSUPPORTED_ELEMENT","BROKEN_ZIP_RECOVERY","HIDDEN_TEXT_FILTERED","MALFORMED_XML","PARTIAL_PARSE","LENIENT_CFB_RECOVERY","NEEDS_OCR","OCR_FAILED","OCR_APPLIED","OCR_LOW_CONF","COM_EMPTY","DRM_COM_FALLBACK","PAGE_BOUNDARY_APPROXIMATE"]},
+    "OutlineItem": {"type":"object","additionalProperties":false,"required":["level","text"],"properties":{"level":{"type":"number"},"text":{"type":"string"},"pageNumber":{"type":"number"}}},
+    "ErrorCode": {"type":"string","enum":["EMPTY_INPUT","UNSUPPORTED_FORMAT","ENCRYPTED","DRM_PROTECTED","CORRUPTED","DECOMPRESSION_BOMB","ZIP_BOMB","IMAGE_BASED_PDF","NO_SECTIONS","PARSE_ERROR","MISSING_DEPENDENCY","OUTPUT_TOO_LARGE","FILE_NOT_FOUND"]},
+    "FileType": {"type":"string","enum":["hwpx","hwp","hwp3","hwpml","pdf","xlsx","xls","docx","pptx","image","unknown"]},
+    "ParseResultBase": {"type":"object","additionalProperties":false,"required":["fileType"],"properties":{"fileType":{"$ref":"#/$defs/FileType"},"pageCount":{"type":"number"},"isImageBased":{"type":"boolean"}}},
+    "ParseSuccess": {"type":"object","additionalProperties":false,"required":["success","fileType","markdown","blocks"],"properties":{"success":{"const":true},"fileType":{"$ref":"#/$defs/FileType"},"pageCount":{"type":"number"},"isImageBased":{"type":"boolean"},"markdown":{"type":"string"},"blocks":{"type":"array","items":{"$ref":"#/$defs/IRBlock"}},"metadata":{"$ref":"#/$defs/DocumentMetadata"},"outline":{"type":"array","items":{"$ref":"#/$defs/OutlineItem"}},"warnings":{"type":"array","items":{"$ref":"#/$defs/ParseWarning"}},"images":{"type":"array","items":{"$ref":"#/$defs/ExtractedImage"}},"pages":{"type":"array","items":{"$ref":"#/$defs/PageMarkdown"}},"pageQuality":{"type":"array","items":{"$ref":"#/$defs/PageQuality"}},"qualitySummary":{"$ref":"#/$defs/DocumentQualitySummary"}}},
+    "ParseFailure": {"type":"object","additionalProperties":false,"required":["success","fileType","error"],"properties":{"success":{"const":false},"fileType":{"$ref":"#/$defs/FileType"},"pageCount":{"type":"number"},"isImageBased":{"type":"boolean"},"error":{"type":"string"},"code":{"$ref":"#/$defs/ErrorCode"}}},
+    "ParseResult": {"oneOf":[{"$ref":"#/$defs/ParseSuccess"},{"$ref":"#/$defs/ParseFailure"}]},
+    "PageMarkdown": {"type":"object","additionalProperties":false,"required":["pageNumber","markdown"],"properties":{"pageNumber":{"type":"number"},"markdown":{"type":"string"}}},
+    "PageQuality": {"type":"object","additionalProperties":false,"required":["page","textChars","hangulRatio","controlCharRatio","replacementCharRatio","puaRatio","needsOcr"],"properties":{"page":{"type":"number"},"textChars":{"type":"number"},"hangulRatio":{"type":"number"},"controlCharRatio":{"type":"number"},"replacementCharRatio":{"type":"number"},"puaRatio":{"type":"number"},"needsOcr":{"type":"boolean"},"ocrReason":{"type":"string","enum":["vector_text","low_text","high_pua","high_control","high_replacement","garbled_hangul"]}}},
+    "DocumentQualitySummary": {"type":"object","additionalProperties":false,"required":["totalPages","totalTextChars","avgHangulRatio","avgControlCharRatio","avgReplacementCharRatio","avgPuaRatio","lowTextPageCount","highPuaPageCount","needsOcr","ocrCandidatePages"],"properties":{"totalPages":{"type":"number"},"totalTextChars":{"type":"number"},"avgHangulRatio":{"type":"number"},"avgControlCharRatio":{"type":"number"},"avgReplacementCharRatio":{"type":"number"},"avgPuaRatio":{"type":"number"},"lowTextPageCount":{"type":"number"},"highPuaPageCount":{"type":"number"},"needsOcr":{"type":"boolean"},"ocrCandidatePages":{"type":"array","items":{"type":"number"}}}},
+    "ExtractedImage": {"type":"object","additionalProperties":false,"required":["filename","data","mimeType"],"properties":{"filename":{"type":"string"},"data":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255},"x-typescript-type":"Uint8Array"},"mimeType":{"type":"string"},"source":{"type":"string"}},"x-python-translation":{"data":"bytes; its JSON representation is an integer array"}},
+    "DiffChangeType": {"type":"string","enum":["added","removed","modified","unchanged"]},
+    "BlockDiff": {"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"$ref":"#/$defs/DiffChangeType"},"before":{"$ref":"#/$defs/IRBlock"},"after":{"$ref":"#/$defs/IRBlock"},"cellDiffs":{"type":"array","items":{"type":"array","items":{"$ref":"#/$defs/CellDiff"}}},"similarity":{"type":"number","minimum":0,"maximum":1}}},
+    "CellDiff": {"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"$ref":"#/$defs/DiffChangeType"},"before":{"type":"string"},"after":{"type":"string"}}},
+    "DiffResult": {"type":"object","additionalProperties":false,"required":["stats","diffs"],"properties":{"stats":{"type":"object","additionalProperties":false,"required":["added","removed","modified","unchanged"],"properties":{"added":{"type":"number"},"removed":{"type":"number"},"modified":{"type":"number"},"unchanged":{"type":"number"}}},"diffs":{"type":"array","items":{"$ref":"#/$defs/BlockDiff"}}}},
+    "PatchSkip": {"type":"object","additionalProperties":false,"required":["reason"],"properties":{"reason":{"type":"string"},"before":{"type":"string","maxLength":80},"after":{"type":"string","maxLength":80},"partial":{"type":"boolean"}}},
+    "PatchOptions": {"type":"object","additionalProperties":false,"properties":{"verify":{"type":"boolean"}}},
+    "PatchResult": {"type":"object","additionalProperties":false,"required":["success","applied","skipped"],"properties":{"success":{"type":"boolean"},"data":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255},"x-typescript-type":"Uint8Array","x-python-translation":"bytes"},"applied":{"type":"number"},"skipped":{"type":"array","items":{"$ref":"#/$defs/PatchSkip"}},"verification":{"$ref":"#/$defs/DiffResult"},"changes":{"$ref":"#/$defs/DiffResult"},"error":{"type":"string"}}},
+    "FormField": {"type":"object","additionalProperties":false,"required":["label","value","row","col"],"properties":{"label":{"type":"string"},"value":{"type":"string"},"row":{"type":"number"},"col":{"type":"number"},"key":{"type":"string"},"source":{"type":"string","enum":["clickhere"]}}},
+    "FormResult": {"type":"object","additionalProperties":false,"required":["fields","confidence"],"properties":{"fields":{"type":"array","items":{"$ref":"#/$defs/FormField"}},"confidence":{"type":"number","minimum":0,"maximum":1}}},
+    "FillOutputFormat": {"type":"string","enum":["markdown","hwpx","hwpx-preserve"]},
+    "FillFormOutput": {"type":"object","additionalProperties":false,"required":["output","format","fill"],"properties":{"output":{"oneOf":[{"type":"string"},{"type":"array","items":{"type":"integer","minimum":0,"maximum":255},"x-typescript-type":"ArrayBuffer","python_translation":"bytes"}]},"format":{"$ref":"#/$defs/FillOutputFormat"},"fill":{"type":"object","additionalProperties":false,"required":["filled","unmatched"],"properties":{"filled":{"type":"array","items":{"$ref":"#/$defs/FormField"}},"unmatched":{"type":"array","items":{"type":"string"}}}}}}
+  }
+}

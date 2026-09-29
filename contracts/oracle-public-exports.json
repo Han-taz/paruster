@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "source_path": "src/index.ts",
+  "source_sha256": "85943942619d9c2b7ed0855bdb58eb0360fec028e84efdd0f719589ba6ce4e01",
+  "named_exports": [
+    "BUILTIN_TEMPLATES", "DEFAULT_REDACT_RULES", "HwpxSession", "PRESET_ALIAS", "SPACE_EM_FIXED", "SPACE_EM_FONT", "VERSION", "ValueCursor",
+    "applySplices", "blocksToChunks", "blocksToMarkdown", "blocksToPages", "blocksToPdf", "buildParagraphSplices", "buildRangeSplices",
+    "charWidthEm1000", "chooseTableRepresentation", "classifyTable", "classifyTableTree", "collectTableBlocks", "compare", "detectFormat",
+    "detectOle2Format", "detectZipFormat", "diffBlocks", "extractClickHereFields", "extractFormFields", "extractFormSchema",
+    "extractRenderedRegions", "extractTables", "fillForm", "fillFormFields", "fillHwpx", "fillWithUniqueGuard", "fitRatioForFewerLines",
+    "flattenLayoutTables", "formatFillValue", "gongmunLintWarnings", "hasStructuredCellContent", "hwpxToProfile",
+    "incompatibleGongmunWarnings", "inferFieldType", "isHwpxFile", "isKnownFont", "isLabelCell", "isOldHwpFile", "isPdfFile",
+    "isZipFile", "lintGongmunText", "lintMuncheText", "markdownToHwpx", "markdownToPdf", "measureTextWidth", "muncheLintWarnings",
+    "normalizeGongmunPreset", "openHwpxDocument", "parse", "parseDocx", "parseHwp", "parseHwp3", "parseHwpml", "parseHwpx",
+    "parseImage", "parsePdf", "parseXls", "parseXlsx", "patchHwp", "patchHwpx", "patchHwpxBlocks", "placeSealHwpx",
+    "readBuiltinTemplate", "readBuiltinTemplateSample", "redactMarkdown", "redactText", "renderDocument", "renderDocumentToScene",
+    "renderHtml", "renderHwp5Pages", "renderHwpxToSvg", "renderSceneToHtml", "resolveBuiltinTemplate", "scanSectionXml", "simulateWrap",
+    "simulateWrapKeepWord", "unknownFontWarnings", "usesGaejosikMunche", "validateHwpx"
+  ],
+  "type_exports": [
+    "BlockCapability", "BlockCapabilityInfo", "BlockDiff", "BlockEdit", "BlockSourceRef", "BorderDef", "BorderFillDef", "BoundingBox",
+    "BuiltinTemplate", "CellCapability", "CellContext", "CellDiff", "CellProfile", "CharPrDef", "ChunkOptions", "ClassifyContext",
+    "ClickHereField", "DiffChangeType", "DiffResult", "DocChunk", "DocumentMetadata", "DocumentQualitySummary", "ErrorCode",
+    "ExtractRegionOptions", "ExtractTableVisualOptions", "ExtractedImage", "ExtractedTable", "ExtractedTableCrop", "FileType",
+    "FillFormOutput", "FillInput", "FillOutputFormat", "FillResult", "FillValue", "FormField", "FormFieldSchema", "FormFieldType",
+    "FormResult", "FormSchemaResult", "FormatProfile", "GongmunFont", "GongmunLintFinding", "GongmunNumbering", "GongmunOptions",
+    "GongmunPreset", "GongmunPresetInput", "HwpxFillResult", "HwpxTheme", "IRBlock", "IRBlockType", "IRCell", "IRTable", "ImageData",
+    "InlineStyle", "MarkdownToHwpxOptions", "MeasureOptions", "MuncheLineKind", "MuncheLintFinding", "OcrProvider", "OutlineItem",
+    "PageBBox", "PageMargin", "PageMarkdown", "PageOptions", "PageQuality", "ParseFailure", "ParseOptions", "ParseResult",
+    "ParseSuccess", "ParseWarning", "PatchOptions", "PatchResult", "PatchSkip", "PlaceSealResult", "PrintOptions", "PrintPreset",
+    "RedactHit", "RedactOptions", "RedactRule", "RedactTextResult", "RegionAsset", "RenderAsset", "RenderDocumentOptions",
+    "RenderDocumentResult", "RenderFormat", "RenderObjectType", "RenderRegion", "RenderScene", "RenderSourceFormat", "RenderSvgOptions",
+    "RenderSvgResult", "ScanCell", "ScanParaKind", "ScanParagraph", "ScanTable", "ScenePage", "SceneRenderOptions", "SceneRenderResult",
+    "SealOp", "SealPlacement", "SectionScan", "SpliceEdit", "TRange", "TableProfile", "TableRepresentation", "TableVisualPolicy",
+    "ValidateIssue", "ValidateResult", "WarningCode", "WatchOptions", "WrapMode", "WrapResult"
+  ],
+  "source_evidence": {
+    "path": "src/index.ts",
+    "sha256": "85943942619d9c2b7ed0855bdb58eb0360fec028e84efdd0f719589ba6ce4e01",
+    "cwd": "kordoc",
+    "sha256_command": "sha256sum src/index.ts",
+    "extraction_command": "python3 -c 'import re,pathlib,json; s=pathlib.Path(\"src/index.ts\").read_text(); vals=set(re.findall(r\"export\\s+(?:async\\s+)?function\\s+(\\w+)\",s)); types=set(re.findall(r\"export\\s+(?:type|interface)\\s+(\\w+)\",s)); [((types if m.group(1) else vals).update(x.strip().split(\" as \")[0] for x in m.group(2).replace(\"\\n\",\" \").split(\",\") if x.strip())) for m in re.finditer(r\"export\\s+(type\\s+)?\\{([\\s\\S]*?)\\}\\s+from\",s)]; print(json.dumps({\"named_exports\":sorted(vals),\"type_exports\":sorted(types)},indent=2))'",
+    "review_command": "sed -n '1,$p' src/index.ts",
+    "capture_note": "The extraction includes directly declared exported functions and types plus named and multiline type-only re-exports. The captured sets were manually checked against the complete source file."
+  }
+}
