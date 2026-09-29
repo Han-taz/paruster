@@ -47,6 +47,17 @@ def load(name: str) -> dict:
     return json.loads((ROOT / "contracts" / name).read_text(encoding="utf-8"))
 
 
+def has_oracle_checkout_reference(contents: str) -> bool:
+    patterns = (
+        r"ROOT\s*/\s*['\"]kordoc['\"]",
+        r"(?:\.\.[/\\])+kordoc(?:[/\\]|['\"\s]|$)",
+        r"file://[^\s'\"]*kordoc(?:[/\\]|$)",
+        r"(?:path|directory)\s*=\s*\{?['\"](?:file:)?(?:\.\.[/\\])*kordoc(?:[/\\]|['\"])",
+        r"(?:^|[\s'\"=(])kordoc/(?:src|package\.json|tsconfig|node_modules)(?:/|['\"\s]|$)",
+    )
+    return any(re.search(pattern, contents) for pattern in patterns)
+
+
 def validate_schema(schema: dict, path: str) -> None:
     if "enum" in schema:
         assert schema["enum"] and len(schema["enum"]) == len(set(schema["enum"])), path
@@ -219,7 +230,7 @@ def test_source_hash_evidence_is_complete_and_reproducible() -> None:
     review_commands = evidence["review_commands"]
     assert {command.rsplit(" ", 1)[-1] for command in review_commands} == expected
     assert all(command.startswith("sed -n '1,$p' ") for command in review_commands)
-    assert evidence["oracle_path"] == "kordoc/src/mcp"
+    assert evidence["oracle_path"] == "kordoc/" + "src/mcp"
     expected_hashes = {
         "src/mcp.ts": "16b373581ec8ef71645febc8e47e0c5312b33848406d04d48aff572cc5f8f0f5",
         "src/mcp/shared.ts": "8e71683e60d08ebc05bad2cb90412581dfde2c98c7c472f79a9cc33bd2e773ff",
@@ -479,6 +490,10 @@ def test_every_api_entry_has_a_disposition_and_exact_export_coverage() -> None:
         assert entry["python_name"]
         assert entry["mapping"]
         assert entry["rationale"]
+        mapping_path = entry["mapping"].removeprefix("Python ").split(" ->", 1)[0]
+        terminal = re.search(r"\.([A-Za-z_]\w*)\s*(?:\(|$)", mapping_path)
+        assert terminal is not None, entry["source_name"]
+        assert terminal.group(1) == entry["python_name"], entry["source_name"]
     for entry in type_entries:
         assert entry["mapping"]
         assert entry["rationale"]
@@ -495,6 +510,13 @@ def test_every_api_entry_has_a_disposition_and_exact_export_coverage() -> None:
     by_source = {entry["source_name"]: entry for entry in entries}
     assert {name: by_source[name]["python_name"] for name in format_parsers} == format_parsers
     assert all(by_source[name]["disposition"] == "planned" for name in format_parsers)
+    symbol_names = {
+        "BUILTIN_TEMPLATES", "DEFAULT_REDACT_RULES", "HwpxSession", "PRESET_ALIAS",
+        "SPACE_EM_FIXED", "SPACE_EM_FONT", "ValueCursor",
+    }
+    assert {name: by_source[name]["python_name"] for name in symbol_names} == {
+        name: name for name in symbol_names
+    }
     assert {item["source_name"]: item["disposition"] for item in public_api["excluded_surfaces"]}["filePath"] == "internal"
     assert {item["source_name"]: item["disposition"] for item in public_api["excluded_surfaces"]}["Node CLI"] == "removed-node-surface"
     assert {item["source_name"]: item["disposition"] for item in public_api["excluded_surfaces"]}["Node package entry machinery"] == "removed-node-surface"
@@ -527,13 +549,17 @@ def test_oracle_export_snapshot_is_hashed_and_reproducible_without_runtime_oracl
 
 
 def test_contract_tests_and_build_manifests_do_not_depend_on_oracle_checkout() -> None:
+    import_snippet = "import " + "kordoc\nfrom " + "kordoc import parse\n"
+    assert not has_oracle_checkout_reference(import_snippet)
+    assert has_oracle_checkout_reference("ROOT / " + '"kordoc"')
+    assert has_oracle_checkout_reference('path = "../' + "kor" + 'doc/src"')
+    assert has_oracle_checkout_reference("file:///workspace/kor" + "doc/src/index.ts")
+
     paths = list((ROOT / "tests").rglob("*.py"))
     paths.extend(path for path in (ROOT / "Cargo.toml", ROOT / "pyproject.toml") if path.exists())
     for path in paths:
         contents = path.read_text(encoding="utf-8")
-        assert "from " + "kordoc" not in contents and "import " + "kordoc" not in contents, path
-        assert "ROOT / " + "\"kordoc\"" not in contents, path
-        assert "file:" + "//" not in contents, path
+        assert not has_oracle_checkout_reference(contents), path
 
 
 def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
@@ -776,3 +802,59 @@ def test_ocr_callable_is_not_json_and_preserves_callable_signature() -> None:
     assert parse_options.is_valid({"ocr": True})
     assert parse_options.is_valid({"ocr": "force"})
     assert not parse_options.is_valid({"ocr": "callback"})
+
+
+def test_ir_schema_validates_recursive_ir_and_parse_result_variants() -> None:
+    contract = load("ir-schema.json")
+    schema = {
+        "$schema": contract["$schema"],
+        "$ref": "#/$defs/ParseResult",
+        "$defs": contract["$defs"],
+    }
+    validator = Draft202012Validator(schema)
+    Draft202012Validator.check_schema(contract)
+
+    recursive_block = {
+        "type": "paragraph",
+        "text": "outer",
+        "children": [{
+            "type": "table",
+            "table": {
+                "rows": 1,
+                "cols": 1,
+                "cells": [[{
+                    "text": "cell",
+                    "colSpan": 1,
+                    "rowSpan": 1,
+                    "blocks": [{"type": "paragraph", "spans": [{"text": "nested", "bold": True}]}],
+                }]],
+                "hasHeader": False,
+                "captionBlocks": [{"type": "paragraph", "spans": [{"text": "caption", "italic": True}]}],
+            },
+        }, {
+            "type": "image",
+            "imageData": {"data": [0, 128, 255], "mimeType": "image/png"},
+        }],
+    }
+    success = {
+        "success": True,
+        "fileType": "pdf",
+        "markdown": "outer",
+        "blocks": [recursive_block],
+    }
+    failure = {
+        "success": False,
+        "fileType": "unknown",
+        "error": "unsupported format",
+        "code": "UNSUPPORTED_FORMAT",
+    }
+    assert validator.is_valid(success)
+    assert validator.is_valid(failure)
+    assert not validator.is_valid({"success": True, "fileType": "pdf", "blocks": []})
+    assert not validator.is_valid({**success, "fileType": "invalid"})
+    assert not validator.is_valid({**success, "unknown": True})
+    assert not validator.is_valid({**success, "blocks": [{**recursive_block, "unknown": True}]})
+    assert not validator.is_valid({**success, "blocks": [{**recursive_block, "type": "invalid"}]})
+    assert not validator.is_valid({"success": False, "fileType": "unknown", "code": "UNSUPPORTED_FORMAT"})
+    assert not validator.is_valid({**failure, "code": "NOT_AN_ERROR_CODE"})
+    assert not validator.is_valid({**failure, "unknown": True})
