@@ -73,3 +73,11 @@ These URLs document the validation cycle for the implementation head above. This
 ## Security follow-up — 2026-09-30
 
 The PR #4 main-target dependency review identified [GHSA-6w46-j5rx-g56g (CVE-2025-71176)](https://github.com/advisories/GHSA-6w46-j5rx-g56g) in pytest. Versions before 9.0.3 are affected. The active project and CI, wheel, and release installation pins are being upgraded from 8.4.2 to the patched exact version 9.0.3; this remediation is in progress pending required checks. Dependabot security updates and the dependency graph were enabled in the repository settings.
+
+## Verification follow-up — 2026-09-30
+
+PR #4 remediation head `31212275` passed all four hosted checks: [CI](https://github.com/Han-taz/paruster/actions/runs/36603823278), [Security](https://github.com/Han-taz/paruster/actions/runs/36603823358), [Native wheels](https://github.com/Han-taz/paruster/actions/runs/36603823436), and [Bounded fuzzing](https://github.com/Han-taz/paruster/actions/runs/36603823386). The Security run includes a successful main-target Dependency review, verifying the pytest 9.0.3 remediation.
+
+Active protect-main ruleset `24182744` is configured for strict required checks `ci-gate`, `security-gate`, `wheels-gate`, `fuzz-gate`, and CodeQL; pull requests are squash-only, and later heads must pass those checks. The linked workflow runs and active ruleset provide the final evidence.
+
+This docs-only followup must pass its own checks before integration. The linked remediation runs validate head `31212275` and do not establish checks for this followup commit.
