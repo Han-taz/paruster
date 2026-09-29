@@ -5,6 +5,154 @@ use kordoc_ir::{
     ParseWarning, TableClassificationKind, TableClassificationReason, TableClassificationSummary,
     WarningCode,
 };
+use serde::Serialize;
+use serde::de::DeserializeOwned;
+use serde_json::Value;
+
+fn assert_optional_fields_reject_null<T>(base: T, fields: &[&str])
+where
+    T: DeserializeOwned + Serialize,
+{
+    let base = serde_json::to_value(base).unwrap();
+    assert!(
+        serde_json::from_value::<T>(base.clone()).is_ok(),
+        "omitted optional fields failed to default to None"
+    );
+    for field in fields {
+        let mut candidate = base.clone();
+        candidate[field] = Value::Null;
+        assert!(
+            serde_json::from_value::<T>(candidate).is_err(),
+            "optional field {field} accepted explicit null"
+        );
+    }
+}
+
+#[test]
+fn every_optional_wire_field_rejects_null_but_allows_omission() {
+    assert_optional_fields_reject_null(
+        IrSpan::default(),
+        &[
+            "bold",
+            "italic",
+            "strike",
+            "underline",
+            "code",
+            "placeholder",
+        ],
+    );
+    assert_optional_fields_reject_null(
+        ImageData {
+            data: vec![],
+            mime_type: "image/png".into(),
+            filename: None,
+        },
+        &["filename"],
+    );
+    assert_optional_fields_reject_null(
+        InlineStyle::default(),
+        &[
+            "bold",
+            "italic",
+            "strike",
+            "underline",
+            "fontSize",
+            "fontName",
+        ],
+    );
+    assert_optional_fields_reject_null(IrCell::default(), &["blocks", "isHeader"]);
+    assert_optional_fields_reject_null(
+        IrTable::default(),
+        &[
+            "renderAsTable",
+            "classification",
+            "sourceId",
+            "regions",
+            "caption",
+            "captionBlocks",
+        ],
+    );
+    assert_optional_fields_reject_null(
+        IrBlock::default(),
+        &[
+            "text",
+            "table",
+            "level",
+            "pageNumber",
+            "bbox",
+            "style",
+            "listType",
+            "children",
+            "href",
+            "footnoteText",
+            "imageData",
+            "spans",
+            "quote",
+            "indent",
+            "listDepth",
+        ],
+    );
+    assert_optional_fields_reject_null(
+        DocumentMetadata::default(),
+        &[
+            "title",
+            "author",
+            "creator",
+            "createdAt",
+            "modifiedAt",
+            "pageCount",
+            "pageMode",
+            "version",
+            "description",
+            "keywords",
+        ],
+    );
+    assert_optional_fields_reject_null(
+        ParseWarning {
+            page: None,
+            message: "warning".into(),
+            code: WarningCode::PartialParse,
+        },
+        &["page"],
+    );
+    assert_optional_fields_reject_null(
+        OutlineItem {
+            level: 1,
+            text: "heading".into(),
+            page_number: None,
+        },
+        &["pageNumber"],
+    );
+    assert_optional_fields_reject_null(
+        ExtractedImage {
+            filename: "image.png".into(),
+            data: vec![],
+            mime_type: "image/png".into(),
+            source: None,
+        },
+        &["source"],
+    );
+    assert_optional_fields_reject_null(PageQuality::default(), &["ocrReason"]);
+
+    assert_optional_fields_reject_null(
+        ParseSuccess::new(kordoc_ir::FileType::Pdf, "", vec![]),
+        &[
+            "pageCount",
+            "isImageBased",
+            "metadata",
+            "outline",
+            "warnings",
+            "images",
+            "pages",
+            "pageQuality",
+            "qualitySummary",
+        ],
+    );
+    assert_optional_fields_reject_null(
+        ParseFailure::new(kordoc_ir::FileType::Unknown, "error"),
+        &["pageCount", "isImageBased", "code"],
+    );
+}
 
 #[test]
 fn recursive_ir_roundtrips_without_loss() {

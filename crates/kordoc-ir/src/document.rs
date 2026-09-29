@@ -1,5 +1,17 @@
 use serde::{Deserialize, Serialize};
 
+fn no_null<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    T::deserialize(deserializer).map(Some)
+}
+
+fn is_none<T>(value: &Option<T>) -> bool {
+    value.is_none()
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum IrBlockType {
     #[default]
@@ -155,17 +167,17 @@ pub enum ListType {
 #[serde(deny_unknown_fields)]
 pub struct IrSpan {
     pub text: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub bold: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub italic: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub strike: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub underline: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub code: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub placeholder: Option<bool>,
 }
 
@@ -188,7 +200,7 @@ impl Default for IrSpan {
 pub struct ImageData {
     pub data: Vec<u8>,
     pub mime_type: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub filename: Option<String>,
 }
 
@@ -205,17 +217,17 @@ pub struct BoundingBox {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InlineStyle {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub bold: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub italic: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub strike: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub underline: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub font_size: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub font_name: Option<String>,
 }
 
@@ -235,9 +247,9 @@ pub struct IrCell {
     pub text: String,
     pub col_span: u32,
     pub row_span: u32,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub blocks: Option<Vec<IrBlock>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub is_header: Option<bool>,
 }
 
@@ -247,18 +259,18 @@ pub struct IrTable {
     pub rows: u32,
     pub cols: u32,
     pub cells: Vec<Vec<IrCell>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub render_as_table: Option<bool>,
     pub has_header: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub classification: Option<TableClassificationSummary>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub source_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub regions: Option<Vec<BoundingBox>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub caption: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub caption_blocks: Option<Vec<IrBlock>>,
 }
 
@@ -267,35 +279,35 @@ pub struct IrTable {
 pub struct IrBlock {
     #[serde(rename = "type")]
     pub kind: IrBlockType,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub text: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub table: Option<IrTable>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub level: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub page_number: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub bbox: Option<BoundingBox>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub style: Option<InlineStyle>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub list_type: Option<ListType>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub children: Option<Vec<IrBlock>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub href: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub footnote_text: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub image_data: Option<ImageData>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub spans: Option<Vec<IrSpan>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub quote: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub indent: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub list_depth: Option<u32>,
 }
 
@@ -312,32 +324,32 @@ impl IrBlock {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentMetadata {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub title: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub author: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub creator: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub created_at: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub modified_at: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub page_count: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub page_mode: Option<PageMode>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub keywords: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ParseWarning {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub page: Option<u32>,
     pub message: String,
     pub code: WarningCode,
@@ -348,7 +360,7 @@ pub struct ParseWarning {
 pub struct OutlineItem {
     pub level: u32,
     pub text: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub page_number: Option<u32>,
 }
 
@@ -365,7 +377,7 @@ pub struct ExtractedImage {
     pub filename: String,
     pub data: Vec<u8>,
     pub mime_type: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub source: Option<String>,
 }
 
@@ -379,7 +391,7 @@ pub struct PageQuality {
     pub replacement_char_ratio: f64,
     pub pua_ratio: f64,
     pub needs_ocr: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub ocr_reason: Option<OcrReason>,
 }
 
@@ -402,9 +414,9 @@ pub struct DocumentQualitySummary {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ParseSuccess {
     pub file_type: FileType,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub page_count: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub is_image_based: Option<bool>,
     #[serde(
         serialize_with = "serialize_true",
@@ -413,19 +425,19 @@ pub struct ParseSuccess {
     pub success: bool,
     pub markdown: String,
     pub blocks: Vec<IrBlock>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub metadata: Option<DocumentMetadata>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub outline: Option<Vec<OutlineItem>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub warnings: Option<Vec<ParseWarning>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub images: Option<Vec<ExtractedImage>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub pages: Option<Vec<PageMarkdown>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub page_quality: Option<Vec<PageQuality>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub quality_summary: Option<DocumentQualitySummary>,
 }
 
@@ -484,9 +496,9 @@ impl ParseSuccess {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ParseFailure {
     pub file_type: FileType,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub page_count: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub is_image_based: Option<bool>,
     #[serde(
         serialize_with = "serialize_false",
@@ -494,7 +506,7 @@ pub struct ParseFailure {
     )]
     pub success: bool,
     pub error: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, deserialize_with = "no_null", skip_serializing_if = "is_none")]
     pub code: Option<crate::ErrorCode>,
 }
 
