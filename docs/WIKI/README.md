@@ -21,3 +21,4 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 - [`2026/09/2026-09-29-contract-freeze.md`](2026/09/2026-09-29-contract-freeze.md)
 - [`2026/09/2026-09-29-contract-freeze-review.md`](2026/09/2026-09-29-contract-freeze-review.md)
 - [`2026/09/2026-09-29-contract-schema-edge-cases.md`](2026/09/2026-09-29-contract-schema-edge-cases.md)
+- [`2026/09/2026-09-30-foundation-integer-contract.md`](2026/09/2026-09-30-foundation-integer-contract.md)

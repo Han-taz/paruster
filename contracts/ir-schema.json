@@ -2628,10 +2628,14 @@
           "type": "string"
         },
         "colSpan": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "rowSpan": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "blocks": {
           "type": "array",
@@ -2709,7 +2713,9 @@
       "additionalProperties": false,
       "properties": {
         "page": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "x": {
           "type": "number"
@@ -2737,10 +2743,14 @@
       "additionalProperties": false,
       "properties": {
         "rows": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "cols": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "cells": {
           "type": "array",
@@ -2880,10 +2890,14 @@
           "$ref": "#/$defs/IRTable"
         },
         "level": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "pageNumber": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "bbox": {
           "$ref": "#/$defs/BoundingBox"
@@ -2926,7 +2940,9 @@
           "type": "number"
         },
         "listDepth": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       },
       "required": [
@@ -5739,7 +5755,9 @@
           "type": "string"
         },
         "pageCount": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "pageMode": {
           "type": "string",
@@ -5767,13 +5785,17 @@
       "additionalProperties": false,
       "properties": {
         "level": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "text": {
           "type": "string"
         },
         "pageNumber": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       },
       "required": [
@@ -5808,7 +5830,9 @@
       "additionalProperties": false,
       "properties": {
         "page": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "message": {
           "type": "string"
@@ -5857,7 +5881,9 @@
       "additionalProperties": false,
       "properties": {
         "pageNumber": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "markdown": {
           "type": "string"
@@ -5873,10 +5899,14 @@
       "additionalProperties": false,
       "properties": {
         "page": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "textChars": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "hangulRatio": {
           "type": "number"
@@ -5920,10 +5950,14 @@
       "additionalProperties": false,
       "properties": {
         "totalPages": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "totalTextChars": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "avgHangulRatio": {
           "type": "number"
@@ -5938,10 +5972,14 @@
           "type": "number"
         },
         "lowTextPageCount": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "highPuaPageCount": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "needsOcr": {
           "type": "boolean"
@@ -5949,7 +5987,9 @@
         "ocrCandidatePages": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
           }
         }
       },
@@ -5974,7 +6014,9 @@
           "$ref": "#/$defs/FileType"
         },
         "pageCount": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "isImageBased": {
           "type": "boolean"
@@ -6061,7 +6103,9 @@
           "$ref": "#/$defs/FileType"
         },
         "pageCount": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "isImageBased": {
           "type": "boolean"

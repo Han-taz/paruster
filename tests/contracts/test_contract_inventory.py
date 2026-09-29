@@ -780,7 +780,7 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
     assert set(schema["ParseFailure"]["required"]) == {"success", "fileType", "error"}
     assert schema["ErrorCode"]["enum"] == [item["code"] for item in load("errors.json")["codes"]]
     assert schema["WarningCode"]["enum"] == contract["warning_codes"]
-    assert schema["IRBlock"]["properties"]["pageNumber"]["type"] == "number"
+    assert schema["IRBlock"]["properties"]["pageNumber"]["type"] == "integer"
     assert "pageNumber" not in schema["IRBlock"].get("required", [])
     assert "kind" not in schema["IRBlock"]["properties"]
     assert set(schema["IRBlock"]["properties"]) == {
@@ -960,3 +960,41 @@ def test_ir_schema_validates_recursive_ir_and_parse_result_variants() -> None:
     assert not validator.is_valid({"success": False, "fileType": "unknown", "code": "UNSUPPORTED_FORMAT"})
     assert not validator.is_valid({**failure, "code": "NOT_AN_ERROR_CODE"})
     assert not validator.is_valid({**failure, "unknown": True})
+
+
+def test_foundation_semantic_counters_are_unsigned_32_bit_integers() -> None:
+    """Keep the JSON wire contract aligned with the Rust/Python integer model."""
+    defs = load("ir-schema.json")["$defs"]
+    integer_fields = {
+        "BoundingBox": ["page"],
+        "IRCell": ["colSpan", "rowSpan"],
+        "IRTable": ["rows", "cols"],
+        "IRBlock": ["level", "pageNumber", "listDepth"],
+        "DocumentMetadata": ["pageCount"],
+        "ParseWarning": ["page"],
+        "OutlineItem": ["level", "pageNumber"],
+        "PageMarkdown": ["pageNumber"],
+        "PageQuality": ["page", "textChars"],
+        "DocumentQualitySummary": [
+            "totalPages",
+            "totalTextChars",
+            "lowTextPageCount",
+            "highPuaPageCount",
+        ],
+        "ParseSuccess": ["pageCount"],
+        "ParseFailure": ["pageCount"],
+    }
+
+    for definition, fields in integer_fields.items():
+        for field in fields:
+            assert defs[definition]["properties"][field] == {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4_294_967_295,
+            }
+
+    candidate_pages = defs["DocumentQualitySummary"]["properties"]["ocrCandidatePages"]
+    assert candidate_pages == {
+        "type": "array",
+        "items": {"type": "integer", "minimum": 0, "maximum": 4_294_967_295},
+    }
