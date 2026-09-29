@@ -713,7 +713,10 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
     assert set(contract["wire_types"]) == serializable
     assert set(contract["root_types"]) == serializable
     assert serializable <= set(schema)
-    assert set(contract["anyOf"][index]["$ref"].removeprefix("#/$defs/") for index in range(len(contract["anyOf"]))) == serializable
+    assert {
+        contract["anyOf"][index]["$ref"].removeprefix("#/$defs/")
+        for index in range(len(contract["anyOf"]))
+    } == serializable
     for name in serializable:
         kind = schema[name].get("type")
         assert kind in {"object", "string"} or "oneOf" in schema[name] or "anyOf" in schema[name], name
@@ -785,16 +788,16 @@ def test_ir_schema_is_recursive_complete_and_internally_consistent() -> None:
         reachable.add(name)
         nested: list[str] = []
         collect_refs(schema[name], name)
-        def gather(value: object) -> None:
+        def gather(value: object, references: list[str] = nested) -> None:
             if isinstance(value, dict):
                 ref = value.get("$ref")
                 if isinstance(ref, str) and ref.startswith("#/$defs/"):
-                    nested.append(ref.removeprefix("#/$defs/"))
+                    references.append(ref.removeprefix("#/$defs/"))
                 for child in value.values():
-                    gather(child)
+                    gather(child, references)
             elif isinstance(value, list):
                 for child in value:
-                    gather(child)
+                    gather(child, references)
         gather(schema[name])
         pending.extend(nested)
     assert set(contract["supporting_types"]) <= reachable
