@@ -1511,11 +1511,14 @@
               {
                 "type": "image",
                 "data": "base64",
-                "mimeType": "image/png or image/jpeg"
+                "mimeType": "image/png or image/jpeg",
+                "min_items": 0,
+                "max_items": 8
               },
               {
                 "type": "text",
-                "text": "classified tables and crop references"
+                "text": "classified tables and crop references",
+                "position": "last"
               }
             ],
             "max_image_items": 8
@@ -1531,7 +1534,7 @@
         ],
         "isError": true
       },
-      "response_behavior": "Up to 8 image content items are returned before one text item; visual crops and tables.json are saved to output_dir when enabled. No global response-character cap."
+      "response_behavior": "For visual none, return one text item. For visual crop modes, return zero to 8 image content items followed by one final text item; zero crops therefore produce a text-only response. Crops and tables.json are written to output_dir when enabled. No global response-character cap."
     },
     "extract_profile": {
       "success": {
@@ -1949,8 +1952,13 @@
     },
     "patch_document": {
       "input_extensions": [
+        ".hwp",
         ".hwpx",
-        ".hwp"
+        ".hml",
+        ".pdf",
+        ".xls",
+        ".xlsx",
+        ".docx"
       ],
       "runtime_input_format": [
         "hwpx",
@@ -1964,7 +1972,9 @@
       "output_extension_rule": "same extension as source",
       "output_path_required": true,
       "same_extension_as_input_enforced": false,
-      "same_extension_as_input_is_described": true
+      "same_extension_as_input_is_described": true,
+      "rejects_confirmed_detected_other_formats": true,
+      "unknown_detection": "defer to the HWPX/HWP patcher"
     },
     "redact_document": {
       "input_extensions": [

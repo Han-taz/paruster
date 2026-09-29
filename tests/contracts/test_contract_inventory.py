@@ -191,7 +191,7 @@ def test_response_caps_and_image_limits_match_per_tool_behavior() -> None:
     capped = {name for name, item in envelopes.items() if "200000" in item["response_behavior"]}
     assert capped == {"parse_document", "parse_chunks", "redact_document"}
     assert "up to 8 image items" in envelopes["render_document"]["response_behavior"]
-    assert "up to 8 image content items" in envelopes["extract_tables"]["response_behavior"].lower()
+    assert "zero to 8 image content items" in envelopes["extract_tables"]["response_behavior"].lower()
     render = envelopes["render_document"]["success"]["variants"]
     assert render[0]["when"] == {"format": ["png", "jpeg"]}
     assert [item["type"] for item in render[0]["content"]] == ["image", "text"]
@@ -203,6 +203,9 @@ def test_response_caps_and_image_limits_match_per_tool_behavior() -> None:
     assert [item["type"] for item in tables[0]["content"]] == ["text"]
     assert tables[1]["when"] == {"visual": ["non-tabular", "non-tabular-and-uncertain", "all"]}
     assert [item["type"] for item in tables[1]["content"]] == ["image", "text"]
+    assert tables[1]["content"][0]["min_items"] == 0
+    assert tables[1]["content"][0]["max_items"] == 8
+    assert tables[1]["content"][1]["position"] == "last"
     assert tables[1]["max_image_items"] == 8
 
 
@@ -224,7 +227,10 @@ def test_each_tool_freezes_file_extensions_and_conditional_output_paths() -> Non
     assert files["fill_form"]["output_path_required"] is False
     assert files["fill_form"]["input_source_precedence"] == "template wins when truthy; otherwise file_path is read; absence of both returns an error"
     assert files["place_seal"]["output_extensions"] == [".hwpx"]
-    assert files["patch_document"]["input_extensions"] == [".hwpx", ".hwp"]
+    assert files["patch_document"]["input_extensions"] == document
+    assert files["patch_document"]["runtime_input_format"] == ["hwpx", "hwp"]
+    assert files["patch_document"]["rejects_confirmed_detected_other_formats"] is True
+    assert files["patch_document"]["unknown_detection"] == "defer to the HWPX/HWP patcher"
     assert files["patch_document"]["output_extensions"] == [".hwpx", ".hwp"]
     assert files["patch_document"]["same_extension_as_input_enforced"] is False
     assert files["redact_document"]["output_extensions_by_detected_format"] == {
