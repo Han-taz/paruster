@@ -1,7 +1,9 @@
 # Rust and Python full-port design
 
-Status: Approved  
-Date: 2026-09-29  
+Status: Approved
+
+Date: 2026-09-29
+
 Owner: project coordinator
 
 ## 1. Objective
@@ -233,4 +235,3 @@ Only then may the local oracle be archived or removed independently of the Git r
 - Maturin distribution: <https://www.maturin.rs/distribution.html>
 - Python version status: <https://devguide.python.org/versions/>
 - Rust API guidelines: <https://rust-lang.github.io/api-guidelines/>
-

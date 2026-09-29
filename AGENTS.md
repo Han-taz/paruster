@@ -24,4 +24,3 @@ paruster is a Rust document-processing core exposed as a Python 3.10+ library an
 - It may be read locally for parity research.
 - New code, tests, packaging, and CI must not depend on its presence.
 - No file beneath it may appear in Git, wheels, sdists, or CI artifacts.
-

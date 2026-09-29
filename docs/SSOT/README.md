@@ -18,4 +18,3 @@ This directory contains the current, normative description of paruster. A code c
 - `generated/`: checked generated reference derived from code and schemas
 
 An empty planned section is not created until it has canonical content.
-

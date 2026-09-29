@@ -21,4 +21,3 @@ related_decisions: []
 ## Outcome
 
 ## Follow-ups
-

@@ -37,4 +37,3 @@ All substantive repository contents can now enter through GitHub Flow.
 
 - Add required status checks after the initial CI workflows exist.
 - Record the bootstrap PR and merge commit in a follow-up entry rather than rewriting this entry.
-
