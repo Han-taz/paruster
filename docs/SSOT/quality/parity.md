@@ -11,6 +11,8 @@ Only these non-semantic differences may be normalized for comparison:
 
 Normalization must leave document content, IR fields, table topology, ordering, paths, image bytes, warning/error identifiers, generated semantics, and protocol envelopes intact. A new normalization requires coordinator review and an explicit documented rationale before use.
 
+The foundation harness uses exact RFC 6901 pointer allowlists. A registered ZIP timestamp is removable only when the pointer's decoded terminal key is `timestamp`; registering an arbitrary semantic field does not authorize deletion. Additional timestamp spellings require a reviewed policy change. Registered XML values may reorder start-tag attributes only: declarations, comments, processing instructions, CDATA, entity spellings, element/text whitespace, text, tails, and child order remain lexically unchanged. Malformed registered XML is an error rather than a normalization opportunity.
+
 ## Evaluation integrity
 
 Do not change oracle answers, expected results, benchmark policies, scoring formulas, fixture populations, or corpus membership to improve a port's score. Do not weaken fixtures or acceptance gates. Evaluator or ground-truth changes must be isolated, labeled, and reviewed separately from implementation improvements.
