@@ -142,6 +142,38 @@ def test_error_inventory_is_exact() -> None:
     )
 
 
+def test_python_only_foundation_surface_is_explicit() -> None:
+    manifest = load("public-api.json")
+    additions = manifest["python_only_entries"]
+    assert {entry["python_name"] for entry in additions} == {
+        "try_parse",
+        "TryParseResult",
+        "KordocError",
+        "EmptyInputError",
+        "UnsupportedFormatError",
+        "EncryptedError",
+        "DrmProtectedError",
+        "CorruptedError",
+        "DecompressionBombError",
+        "ZipBombError",
+        "ImageBasedPdfError",
+        "NoSectionsError",
+        "ParseError",
+        "MissingDependencyError",
+        "OutputTooLargeError",
+        "InputFileNotFoundError",
+    }
+    assert len(additions) == len({entry["python_name"] for entry in additions})
+    assert all(entry["disposition"] == "foundation" for entry in additions)
+    assert all(entry["kind"] in {"function", "type", "exception"} for entry in additions)
+    assert all(entry["mapping"] and entry["rationale"] for entry in additions)
+
+    entries = {entry["source_name"]: entry for entry in manifest["entries"]}
+    assert entries["VERSION"]["disposition"] == "foundation"
+    assert entries["detectFormat"]["disposition"] == "foundation"
+    assert entries["parse"]["disposition"] == "foundation"
+
+
 def test_mcp_inventory_is_exact_and_ordered() -> None:
     inventory = load("mcp-tools.json")
     tools = inventory["tools"]
