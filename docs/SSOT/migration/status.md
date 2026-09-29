@@ -71,6 +71,14 @@ may now execute from that merge; this merge does not advance either parser's
 capability or parity status. Detailed hosted evidence is in the append-only
 [scaffold merge record](../../WIKI/2026/09/2026-09-30-parser-wave-scaffold-merge.md).
 
+HWPX H0 merged in PR [#16](https://github.com/Han-taz/paruster/pull/16) as
+`08654585d58339c9116aa82fd6c87515364a02fe`. The merged evidence freezes 12
+deterministic CC0 recipes, their hashes and complete oracle observations, and
+the private package/error/order/budget contract. It exposes no parser entry
+point and does not advance HWPX capability or parity. H1a package/security and
+H2a XML/section implementation are now unblocked. See the append-only
+[H0 merge record](../../WIKI/2026/09/2026-09-30-hwpx-h0-merge.md).
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy
