@@ -182,8 +182,7 @@ def _notice_entries(manifest_path: Path, root: Path = ROOT) -> list[dict[str, st
             raise ValueError("duplicate source or wheel path in license manifest")
         seen_sources.add(source)
         seen_wheel_paths.add(wheel_path)
-        if _sha256(source_resolved.read_bytes()) != digest:
-            raise ValueError(f"source notice hash does not match manifest: {source}")
+        _verified_notice_bytes(source_resolved, digest, source)
         normalized.append(
             {
                 "source": source,
@@ -211,6 +210,18 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _verified_notice_bytes(source: Path, digest: str, label: str) -> bytes:
+    data = source.read_bytes()
+    if _sha256(data) == digest:
+        return data
+    # Git may materialize text files with CRLF on Windows. Accept that checkout
+    # representation only when converting CRLF back to LF restores the pinned bytes.
+    canonical = data.replace(b"\r\n", b"\n")
+    if canonical != data and _sha256(canonical) == digest:
+        return canonical
+    raise ValueError(f"source notice hash does not match manifest: {label}")
+
+
 def stage_notices(
     manifest_path: Path = ROOT / NOTICE_MANIFEST, root: Path = ROOT
 ) -> None:
@@ -232,7 +243,9 @@ def stage_notices(
         source = root / entry["source"]
         destination = destination_root / Path(entry["wheel_path"])
         destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, destination)
+        destination.write_bytes(
+            _verified_notice_bytes(source, entry["sha256"], entry["source"])
+        )
         if _sha256(destination.read_bytes()) != entry["sha256"]:
             raise ValueError(f"staged notice hash mismatch: {entry['wheel_path']}")
 

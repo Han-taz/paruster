@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import struct
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -120,6 +121,31 @@ class NoticeBundleTests(unittest.TestCase):
             pdf_worker_wheel.EXPECTED_NOTICE_PATHS,
         )
 
+    def test_pinned_sources_and_probe_pdfs_disable_git_text_conversion(self) -> None:
+        manifest = pdf_worker_wheel._notice_entries(
+            pdf_worker_wheel.ROOT / pdf_worker_wheel.NOTICE_MANIFEST
+        )
+        paths = sorted(
+            {entry["source"] for entry in manifest}
+            | {
+                "crates/kordoc-pdf/tests/fixtures/pdfjs_probe/one_page_helvetica.pdf",
+                "crates/kordoc-pdf/tests/fixtures/unicode_probe/unicode_probe.pdf",
+                "tests/golden/fixtures/minimal.pdf",
+            }
+        )
+        result = subprocess.run(
+            ["git", "check-attr", "--stdin", "text"],
+            cwd=pdf_worker_wheel.ROOT,
+            input=("\n".join(paths) + "\n").encode(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+        lines = result.stdout.decode("utf-8").splitlines()
+        self.assertEqual(len(lines), len(paths))
+        for path, line in zip(paths, lines):
+            self.assertEqual(line, f"{path}: text: unset")
+
     def test_manifest_rejects_missing_inventory_entry(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -142,6 +168,38 @@ class NoticeBundleTests(unittest.TestCase):
                 if path.is_file()
             }
             self.assertEqual(actual, expected)
+
+    def test_manifest_normalizes_windows_checkout_line_endings(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest, expected = self._manifest(root)
+            manifest_data = json.loads(manifest.read_text(encoding="utf-8"))
+            entry = next(
+                item
+                for item in manifest_data["files"]
+                if item["source"].endswith("test-notices/license-0.txt")
+            )
+            source = root / entry["source"]
+            original = source.read_bytes()
+            source.write_bytes(original.replace(b"\n", b"\r\n"))
+
+            pdf_worker_wheel.stage_notices(manifest, root)
+
+            destination = (
+                root / "python/kordoc/_licenses/pdfjs-v8" / entry["wheel_path"]
+            )
+            self.assertEqual(destination.read_bytes(), expected[entry["wheel_path"]])
+
+    def test_manifest_rejects_tampering_with_crlf_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest, _ = self._manifest(root)
+            source = root / "crates/kordoc-pdf/assets/pdfjs/LICENSE"
+            source.write_bytes(
+                source.read_bytes().replace(b"\n", b"\r\n") + b"tampered"
+            )
+            with self.assertRaisesRegex(ValueError, "source notice hash"):
+                pdf_worker_wheel.stage_notices(manifest, root)
 
     def test_manifest_rejects_modified_source_digest(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -1,1 +1,6 @@
 tests/golden/fixtures/*.pdf binary
+# Preserve provenance-pinned asset and PDF bytes across every checkout.
+# Keep normal diff/whitespace checks; only Git line-ending conversion is disabled.
+crates/kordoc-pdf/assets/** -text
+crates/kordoc-pdf/tests/fixtures/**/*.pdf -text
+tests/golden/document/pdf/**/*.pdf -text

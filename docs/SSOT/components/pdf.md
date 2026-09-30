@@ -86,13 +86,17 @@ The notice-only [provenance manifest](../../../crates/kordoc-pdf/assets/v8-licen
 pins 33 upstream notices totaling 221,177 bytes for PDF.js, Rusty V8, pinned V8
 and identified native dependencies. Source, staged, wheel and installed bytes
 are SHA-256 checked; omitted inventory and duplicate ZIP entries fail closed.
+Targeted Git attributes preserve pinned assets and PDF inputs during Windows
+checkout. A defensive CRLF restoration is accepted only when it reproduces the
+same pinned notice hash; tampered bytes still fail. Both probe inputs and the
+existing legacy PDF fixture keep exact checkout bytes.
 All upstream sources were independently reverified, including the original
 PDF.js npm tarball SHA-512 and `package/LICENSE`. This is a notice bundle for
 identified embedded assets, not a blanket audit of every Rust dependency.
 
 A macOS arm64 wheel built after the HWPX warning merge passes archive/artifact
-audits and **335** tests in isolated CPython 3.10.19 (320 existing API/contract/
-parity cases plus 15 tooling regressions), then extracts exact ASCII and
+audits and **338** tests in isolated CPython 3.10.19 (320 existing API/contract/
+parity cases plus 18 tooling regressions), then extracts exact ASCII and
 `한글🧪` through the installed worker. Its worker is 61,976,928 bytes with mode
 0755 and declares macOS 11.0, matching this local wheel tag. Other targets
 require hosted execution evidence; OS memory containment, fixed production
