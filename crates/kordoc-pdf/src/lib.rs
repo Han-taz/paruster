@@ -38,3 +38,17 @@ mod text;
     reason = "private Task B runtime probe is not registered as a parser"
 )]
 mod v8_runtime;
+
+#[cfg(feature = "pdfjs-v8")]
+#[allow(
+    dead_code,
+    reason = "private worker protocol is not a registered parser boundary"
+)]
+mod worker_protocol;
+
+#[cfg(feature = "pdfjs-v8")]
+#[allow(
+    dead_code,
+    reason = "private process supervisor is not a registered parser"
+)]
+mod worker_supervisor;
