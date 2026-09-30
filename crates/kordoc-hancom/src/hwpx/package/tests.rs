@@ -231,6 +231,23 @@ fn ciphertext_and_decrypted_output_use_separate_shared_meters() {
 }
 
 #[test]
+fn encrypted_members_are_never_exposed_until_complete_batch_install() {
+    let bytes = archive(&[("one", b"cipher-one"), ("two", b"cipher-two")]);
+    let mut package = Package::open(&bytes).unwrap();
+    package
+        .mark_encrypted_members(&["one".into(), "two".into()])
+        .unwrap();
+    assert_eq!(error_code(package.read("one")), ErrorCode::Encrypted);
+    package.read_ciphertext("one").unwrap();
+    package.charge_decrypted("one", 3).unwrap();
+    package.finish_decrypted("one").unwrap();
+    let result = package.install_decrypted_batch(vec![("one".into(), b"abc".to_vec())]);
+    assert_eq!(error_code(result), ErrorCode::Corrupted);
+    assert_eq!(error_code(package.read("one")), ErrorCode::Encrypted);
+    assert_eq!(error_code(package.read("two")), ErrorCode::Encrypted);
+}
+
+#[test]
 fn finalized_decrypted_member_cannot_be_charged_again() {
     let bytes = archive(&[("Contents/section0.xml", b"cipher")]);
     let mut package = Package::open(&bytes).unwrap();

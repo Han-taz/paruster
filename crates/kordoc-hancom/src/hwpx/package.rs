@@ -59,6 +59,7 @@ pub(crate) struct Package<'a> {
     ciphertext_metered: HashMap<usize, u64>,
     decrypted_metered: HashMap<usize, u64>,
     decrypted_finalized: HashSet<usize>,
+    encrypted_members: HashSet<usize>,
     actual_plaintext: u64,
     actual_ciphertext: u64,
     warnings: Vec<ParseWarning>,
@@ -94,6 +95,7 @@ impl<'a> Package<'a> {
             ciphertext_metered: HashMap::new(),
             decrypted_metered: HashMap::new(),
             decrypted_finalized: HashSet::new(),
+            encrypted_members: HashSet::new(),
             actual_plaintext: 0,
             actual_ciphertext: 0,
             warnings: Vec::new(),
@@ -105,8 +107,98 @@ impl<'a> Package<'a> {
         let Some(&entry_index) = self.by_name.get(path) else {
             return Ok(None);
         };
+        if self.encrypted_members.contains(&entry_index) && !self.cache.contains_key(&entry_index) {
+            return Err(KordocError::new(
+                ErrorCode::Encrypted,
+                "Encrypted HWPX member has not been decrypted",
+            ));
+        }
         self.read_index(entry_index, MemberMeter::Plaintext)
             .map(Some)
+    }
+
+    pub(crate) fn mark_encrypted_members(&mut self, paths: &[String]) -> Result<(), KordocError> {
+        let mut seen = HashSet::with_capacity(paths.len());
+        for path in paths {
+            let Some(&index) = self.by_name.get(path) else {
+                return Err(corrupted("Encrypted package member is missing"));
+            };
+            if self.entries[index].is_directory || !seen.insert(index) {
+                return Err(corrupted("Encrypted package members are ambiguous"));
+            }
+        }
+        self.encrypted_members.extend(seen);
+        Ok(())
+    }
+
+    pub(crate) fn contains(&self, path: &str) -> bool {
+        self.by_name
+            .get(path)
+            .is_some_and(|&index| !self.entries[index].is_directory)
+    }
+
+    pub(crate) fn file_paths(&self) -> Vec<String> {
+        self.entries
+            .iter()
+            .filter(|entry| !entry.is_directory)
+            .map(|entry| entry.name.clone())
+            .collect()
+    }
+
+    pub(crate) fn file_count(&self) -> usize {
+        self.entries
+            .iter()
+            .filter(|entry| !entry.is_directory)
+            .count()
+    }
+
+    pub(crate) fn first_path(&self) -> Option<&str> {
+        self.entries.first().map(|entry| entry.name.as_str())
+    }
+
+    /// Atomically publishes plaintext only after all members have been validated and charged.
+    pub(crate) fn install_decrypted_batch(
+        &mut self,
+        plaintext: Vec<(String, Vec<u8>)>,
+    ) -> Result<(), KordocError> {
+        let mut seen = HashSet::with_capacity(plaintext.len());
+        let mut staged = Vec::with_capacity(plaintext.len());
+        for (path, bytes) in plaintext {
+            let Some(&index) = self.by_name.get(&path) else {
+                return Err(corrupted(
+                    "Decrypted output does not identify a package member",
+                ));
+            };
+            if self.entries[index].is_directory || !seen.insert(index) {
+                return Err(corrupted("Decrypted package members are ambiguous"));
+            }
+            if !self.ciphertext_cache.contains_key(&index) {
+                return Err(corrupted(
+                    "Encrypted member ciphertext must be read before installation",
+                ));
+            }
+            if !self.decrypted_finalized.contains(&index) {
+                return Err(corrupted("Encrypted member plaintext was not finalized"));
+            }
+            let len = u64::try_from(bytes.len())
+                .map_err(|_| decompression_bomb("HWPX decrypted member size overflows"))?;
+            if self.decrypted_metered.get(&index).copied() != Some(len) {
+                return Err(corrupted("Decrypted member byte count is inconsistent"));
+            }
+            staged.push((index, bytes));
+        }
+        if seen != self.encrypted_members {
+            return Err(corrupted("Encrypted plaintext batch is incomplete"));
+        }
+        if self.actual_plaintext > MAX_PLAINTEXT {
+            return Err(decompression_bomb(
+                "HWPX package exceeds the plaintext byte limit",
+            ));
+        }
+        for (index, bytes) in staged {
+            self.cache.insert(index, bytes);
+        }
+        Ok(())
     }
 
     /// Reads encrypted-member ciphertext under its own cap, leaving plaintext budget untouched.
@@ -175,6 +267,26 @@ impl<'a> Package<'a> {
             ));
         }
         self.decrypted_finalized.insert(entry_index);
+        Ok(())
+    }
+
+    /// Removes plaintext metering from one failed PRF attempt before trying the fallback PRF.
+    pub(crate) fn rollback_decrypted_attempt(&mut self, path: &str) -> Result<(), KordocError> {
+        let Some(&entry_index) = self.by_name.get(path) else {
+            return Err(corrupted(
+                "Decrypted output does not identify a package member",
+            ));
+        };
+        if self.decrypted_finalized.contains(&entry_index) {
+            return Err(corrupted(
+                "Finalized encrypted plaintext cannot be rolled back",
+            ));
+        }
+        let charged = self.decrypted_metered.remove(&entry_index).unwrap_or(0);
+        self.actual_plaintext = self
+            .actual_plaintext
+            .checked_sub(charged)
+            .ok_or_else(|| corrupted("HWPX plaintext byte counter is inconsistent"))?;
         Ok(())
     }
 
