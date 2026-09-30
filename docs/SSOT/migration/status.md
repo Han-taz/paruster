@@ -274,3 +274,7 @@ bits, nine focused cases and 252 scoped feature executions pass independent
 review. Invalid/overflowing geometry rejects without clamping. Full PDF item
 normalization/layout and public registration remain pending; final-head
 artifact and hosted qualification precede publication.
+
+The private Rust metadata checkpoint merged in PR [#34](https://github.com/Han-taz/paruster/pull/34)
+as `bc61d32a8fbf2fdea2e2ace3e36104d3eb1e56c6` after final-head required
+gates, CodeQL and all six installed worker targets passed.

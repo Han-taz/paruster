@@ -21,3 +21,23 @@ strict Clippy pass independent review. The offline contract separately pins
 recipe/input/captures/vector bytes, stdlib regeneration and malformed-byte
 rejection. This helper allocates no input-sized data and changes no DTO, worker
 wire or public contract. Broader item/layout/operator parity remains pending.
+
+## Main34 artifacts and unchanged supervisor timing investigation
+
+Fresh locked default workspace tests, strict all-feature Clippy/rustdoc,
+format/Ruff/mypy/docs checks pass. A fresh base wheel/sdist passes both audits;
+isolated Python tests pass 362 cases plus ten subtests. Five provenance bytepins
+survive real autocrlf=true checkout. Release native geometry/metadata checks
+pass 9 and 10 tests, respectively. The six worker builders now execute those
+release native tests in addition to all four existing installed probes.
+
+The first local full feature run failed the unchanged supervisor sleep test's
+100ms child-start marker assertion. Focused Cargo invocation also reproduced
+it; the same binary directly passed. Cargo variants, paths, working directory,
+printed environment, process group and nice values did not explain the
+difference. Temporary entry/writer instrumentation was restored byte-exact.
+All 13 unchanged test executables directly passed 252 cases, then the complete
+original Cargo feature command passed 252 cases including 40 supervisor tests.
+Cold process startup is a hypothesis; the OS mechanism remains unproven.
+No source, timeout, security limit, fixture or gate was changed to obtain this
+result. Logs are retained locally for the later process-containment checkpoint.

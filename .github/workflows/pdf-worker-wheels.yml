@@ -86,6 +86,7 @@ jobs:
           args: --release --locked --out dist
           before-script-linux: |
             cargo +1.97.0 build --locked --release --manifest-path crates/kordoc-pdf/Cargo.toml --bin pdfjs-worker --features pdfjs-v8 --target ${{ matrix.target }}
+            cargo +1.97.0 test --locked --release --manifest-path crates/kordoc-pdf/Cargo.toml --features pdfjs-v8 --target ${{ matrix.target }} --test pdfjs_geometry --test pdfjs_metadata
             python3 tests/support/pdf_worker_wheel.py stage --target ${{ matrix.target }} --binary target/${{ matrix.target }}/release/pdfjs-worker
 
       - name: Install pinned Rust toolchain
@@ -97,6 +98,7 @@ jobs:
         shell: bash
         run: |
           cargo +1.97.0 build --locked --release --manifest-path crates/kordoc-pdf/Cargo.toml --bin pdfjs-worker --features pdfjs-v8 --target "${{ matrix.target }}"
+          cargo +1.97.0 test --locked --release --manifest-path crates/kordoc-pdf/Cargo.toml --features pdfjs-v8 --target "${{ matrix.target }}" --test pdfjs_geometry --test pdfjs_metadata
           if [[ "${{ runner.os }}" == "Windows" ]]; then
           worker_binary="target/${{ matrix.target }}/release/pdfjs-worker.exe"
           else
