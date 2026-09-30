@@ -13,6 +13,7 @@ regex.workspace = true
 cfb.workspace = true
 kordoc-hancom = { path = "../kordoc-hancom", version = "=0.1.0" }
 kordoc-ir = { path = "../kordoc-ir", version = "=0.1.0" }
+kordoc-tables = { path = "../kordoc-tables", version = "=0.1.0" }
 zip.workspace = true
 
 [dev-dependencies]

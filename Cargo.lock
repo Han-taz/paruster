@@ -637,6 +637,7 @@ dependencies = [
  "cfb",
  "kordoc-hancom",
  "kordoc-ir",
+ "kordoc-tables",
  "proptest",
  "regex",
  "serde_json",
@@ -651,6 +652,7 @@ dependencies = [
  "cbc",
  "flate2",
  "kordoc-ir",
+ "kordoc-tables",
  "pbkdf2",
  "quick-xml",
  "serde",
@@ -690,6 +692,13 @@ dependencies = [
  "pyo3",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "kordoc-tables"
+version = "0.1.0"
+dependencies = [
+ "kordoc-ir",
 ]
 
 [[package]]

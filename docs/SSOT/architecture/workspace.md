@@ -5,14 +5,17 @@ working interfaces and boundaries, not completed document-processing parity.
 
 ## Components and data flow
 
-The Rust workspace contains five crates. `kordoc-ir` defines shared wire
+The Rust workspace contains six crates in the shared-table candidate. `kordoc-ir` defines shared wire
 DTOs plus the Rust-only `ParsedDocument` and `ParseOptions` handoff for future
 format crates. `kordoc-core` owns bounded format detection, container preflight, a
 private injectable registry, panic containment, result assembly, and P7's
 shared Markdown/page/chunk projections, table policy, and one Markdown
 table-unit reader. Format
-crates depend on IR only; core-side adapters call them, preventing a Cargo
-cycle. `kordoc-hancom` exposes real HWPX parsing, metadata-only and validation
+crates depend on shared IR and source-neutral utility crates; core-side
+adapters call them, preventing a Cargo cycle. The candidate `kordoc-tables`
+sibling depends only on `kordoc-ir` and std, and both core and Hancom depend
+on that sibling. It owns grid construction; Markdown, classification and
+legacy layout-table flattening remain core policy. `kordoc-hancom` exposes real HWPX parsing, metadata-only and validation
 facades and is the first candidate registered in core dispatch. Its Python
 boundary is executable locally; final allocation, full-result and hosted
 gates still govern capability promotion. `kordoc-pdf` remains a private

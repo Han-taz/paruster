@@ -223,6 +223,19 @@ ARM worker wheel passes all four probes and 352 isolated Python/helper tests;
 hosted publication evidence follows. No public PDF capability,
 layout/IR parity or protected score is promoted.
 
+The [shared table-builder extraction](plans/2026-09-30-shared-table-builder-plan.md)
+merged in PR [#31](https://github.com/Han-taz/paruster/pull/31) as
+`a8956457949f82e9a22281b5580ef1be4ee5c229` after all required checks and
+six installed worker targets passed. It registers an IR-only sibling used by core and Hancom, avoiding a format-to-core
+cycle. Its metered grid construction and consuming nested-cell API pass local
+verification and independent review. Ten thousand deterministic grids preserve
+exact previous core IR/errors, and 91.75% selected line coverage passes the
+unchanged 80% threshold with moved table code included. A fresh macOS ARM abi3
+wheel passes 348 isolated Python tests and three subtests; wheel and sdist
+artifact audits pass. Hosted final-head publication passed; legacy core semantics
+stay intact. This scaffold does not implement HWPML tables, promote
+any parser capability, or change frozen IR/errors or protected scoring.
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy
