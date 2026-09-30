@@ -188,7 +188,7 @@ fn copy_string(value: &str) -> Result<String, KordocError> {
     Ok(output)
 }
 
-fn trim_ecmascript(value: &str) -> &str {
+pub(crate) fn trim_ecmascript(value: &str) -> &str {
     value.trim_matches(is_ecmascript_whitespace)
 }
 

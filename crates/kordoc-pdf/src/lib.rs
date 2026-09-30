@@ -40,6 +40,12 @@ mod text;
 #[cfg(feature = "pdfjs-v8")]
 #[allow(
     dead_code,
+    reason = "private scalar-normalization checkpoint is not wired into PDF parser yet"
+)]
+mod text_scalar;
+#[cfg(feature = "pdfjs-v8")]
+#[allow(
+    dead_code,
     reason = "private Task B runtime probe is not registered as a parser"
 )]
 mod v8_runtime;
