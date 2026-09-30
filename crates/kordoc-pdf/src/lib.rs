@@ -9,14 +9,26 @@ mod glyph;
 mod headings;
 mod image;
 mod layout;
+#[allow(
+    dead_code,
+    reason = "P2a Task 0 substrate is intentionally private until Task 1 wires parser semantics"
+)]
 mod limits;
 mod lines;
 mod links;
 mod notes;
+#[allow(
+    dead_code,
+    reason = "P2a Task 0 substrate is intentionally private until Task 1 wires parser semantics"
+)]
 mod objects;
 mod parser;
 mod quality;
 mod regions;
+#[allow(
+    dead_code,
+    reason = "P2a Task 0 substrate is intentionally private until Task 1 wires parser semantics"
+)]
 mod stream;
 mod table;
 mod text;
