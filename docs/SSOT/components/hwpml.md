@@ -58,3 +58,29 @@ slice as `5a8e27c4d67a3cfcff9f31bb5e9dcc304fda6f34` after required checks
 and all six additional installed-worker targets passed on final head `fa8c461`.
 See the [merge record](../../WIKI/2026/09/2026-09-30-hwpml-private-text-merge.md);
 public HWPML registration and full parity remain pending.
+
+
+## Private unique-anchor table checkpoint
+
+The [nested-table plan](../migration/plans/2026-09-30-hwpml-nested-table-plan.md)
+is approved for a bounded private slice against three unchanged H0 observations
+of the authored 949-byte nested-table input. Default/false require 2×2 geometry;
+true retains the anchored trailing column for 2×3. Qualification includes full
+serialized blocks and ordered nested cell content, not flat text alone.
+The source-specific Hancom adapter uses the merged IR-only shared builder,
+one document-wide logical-cell budget and the existing lowering allocation
+budget. Root verifies fixture-copy bytes and captured-IR Markdown projection.
+Native lowering passes exact full-block comparison for all three captures and
+independent review; latest-main artifact/hosted evidence remains pending.
+
+Collision/text-span fallback, loose source dimension coercion, captions,
+depth-9 flattening, malformed XML recovery, public registration and broad
+HWPML parity remain outside this slice. Unsupported structured attachments
+and captions fail closed rather than silently losing blocks. Selected nested
+tables under inline note/header/footer wrappers and tables without direct cells
+also reject; the source skips those tables. Shared
+security limits and protected scoring remain unchanged.
+
+PR [#33](https://github.com/Han-taz/paruster/pull/33) merged the private
+nested-table checkpoint as `e0fde7db6ed97914ed78483fd2b5f0a58a5d99a3`
+after all required final-head checks and six installed worker targets passed.

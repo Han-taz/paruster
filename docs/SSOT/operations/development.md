@@ -39,7 +39,7 @@ cargo +1.97.0 test --workspace --locked
 RUSTDOCFLAGS=-Dwarnings cargo +1.97.0 doc --workspace --no-deps --locked
 
 # Foundation line coverage (cargo-llvm-cov 0.9.1)
-cargo +1.97.0 llvm-cov -p kordoc-ir -p kordoc-core --locked --fail-under-lines 80
+cargo +1.97.0 llvm-cov -p kordoc-ir -p kordoc-core -p kordoc-tables --locked --fail-under-lines 80
 
 # Bounded safety campaigns (nightly-2026-09-20 and cargo-fuzz 0.13.2)
 cargo +nightly-2026-09-20 fuzz run detect_format -- -max_total_time=30

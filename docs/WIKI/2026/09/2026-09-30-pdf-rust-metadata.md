@@ -59,3 +59,33 @@ validation precedes every output copy; strings and vectors grow fallibly.
 Page count and mode are typed internal arguments from the existing private
 extraction path; this does not implement a separate metadata-only worker.
 Latest-main integration and fresh artifacts/hosted gates remain before PR.
+
+
+## Latest-main and installed worker verification
+
+The candidate merges protected table/PDF text mainline; a synthetic reviewed
+text-candidate base resolves squashed ancestry while retaining append-only
+WIKI history and both SSOT additions. Root merged locked workspace tests,
+strict all-feature Clippy/rustdoc, fmt, Ruff (55 files), eight-source mypy,
+docs, actionlint and zizmor pass. Fresh base wheel/sdist artifact audits pass;
+private PDF sources remain outside base-sdist closure as documented by PR #32.
+
+A fresh optional release-worker wheel passes architecture, exactly 36 unique
+notices, executable mode and artifact scans. Its clean CPython 3.10 install
+passes all four installed probes and 356 full Python/helper cases plus ten
+subtests. Initial collection lacks jsonschema in the new dev environment;
+installing its pinned declared version resolves it without test changes.
+Root repeats the exact kind-4 installed comparison. The 64037952-byte worker
+SHA remains `3361ff9ee40bed25990429bb6fbe12e3b1ca34bde2f85648c923a9a9a3c4b837`;
+normalization is private Rust logic exercised by native tests, not a new wire
+operation. Stage inputs are preserved in ignored build storage. Final-head
+hosted gates remain required before merge.
+
+## Main33 combined verification
+
+Merged private nested-table main `e0fde7d` into this candidate. Fresh locked
+workspace tests, strict all-feature Clippy/rustdoc and format checks pass.
+Fresh base wheel and sdist audits pass. A new optional macOS ARM worker wheel
+passes architecture/notices inventory, exact installed kind-4 probe and 360
+isolated Python/helper cases plus ten subtests. Staged files are preserved
+under ignored build storage. Native metadata code and frozen captures are unchanged.
