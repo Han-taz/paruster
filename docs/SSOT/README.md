@@ -16,6 +16,7 @@ This directory contains the current, normative description of paruster. A code c
 - [`migration/plans/2026-09-30-pdf-worker-wheel-plan.md`](migration/plans/2026-09-30-pdf-worker-wheel-plan.md): separate six-target worker-wheel stage, notice, architecture and installed-execution gate
 - [`migration/plans/2026-09-30-pdf-v8-runtime-plan.md`](migration/plans/2026-09-30-pdf-v8-runtime-plan.md): active private embedded V8/PDF.js runtime plan
 - [`migration/plans/2026-09-30-pdf-implementation-plan.md`](migration/plans/2026-09-30-pdf-implementation-plan.md): superseded P2 semantic-backend plan; retained layout/table/parity requirements
+- [`migration/plans/2026-09-30-pdf-v8-resources-plan.md`](migration/plans/2026-09-30-pdf-v8-resources-plan.md): private bounded CMap/font factories with compile-time embedded assets
 - [`migration/status.md`](migration/status.md): live implementation and parity status
 - [Workspace architecture](architecture/workspace.md): current crate boundaries, data flow, and security boundaries
 - [`contracts/errors.md`](contracts/errors.md): stable shared error code inventory and status semantics

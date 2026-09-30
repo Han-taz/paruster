@@ -103,6 +103,9 @@ class ProtocolSmokeTests(unittest.TestCase):
 class NoticeBundleTests(unittest.TestCase):
     def _manifest(self, root: Path) -> tuple[Path, dict[str, bytes]]:
         required_sources = {
+            "pdfjs/cmaps/LICENSE": "crates/kordoc-pdf/assets/pdfjs/cmaps/LICENSE",
+            "pdfjs/standard_fonts/LICENSE_FOXIT": "crates/kordoc-pdf/assets/pdfjs/standard_fonts/LICENSE_FOXIT",
+            "pdfjs/standard_fonts/LICENSE_LIBERATION": "crates/kordoc-pdf/assets/pdfjs/standard_fonts/LICENSE_LIBERATION",
             "pdfjs/LICENSE": "crates/kordoc-pdf/assets/pdfjs/LICENSE",
             "rusty_v8/LICENSE": "crates/kordoc-pdf/assets/v8-licenses/rusty_v8/LICENSE",
             "v8/LICENSE": "crates/kordoc-pdf/assets/v8-licenses/v8/LICENSE",
@@ -176,6 +179,23 @@ class NoticeBundleTests(unittest.TestCase):
         self.assertEqual(len(lines), len(paths))
         for path, line in zip(paths, lines):
             self.assertEqual(line, f"{path}: text: unset")
+
+    def test_manifest_rejects_each_missing_resource_notice(self) -> None:
+        for path in (
+            "pdfjs/cmaps/LICENSE",
+            "pdfjs/standard_fonts/LICENSE_FOXIT",
+            "pdfjs/standard_fonts/LICENSE_LIBERATION",
+        ):
+            with self.subTest(path=path), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                manifest, _ = self._manifest(root)
+                data = json.loads(manifest.read_text(encoding="utf-8"))
+                data["files"] = [
+                    entry for entry in data["files"] if entry["wheel_path"] != path
+                ]
+                manifest.write_text(json.dumps(data), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "omits a required"):
+                    pdf_worker_wheel._notice_entries(manifest, root)
 
     def test_manifest_rejects_missing_inventory_entry(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

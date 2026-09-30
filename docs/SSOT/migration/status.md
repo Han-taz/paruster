@@ -182,6 +182,15 @@ default wheels, ordinary PEP 517/sdist worker builds and public PDF registration
 are unchanged. Windows ARM64 uses CPython 3.12 for this feasibility gate and
 minimum-version native execution remains unproven there.
 
+The private [PDF resource-factory checkpoint](plans/2026-09-30-pdf-v8-resources-plan.md)
+is locally reviewed. An authored CID/Helvetica PDF first fails to retain Korean
+text, then passes with real CMap/font callback counts; 182 embedded mappings
+match the unchanged provenance. Bounded callback arguments/request/item/total
+bytes and strict fallback-denial behavior are verified. The next worker-wheel
+inventory has 36 notices and a third mandatory installed resource probe.
+Hosted publication, production containment/assembly and full PDF IR parity
+remain pending; this does not promote public capability or protected scoring.
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy

@@ -81,4 +81,16 @@ globalThis.structuredClone ??= function(value) {
   }
   return copy(value);
 };
+globalThis.__pdfjsCMapReaderFactory = class {
+  constructor({isCompressed=true}={}) { this.isCompressed=isCompressed; }
+  async fetch({name}) {
+    if (!this.isCompressed) throw new TypeError('only packed PDF.js CMaps are embedded');
+    return {cMapData:globalThis.__pdfjsReadEmbeddedResource('cmap',name),isCompressed:true};
+  }
+};
+globalThis.__pdfjsStandardFontDataFactory = class {
+  async fetch({filename}) {
+    return globalThis.__pdfjsReadEmbeddedResource('standard_font',filename);
+  }
+};
 "#;
