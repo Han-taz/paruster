@@ -62,7 +62,7 @@ pub(crate) fn base_text_position(
     Ok(PdfTextPosition { x, y })
 }
 
-fn js_math_round(value: f64) -> f64 {
+pub(crate) fn js_math_round(value: f64) -> f64 {
     let lower = value.floor();
     let rounded = if value - lower >= 0.5 {
         lower + 1.0
