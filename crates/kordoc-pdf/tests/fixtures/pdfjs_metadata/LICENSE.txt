@@ -1,0 +1,8 @@
+CC0 1.0 Universal
+
+The author dedicates the synthetic PDF inputs and their generator to the
+public domain under the Creative Commons CC0 1.0 Universal dedication:
+https://creativecommons.org/publicdomain/zero/1.0/ .
+
+The frozen oracle output is included only as test data. No oracle source code
+is included.

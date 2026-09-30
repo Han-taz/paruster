@@ -3,6 +3,14 @@
 mod allocator;
 mod engine;
 mod host;
+#[cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "metadata normalization is exercised by its focused integration target"
+    )
+)]
+pub(crate) mod metadata;
 mod resources;
 #[cfg_attr(
     test,

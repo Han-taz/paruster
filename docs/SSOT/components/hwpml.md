@@ -80,3 +80,7 @@ and captions fail closed rather than silently losing blocks. Selected nested
 tables under inline note/header/footer wrappers and tables without direct cells
 also reject; the source skips those tables. Shared
 security limits and protected scoring remain unchanged.
+
+PR [#33](https://github.com/Han-taz/paruster/pull/33) merged the private
+nested-table checkpoint as `e0fde7db6ed97914ed78483fd2b5f0a58a5d99a3`
+after all required final-head checks and six installed worker targets passed.

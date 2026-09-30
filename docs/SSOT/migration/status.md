@@ -227,6 +227,15 @@ probe;
 final-head hosted publication passed. No public PDF capability,
 layout/IR parity or protected score is promoted.
 
+A private [Rust PDF metadata candidate](plans/2026-09-30-pdf-rust-metadata-plan.md)
+normalizes seven bounded raw fields into the existing metadata type. Three
+authored PDFs reproduce six frozen full-parse/metadata-only observations,
+including duplicate keywords, delimiter-only empty arrays and permissive dates.
+Ten focused cases and 243 scoped feature executions pass with independent
+review. No public metadata entry point, geometry or DTO/wire change is made;
+fresh latest-main worker wheel checks pass all four probes and 360 isolated
+Python/helper cases; hosted qualification remains before publication.
+
 The [shared table-builder extraction](plans/2026-09-30-shared-table-builder-plan.md)
 merged in PR [#31](https://github.com/Han-taz/paruster/pull/31) as
 `a8956457949f82e9a22281b5580ef1be4ee5c229` after all required checks and
@@ -248,7 +257,9 @@ integration executions and independent review pass. Captions, ambiguous
 attachments, empty tables, skipped-wrapper tables and depth 9 deliberately
 reject; general source coercion/recovery and public registration remain pending.
 A fresh latest-main macOS ARM wheel passes 358 isolated Python/helper tests
-and both artifact audits; hosted gates still precede publication.
+and both artifact audits. PR [#33](https://github.com/Han-taz/paruster/pull/33)
+merged as `e0fde7db6ed97914ed78483fd2b5f0a58a5d99a3` after all required
+checks, CodeQL and all six installed worker targets passed.
 
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
