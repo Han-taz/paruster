@@ -106,6 +106,14 @@ pub(crate) fn image_reference(node: &XmlNode) -> Option<String> {
     find(node)
 }
 
+pub(crate) fn image_placeholder(reference: String) -> IrBlock {
+    IrBlock {
+        kind: IrBlockType::Image,
+        text: Some(reference),
+        ..IrBlock::default()
+    }
+}
+
 pub(crate) fn resolve_image(
     reference: &str,
     page: Option<u32>,
@@ -204,6 +212,51 @@ pub(crate) fn resolve_image(
     } else {
         skipped_image(reference, page, cache, warnings)
     }
+}
+
+/// Adds package images that were not referenced by retained IR. The caller invokes this only for
+/// a full-document parse, after all retained references have been resolved and deduplicated.
+pub(crate) fn sweep_unreferenced(
+    package: &mut Package<'_>,
+    cache: &mut ImageCache,
+    blocks: &mut Vec<IrBlock>,
+    images: &mut Vec<ExtractedImage>,
+    warnings: &mut Vec<ParseWarning>,
+) -> Result<(), KordocError> {
+    for path in package.file_paths() {
+        let in_bindata = path.rsplit_once('/').is_some_and(|(directory, _)| {
+            directory
+                .split('/')
+                .any(|segment| segment.eq_ignore_ascii_case("BinData"))
+        });
+        if !in_bindata
+            || images
+                .iter()
+                .any(|image| image.source.as_deref() == Some(path.as_str()))
+        {
+            continue;
+        }
+        let data = match package.read(&path) {
+            Ok(Some(data)) => data,
+            Ok(None) => continue,
+            Err(error) if error.code == ErrorCode::Corrupted => {
+                let _ = skipped_image(&path, None, cache, warnings)?;
+                continue;
+            }
+            Err(error) => return Err(error),
+        };
+        if mime_from_path(&path)
+            .or_else(|| sniff_mime(&data))
+            .is_none()
+        {
+            continue;
+        }
+        let block = resolve_image(&path, None, package, cache, images, warnings)?;
+        if block.kind == IrBlockType::Image {
+            blocks.push(block);
+        }
+    }
+    Ok(())
 }
 
 fn skipped_image(

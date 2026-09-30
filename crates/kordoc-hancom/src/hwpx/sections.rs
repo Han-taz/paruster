@@ -10,7 +10,7 @@ use kordoc_ir::{
     PageEvidence, PageMode, PageSelection, ParseOptions, ParseWarning, WarningCode,
 };
 
-use crate::hwpx::images::{ImageCache, image_reference, resolve_image};
+use crate::hwpx::images::{ImageCache, image_placeholder, image_reference, resolve_image};
 use crate::hwpx::package::Package;
 use crate::hwpx::styles::StyleCatalog;
 use crate::hwpx::tables::{CellBudget, lower_table_with_assets};
@@ -21,14 +21,21 @@ const MAX_PAGE_EVIDENCE_ENTRIES: u32 = 100_000;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SectionInput {
     pub(crate) path: String,
-    pub(crate) bytes: Vec<u8>,
+    pub(crate) bytes: Option<Vec<u8>>,
 }
 
 impl SectionInput {
     pub(crate) fn new(path: impl Into<String>, bytes: Vec<u8>) -> Self {
         Self {
             path: path.into(),
-            bytes,
+            bytes: Some(bytes),
+        }
+    }
+
+    pub(crate) fn unavailable(path: impl Into<String>) -> Self {
+        Self {
+            path: path.into(),
+            bytes: None,
         }
     }
 }
@@ -40,6 +47,8 @@ pub(crate) struct SectionOutput {
     pub(crate) warnings: Vec<ParseWarning>,
     pub(crate) page_mode: Option<PageMode>,
     pub(crate) page_evidence: Vec<PageEvidence>,
+    pub(crate) source_page_count: u32,
+    pub(crate) usable_sections: usize,
     pub(crate) images: Vec<ExtractedImage>,
 }
 
@@ -164,7 +173,11 @@ fn lower_sections_impl(
     let mut cell_budget = CellBudget::default();
     let mut image_cache = ImageCache::default();
     for (index, input) in inputs.iter().enumerate() {
-        match parse(&input.bytes) {
+        let Some(bytes) = input.bytes.as_deref() else {
+            deltas.push(None);
+            continue;
+        };
+        match parse(bytes) {
             Ok(root) => {
                 let image_checkpoint = image_cache.checkpoint();
                 let mut section_cell_budget = cell_budget;
@@ -199,6 +212,7 @@ fn lower_sections_impl(
                 );
                 match lowering {
                     Ok(()) => {
+                        output.usable_sections += 1;
                         cell_budget = section_cell_budget;
                         output.images.extend(section_images);
                         delta.warnings = section_warnings;
@@ -321,6 +335,12 @@ fn lower_sections_impl(
         .into_iter()
         .map(|page_number| PageEvidence { page_number })
         .collect();
+    output.source_page_count = u32::try_from(output.page_evidence.len()).map_err(|_| {
+        KordocError::new(
+            ErrorCode::DecompressionBomb,
+            "HWPX page evidence exceeds its bound",
+        )
+    })?;
     apply_page_selection(&mut output, options.pages.as_ref());
     Ok(output)
 }
@@ -355,6 +375,60 @@ fn find_block_page(blocks: &[IrBlock], text: &str) -> Option<u32> {
         }
     }
     None
+}
+
+/// Resolves only image placeholders retained by source-page selection. This keeps excluded-page
+/// package members outside both extraction and image-output accounting.
+pub(crate) fn resolve_selected_images(
+    output: &mut SectionOutput,
+    package: &mut Package<'_>,
+) -> Result<ImageCache, KordocError> {
+    fn visit(
+        blocks: &mut [IrBlock],
+        package: &mut Package<'_>,
+        cache: &mut ImageCache,
+        images: &mut Vec<ExtractedImage>,
+        warnings: &mut Vec<ParseWarning>,
+    ) -> Result<(), KordocError> {
+        for block in blocks {
+            if block.kind == IrBlockType::Image && block.image_data.is_none() {
+                let reference = block.text.as_deref().ok_or_else(|| {
+                    KordocError::new(
+                        ErrorCode::Corrupted,
+                        "HWPX image placeholder has no reference",
+                    )
+                })?;
+                let page = block.page_number;
+                let mut resolved =
+                    resolve_image(reference, page, package, cache, images, warnings)?;
+                resolved.page_number = page;
+                *block = resolved;
+            }
+            if let Some(children) = &mut block.children {
+                visit(children, package, cache, images, warnings)?;
+            }
+            if let Some(table) = &mut block.table {
+                for cell in table.cells.iter_mut().flatten() {
+                    if let Some(children) = &mut cell.blocks {
+                        visit(children, package, cache, images, warnings)?;
+                    }
+                }
+                if let Some(children) = &mut table.caption_blocks {
+                    visit(children, package, cache, images, warnings)?;
+                }
+            }
+        }
+        Ok(())
+    }
+    let mut cache = ImageCache::default();
+    visit(
+        &mut output.blocks,
+        package,
+        &mut cache,
+        &mut output.images,
+        &mut output.warnings,
+    )?;
+    Ok(cache)
 }
 
 fn apply_page_selection(output: &mut SectionOutput, selection: Option<&PageSelection>) {
@@ -705,30 +779,26 @@ fn lower_paragraph(
                 host_layout_pending = false;
             }
             ParagraphPart::Image(reference) => {
-                if let Some(package) = package.as_deref_mut() {
-                    let block_index = delta.blocks.len();
-                    delta.blocks.push(resolve_image(
-                        &reference,
-                        None,
-                        package,
-                        image_cache,
-                        images,
-                        warnings,
-                    )?);
-                    let layout = if host_layout_pending {
-                        ParagraphLayout {
-                            block_index: Some(block_index),
-                            ..layout_position.clone()
-                        }
-                    } else {
-                        ParagraphLayout {
-                            block_index: Some(block_index),
-                            ..ParagraphLayout::default()
-                        }
-                    };
-                    delta.layout_positions.push(layout);
-                    host_layout_pending = false;
-                }
+                let block_index = delta.blocks.len();
+                let block = if let Some(package) = package.as_deref_mut() {
+                    resolve_image(&reference, None, package, image_cache, images, warnings)?
+                } else {
+                    image_placeholder(reference)
+                };
+                delta.blocks.push(block);
+                let layout = if host_layout_pending {
+                    ParagraphLayout {
+                        block_index: Some(block_index),
+                        ..layout_position.clone()
+                    }
+                } else {
+                    ParagraphLayout {
+                        block_index: Some(block_index),
+                        ..ParagraphLayout::default()
+                    }
+                };
+                delta.layout_positions.push(layout);
+                host_layout_pending = false;
             }
         }
     }

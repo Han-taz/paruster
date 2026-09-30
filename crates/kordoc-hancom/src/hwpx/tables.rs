@@ -1,6 +1,6 @@
 //! Bounded HWPX table lowering.
 
-use crate::hwpx::images::{ImageCache, image_reference, resolve_image};
+use crate::hwpx::images::{ImageCache, image_placeholder, image_reference, resolve_image};
 use crate::hwpx::package::Package;
 use crate::hwpx::xml::{XmlContent, XmlNode};
 use kordoc_ir::{ErrorCode, IrBlock, IrBlockType, IrCell, IrTable, KordocError};
@@ -128,7 +128,10 @@ pub(crate) fn lower_table_with_assets(
                     text,
                     col_span: col_span as u32,
                     row_span: row_span as u32,
-                    blocks: (!nested.is_empty()).then_some(nested),
+                    blocks: nested
+                        .iter()
+                        .any(|block| block.kind != IrBlockType::Paragraph)
+                        .then_some(nested),
                     is_header: (tc.attr("header").is_some_and(|v| v == "1" || v == "true"))
                         .then_some(true),
                 },
@@ -174,7 +177,10 @@ pub(crate) fn lower_table_with_assets(
         has_header,
         source_id: node.attr("id").map(str::to_owned),
         caption: (!caption.is_empty()).then(|| caption.join("\n")),
-        caption_blocks: (!caption_blocks.is_empty()).then_some(caption_blocks),
+        caption_blocks: caption_blocks
+            .iter()
+            .any(|block| block.kind != IrBlockType::Paragraph)
+            .then_some(caption_blocks),
         ..IrTable::default()
     };
     Ok(IrBlock {
@@ -291,17 +297,20 @@ fn lower_nested_paragraph(
                         } else {
                             text.clear();
                         }
-                        if let (Some(reference), Some(package)) =
-                            (image_reference(child), package.as_deref_mut())
-                        {
-                            out.push(resolve_image(
-                                &reference,
-                                None,
-                                package,
-                                image_cache,
-                                images,
-                                warnings,
-                            )?);
+                        if let Some(reference) = image_reference(child) {
+                            let block = if let Some(package) = package.as_deref_mut() {
+                                resolve_image(
+                                    &reference,
+                                    None,
+                                    package,
+                                    image_cache,
+                                    images,
+                                    warnings,
+                                )?
+                            } else {
+                                image_placeholder(reference)
+                            };
+                            out.push(block);
                         }
                     } else {
                         walk(

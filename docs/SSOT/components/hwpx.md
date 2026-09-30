@@ -1,6 +1,6 @@
 # HWPX component
 
-Status: H1a merged; H2a XML/sections and H1b crypto/metadata/validation are locally reviewed private candidates. Protected hosted gates, H3/H4 public integration and parity remain pending.
+Status: H1a merged; H2a, H1b, and H2b are locally reviewed private candidates. H3 composes private crate entry points on a local feature branch. Coordinator-owned public dispatch/Python wiring, full parity, fuzzing, and protected hosted gates remain pending.
 
 ## Package boundary
 
@@ -60,13 +60,63 @@ H1b passes 72 unit plus 8 integration tests and strict local gates; independent
 SOL scoped review is CLEAN. Its red-first TDD process deviation is recorded in
 [WIKI](../../WIKI/2026/09/2026-09-30-hwpx-h1b-local.md).
 
-Tables and images remain H2b work. The candidate's paragraph layout inference
-does not yet account for table-internal page splits or suppress the following
-mid-page reset after a split table. Those signals must be integrated with H2b
-before the final parser parity gate.
+### H2b tables and images
 
-The current branch contains 53 crate unit tests across package, XML, sections, and styles, plus 8 HWPX integration tests. H2a-specific coverage includes namespace-local names, DTD/entity rejection, critical XML depth failure, section depth recovery, preserving neighbors around a malformed middle section, spine and numeric ordering, run spans and heading outline, notes, complete versus mixed layout-cache behavior, empty-paragraph page transitions, column transitions, source-page evidence and supplied-cache range bounds. The integration tests presently cover deterministic fixture construction and shape, not production parser registration or public API behavior.
+Table lowering retains ordered text, nested tables, image blocks, captions,
+merged spans, header cells, and trailing empty cells. It enforces inclusive
+200-column, 2,000,000 aggregate logical-cell, and 64-level logical-recursion
+limits before grid allocation. Table-internal page splits advance the source
+page once and suppress the following mid-page reset. A malformed section rolls
+back its staged table/image state; package/resource limits remain hard errors.
+Image references are path-checked and resolved only through the shared package
+reader. Retained cache/list/block copies and image metadata share an inclusive
+256 MiB private image-output meter; exceeding it is `OUTPUT_TOO_LARGE` rather
+than a silent truncation. The H2b scoped SOL review and local gates are clean.
 
-The deterministic fixtures and oracle observations are research evidence only. Over-depth section handling intentionally differs from the current oracle, which returns clipped/empty content; the bounded implementation reports `PARTIAL_PARSE`. Such security divergences are recorded and excluded from parity scoring according to the parity policy. There is no successful production parser oracle capture, Python HWPX test, or full HWPX parity result at this checkpoint.
+### H3 private composition
 
-H2a and H1b final scoped SOL reviews are CLEAN and local checks pass; protected hosted gates remain pending because the session cannot publish GitHub writes. H2b work, H3 crate integration, H4 coordinator dispatch/Python/golden wiring, and H5 full fuzz/hosted gates remain separate gates. Capability and parity remain pending in the [migration ledger](../migration/status.md).
+The private `parse_hwpx`, `parse_hwpx_metadata`, and `validate_hwpx` entry points
+compose bounded package, crypto, critical XML, metadata, styles, section
+lowering, and validation. The parser returns source-neutral `ParsedDocument`
+without Markdown. Missing required container/content/header data is hard
+`CORRUPTED`; an all-unusable section set is `NO_SECTIONS`. After central
+validation, isolated damaged section members produce `BROKEN_ZIP_RECOVERY`
+and retain their original section ordinals so neighboring page numbers do not
+shift. Malformed section XML remains `PARTIAL_PARSE`.
+
+Image placeholders preserve source order through page-mode selection and page
+filtering, including nested table cells/captions. Only retained image refs are
+then resolved; excluded-page image members are neither read nor returned,
+warned, charged, or assigned filenames. A full parse additionally sweeps
+unreferenced `BinData` images through the same cache/output meter, returning
+their assets and appending image IR blocks. A page-selected parse does not run
+that sweep. `metadata.pageCount` and `ParsedDocument.pageCount` use full source
+page evidence, not the count remaining after selection. Metadata-only reads
+package metadata and section paths, never section contents; plaintext metadata
+remains available when section members are encrypted, without decrypting them.
+Metadata-only first parses the bounded critical encryption manifest and marks
+declared encrypted paths before any metadata member read. An encrypted OPF or
+optional metadata member fails closed with typed `ENCRYPTED`, even with a
+password; selective metadata-only decryption is not implemented.
+Plain paragraph-only table cells and captions omit redundant optional nested
+block arrays, while structural nested blocks remain ordered.
+
+The local private integration cases cover the three entry points, deterministic
+fixtures, both encrypted PRFs, section isolation, critical/package failures,
+page-selected nested assets, unreferenced sweep, full source page count, and
+plain-versus-structural table fields. These do not constitute public Python or
+full-wire parity evidence.
+
+The deterministic fixtures and twelve captured oracle results are research evidence, not a full-wire parity result. Over-depth section handling intentionally differs from the current oracle, which returns clipped/empty content; the bounded implementation reports `PARTIAL_PARSE`. Such security divergences are recorded and excluded from parity scoring according to the parity policy. Public Python and production dispatch verification remain coordinator-owned H4 work.
+
+The H3 candidate still has an unclosed textual-allocation hard gate: nested cell
+flattening, captions, paragraph spans, and placeholders can duplicate source
+text before any shared IR-text budget is charged. The 200-column/2,000,000-cell
+and 64-depth bounds do not prevent a large source string from being replicated
+at each ancestor. A private, aggregate 256 MiB IR textual-allocation ceiling,
+charged before each retained copy and returning hard `OUTPUT_TOO_LARGE`, must
+land and pass reduced-budget amplification tests before HWPX can be called
+security-complete. This is independent of ZIP plaintext and image-output
+limits.
+
+H2a, H1b, and H2b final scoped SOL reviews are CLEAN and their local checks pass; H3 remains a candidate with the textual-allocation gate above. Protected hosted gates remain pending because the session cannot publish GitHub writes. H4 coordinator dispatch/Python/golden wiring and H5 full fuzz/hosted gates remain separate gates. Capability and parity remain pending in the [migration ledger](../migration/status.md).
