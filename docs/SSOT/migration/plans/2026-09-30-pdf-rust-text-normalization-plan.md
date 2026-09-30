@@ -1,9 +1,8 @@
 # Private PDF text-item scalar normalization
 
-Status: capture-only preparation. No Rust implementation, wire change or public
-contract change is included. Authored captures are now frozen in
-`crates/kordoc-pdf/tests/fixtures/pdfjs_text_normalization/`; root review is
-required before RED/GREEN work begins.
+Status: Coordinator-approved private scalar projection implemented and
+independently reviewed. Thirteen focused tests and the scoped PDF feature
+suite pass. Final combined artifacts and hosted gates precede publication.
 
 ## Source and pipeline boundary
 

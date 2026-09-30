@@ -30,3 +30,7 @@ crates/kordoc-pdf/tests/fixtures/pdfjs_metadata/oracle-captures.jsonl -text
 # Preserve independent geometry recipe and pinned engine/source observations.
 crates/kordoc-pdf/tests/fixtures/pdfjs_geometry/generate.py -text
 crates/kordoc-pdf/tests/fixtures/pdfjs_geometry/*.json -text
+
+# Preserve independent scalar recipe and engine/source capture bytes.
+crates/kordoc-pdf/tests/fixtures/pdfjs_text_normalization/make_fixture.py -text
+crates/kordoc-pdf/tests/fixtures/pdfjs_text_normalization/*.json -text

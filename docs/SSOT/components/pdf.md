@@ -271,3 +271,34 @@ handling, IR/layout and public PDF registration remain pending.
 PR [#34](https://github.com/Han-taz/paruster/pull/34) merged private Rust
 metadata as `bc61d32a8fbf2fdea2e2ace3e36104d3eb1e56c6` after all
 required checks and six installed worker targets passed.
+
+## Private Rust base text scalars
+
+The [scalar checkpoint](../migration/plans/2026-09-30-pdf-rust-text-normalization-plan.md)
+consumes bounded raw items in Rust, trims ECMAScript whitespace, preserves
+one-based source sequence gaps, rounds positions/dimensions, estimates font
+size and projects vertical/hidden flags before sorting by y descending, x
+ascending and original sequence. Signed zeros compare as equal coordinates.
+An in-place unstable sort with the complete unique sequence key preserves
+source tie order without stable-sort scratch allocation. All raw numeric
+fields and existing 100,000-item, 64 KiB/2 MiB text and 128-byte/512 KiB font
+budgets are preflighted before fallible output reservation/copies. Nonfinite
+derived metrics reject as ParseError; no clamp or magnitude cap is added.
+
+Rust directly reproduces pinned V8's finite two-argument Math.hypot fast path
+with separately rounded scaled operations. Direct Rust f64::hypot changes a
+captured font-size boundary from zero to one, so it is unsuitable here. Actual
+PDF.js 20-item evidence projects to 15 oracle records; separate synthetic
+captures cover trim/NEL/whitespace gaps/ties and V8 IEEE vectors. Thirteen
+focused cases and independent review pass. The six native worker builders run
+release metadata, geometry and scalar tests plus all four installed probes.
+Source rewrites, splitting, deduplication, spacing/operator flags, filtering,
+full line/layout/IR and public registration remain pending.
+
+The combined main35 base-text candidate passes 265 scoped executions and
+release native 9/10/13 geometry/metadata/scalar tests. Fresh base and optional
+macOS ARM worker wheels pass 366 isolated Python/helper cases plus ten subtests;
+all four installed probes, artifact inventories and eleven checkout bytepins
+pass. The initial unchanged 100ms supervisor startup-marker failure and later
+unchanged full-suite success are recorded in the geometry WIKI. No deadline or
+quality gate is weakened. Final-head hosted qualification precedes publication.

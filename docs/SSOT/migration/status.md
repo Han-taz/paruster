@@ -281,9 +281,26 @@ repeated-text collisions reveal source structure loss/wrong-cell attachment;
 private Rust deliberately rejects those ambiguities. This capture-only change
 establishes known divergences, preserves blank-collision owner structure, and
 changes no parser or protected scoring. Offline checks and independent review
-pass; final-head publication remains pending. Private unique-anchor tables
+pass; PR #35 merged these observations after required gates and all six
+worker targets passed. Private unique-anchor tables
 merged in PR #33 after all required gates and six worker targets passed.
 
 The private Rust metadata checkpoint merged in PR [#34](https://github.com/Han-taz/paruster/pull/34)
 as `bc61d32a8fbf2fdea2e2ace3e36104d3eb1e56c6` after final-head required
 gates, CodeQL and all six installed worker targets passed.
+
+A private [Rust base-scalar candidate](plans/2026-09-30-pdf-rust-text-normalization-plan.md)
+adds finite V8-compatible metrics, trim/sequence gaps, vertical/hidden fields
+and stable coordinate ordering under unchanged DTO budgets. Frozen real and
+synthetic captures expose the Rust hypot boundary and establish only this
+initial projection. Thirteen focused cases and independent review pass.
+Six worker jobs now require native release metadata/geometry/scalar tests in
+addition to existing installed probes. Full normalizeItems/layout/corpus and
+public PDF registration remain pending.
+
+The combined private Rust geometry/scalar candidate passes 265 scoped feature
+executions and fresh release native tests (9/10/13 geometry/metadata/scalar).
+Fresh optional macOS ARM worker and base wheels pass 366 isolated Python/helper
+cases plus ten subtests; artifact audits, all four installed probes and eleven
+checkout bytepins pass. All six hosted worker targets now execute the native
+release tests; final-head hosted qualification remains before publication.
