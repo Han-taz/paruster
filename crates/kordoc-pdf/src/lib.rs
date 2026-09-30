@@ -4,6 +4,11 @@
 
 mod cmap;
 mod document;
+#[cfg(feature = "pdfjs-v8")]
+#[allow(
+    dead_code,
+    reason = "private geometry checkpoint is not yet wired to PDF parser layout"
+)]
 mod geometry;
 mod glyph;
 mod headings;

@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "pageCount": 1,
+    "pageMode": "layout",
+    "title": "Fractional CropBox geometry probe"
+  },
+  "markdown": "positive tie",
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "positive tie",
+      "pageNumber": 1,
+      "bbox": {
+        "page": 1,
+        "x": 1.75,
+        "y": 1.25,
+        "width": 47,
+        "height": 10
+      },
+      "style": {
+        "fontSize": 10,
+        "fontName": "g_d0_f1"
+      }
+    }
+  ],
+  "pages": [
+    {
+      "pageNumber": 1,
+      "markdown": "positive tie"
+    }
+  ]
+}
