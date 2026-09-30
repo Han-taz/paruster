@@ -59,5 +59,5 @@ private modules), default locked workspace tests, all-target/all-feature strict
 workspace Clippy and warning-free rustdoc. Twenty notice-helper tests validate
 the 36-entry bundle and each missing resource notice. Independent review is
 CLEAN. A fresh macOS arm64 release-worker wheel passes all three installed probes,
-341 isolated Python tests and architecture/notice/artifact audit. Hosted
+345 isolated Python tests after integrating the published H0 fixtures and architecture/notice/artifact audit. Hosted
 six-target checks remain required before protected merge; public PDF semantics remain pending.

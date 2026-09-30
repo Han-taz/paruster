@@ -52,3 +52,9 @@ API/contract/parity/tooling tests. Wheel and clean source-distribution artifact
 audits pass; generated staging files are moved to ignored build storage.
 Hosted six-target gates still follow before merge. This private checkpoint does not register PDF or complete layout/IR,
 metadata/encryption/options/corpus or OS containment/ordinary build assembly.
+
+Before PR publication, the candidate integrates current main after H0 fixture
+PR #28 (`5a077eb78704b8b60e03963a22297978f9854d63`). The same freshly built
+resource-worker wheel then passes all 345 current isolated Python tests, with
+the expected duplicate-member warning and three notice subtests. Documentation
+links/indexes and the authored diff against main also pass.
