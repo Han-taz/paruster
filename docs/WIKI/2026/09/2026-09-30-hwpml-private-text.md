@@ -69,3 +69,16 @@ full-result parity or protected success score is claimed. HWPML-specific table
 coordinates/nesting, bounded recovery, public Python/core registration,
 options and representative corpus parity require separate reviewed slices.
 Hosted required checks remain pending until this branch's PR head passes them.
+
+## PR #30 final-base refresh
+
+After PDF resource PR [#29](https://github.com/Han-taz/paruster/pull/29)
+merged as `f7528a6a40b1df80617c961f2225c40eeb4b7f68`, this branch merged the
+new mainline without changing the HWPML native slice. A new macOS arm64
+`cp310-abi3` wheel and sdist again validated as two artifacts. The sdist's
+three fixture hashes match H0, and both archives exclude oracle source.
+A second clean CPython 3.10.19 install passes **326** Python API, contract and
+parity tests; the separately run worker-wheel helper suite passes **20**
+tests. The added case pins the PDF resource probe recipe from PR #29, so these
+counts supersede the earlier 325/19 local-base counts. This is compatibility
+evidence for the updated mainline, not a public HWPML parser claim.
