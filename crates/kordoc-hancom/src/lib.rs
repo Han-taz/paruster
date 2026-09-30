@@ -1,5 +1,10 @@
 //! Bounded HWPX document parsing, metadata extraction, and structural validation.
 
+#[allow(
+    dead_code,
+    reason = "private HWPML text candidate awaits semantic qualification and facade"
+)]
+mod hwpml;
 mod hwpx;
 
 use kordoc_ir::{DocumentMetadata, KordocError, ParseOptions, ParsedDocument};

@@ -1,9 +1,10 @@
 use super::PdfJsProbe;
 use super::allocator::{AllocationCap, new_v8_allocator};
 use super::host;
+use super::resources::{self, ResourceLimits, ResourceState, ResourceStats};
 use kordoc_ir::{ErrorCode, KordocError};
-use std::sync::Once;
 use std::sync::mpsc::{self, Sender};
+use std::sync::{Arc, Once};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
@@ -75,8 +76,19 @@ pub(super) fn probe(
     max_pages: u32,
     max_output: usize,
 ) -> Result<PdfJsProbe, KordocError> {
+    probe_with_resource_limits(bytes, max_pages, max_output, ResourceLimits::default())
+        .map(|(probe, _)| probe)
+}
+
+fn probe_with_resource_limits(
+    bytes: &[u8],
+    max_pages: u32,
+    max_output: usize,
+    resource_limits: ResourceLimits,
+) -> Result<(PdfJsProbe, ResourceStats), KordocError> {
     initialize_v8();
     let external_cap = AllocationCap::new(EXTERNAL_BUFFER_LIMIT);
+    let mut resource_state = ResourceState::new(resource_limits, Arc::clone(&external_cap));
     let mut isolate = v8::Isolate::new(
         v8::Isolate::create_params()
             .set_max_old_generation_size_in_bytes(HEAP_LIMIT)
@@ -90,6 +102,12 @@ pub(super) fn probe(
 
     run_script(scope, host::SHIMS)
         .ok_or_else(|| parse_error("PDF.js host initialization failed"))?;
+    let global = context.global(scope);
+    if !resources::install_callback(scope, global, &mut resource_state) {
+        return Err(parse_error(
+            "PDF.js embedded resource callback initialization failed",
+        ));
+    }
     let worker = compile_module(scope, PDFJS_WORKER)
         .ok_or_else(|| parse_error("PDF.js worker module compilation failed"))?;
     worker
@@ -168,7 +186,7 @@ pub(super) fn probe(
     let probe_js = format!(
         r#"
       globalThis.__probeState={{done:false,error:null,result:null}};
-      const task=pdfjsLib.getDocument({{data:globalThis.__pdfInput,useWorkerFetch:false,isEvalSupported:false,disableFontFace:true,isOffscreenCanvasSupported:false,isImageDecoderSupported:false}});
+      const task=pdfjsLib.getDocument({{data:globalThis.__pdfInput,useWorkerFetch:false,cMapUrl:null,cMapPacked:true,CMapReaderFactory:globalThis.__pdfjsCMapReaderFactory,standardFontDataUrl:null,StandardFontDataFactory:globalThis.__pdfjsStandardFontDataFactory,useSystemFonts:false,isEvalSupported:false,disableFontFace:true,isOffscreenCanvasSupported:false,isImageDecoderSupported:false}});
       const settled=task.promise.then(async doc=>{{
         if(doc.numPages>{max_pages}) throw new Error('page limit exceeded');
         const pageText=[]; let total=0;
@@ -204,6 +222,9 @@ pub(super) fn probe(
     if !get_bool(scope, "__probeState.done") {
         return Err(parse_error("PDF.js probe deadline exceeded"));
     }
+    if let Some(failure) = resource_state.failure() {
+        return Err(failure.to_error());
+    }
     if external_cap.rejected() {
         return Err(KordocError::new(
             ErrorCode::OutputTooLarge,
@@ -229,7 +250,81 @@ pub(super) fn probe(
         ));
     }
     let json = json.to_rust_string_lossy(scope);
-    serde_json::from_str(&json).map_err(|_| parse_error("PDF.js returned an invalid result"))
+    let probe = serde_json::from_str(&json)
+        .map_err(|_| parse_error("PDF.js returned an invalid result"))?;
+    Ok((probe, resource_state.stats()))
+}
+
+#[cfg(test)]
+#[allow(
+    dead_code,
+    reason = "resource integration entry point is unused by other runtime integration targets"
+)]
+pub(super) fn test_probe_with_resource_stats(
+    bytes: &[u8],
+) -> Result<(PdfJsProbe, ResourceStats), KordocError> {
+    probe_with_resource_limits(bytes, 200, 4 * 1024 * 1024, ResourceLimits::default())
+}
+
+#[cfg(test)]
+#[allow(
+    dead_code,
+    reason = "resource integration entry point is unused by other runtime integration targets"
+)]
+pub(super) fn test_probe_with_resource_limits(
+    bytes: &[u8],
+    limits: ResourceLimits,
+) -> Result<(PdfJsProbe, ResourceStats), KordocError> {
+    probe_with_resource_limits(bytes, 200, 4 * 1024 * 1024, limits)
+}
+
+#[cfg(test)]
+#[allow(
+    dead_code,
+    reason = "resource integration entry point is unused by other runtime integration targets"
+)]
+pub(super) fn test_resource_callback_rejects_unbounded_arguments()
+-> Result<(ResourceStats, Option<ErrorCode>), KordocError> {
+    initialize_v8();
+    let cap = AllocationCap::new(1024 * 1024);
+    let mut resource_state = ResourceState::new(
+        ResourceLimits {
+            max_item_bytes: 1024,
+            max_requests: 1,
+            max_total_bytes: 1024,
+        },
+        Arc::clone(&cap),
+    );
+    let mut isolate = v8::Isolate::new(v8::CreateParams::default());
+    v8::scope!(let base, &mut isolate);
+    let context = v8::Context::new(base, Default::default());
+    v8::scope_with_context!(let scope, base, context);
+    if run_script(scope, host::SHIMS).is_none() {
+        return Err(parse_error("PDF.js host initialization failed"));
+    }
+    let global = context.global(scope);
+    if !resources::install_callback(scope, global, &mut resource_state) {
+        return Err(parse_error(
+            "PDF.js resource callback initialization failed",
+        ));
+    }
+    if run_script(
+        scope,
+        "try { __pdfjsReadEmbeddedResource('cmap', 'x'.repeat(1000000)); } catch (_) {}\
+         try { __pdfjsReadEmbeddedResource(null, null); } catch (_) {}",
+    )
+    .is_none()
+    {
+        return Err(parse_error(
+            "PDF.js resource callback regression script failed",
+        ));
+    }
+    Ok((
+        resource_state.stats(),
+        resource_state
+            .failure()
+            .map(|failure| failure.to_error().code),
+    ))
 }
 
 fn compile_module<'s>(
@@ -283,11 +378,17 @@ fn get_string_property(scope: &mut v8::PinScope<'_, '_>, object: &str, property:
 #[cfg(test)]
 pub(super) fn test_host_has_no_io_globals() -> bool {
     initialize_v8();
+    let cap = AllocationCap::new(1024 * 1024);
+    let mut resource_state = ResourceState::new(ResourceLimits::default(), Arc::clone(&cap));
     let mut isolate = v8::Isolate::new(v8::CreateParams::default());
     v8::scope!(let base, &mut isolate);
     let context = v8::Context::new(base, Default::default());
     v8::scope_with_context!(let scope, base, context);
     if run_script(scope, host::SHIMS).is_none() {
+        return false;
+    }
+    let global = context.global(scope);
+    if !resources::install_callback(scope, global, &mut resource_state) {
         return false;
     }
     let Some(worker) = compile_module(scope, PDFJS_WORKER) else {
@@ -334,7 +435,7 @@ pub(super) fn test_host_has_no_io_globals() -> bool {
         return false;
     }
     scope.perform_microtask_checkpoint();
-    let source = v8::String::new(scope, "['process','require','fetch','XMLHttpRequest','WebSocket','Worker','document','window'].every(k=>typeof globalThis[k]==='undefined')").unwrap();
+    let source = v8::String::new(scope, "['process','require','fetch','XMLHttpRequest','WebSocket','Worker','document','window'].every(k=>typeof globalThis[k]==='undefined') && typeof globalThis.__pdfjsReadEmbeddedResource==='function' && typeof globalThis.__pdfjsCMapReaderFactory==='function' && typeof globalThis.__pdfjsStandardFontDataFactory==='function'").unwrap();
     let script = v8::Script::compile(scope, source, None).unwrap();
     script
         .run(scope)

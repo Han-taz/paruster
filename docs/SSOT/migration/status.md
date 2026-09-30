@@ -174,13 +174,21 @@ checkpoint merged in PR [#25](https://github.com/Han-taz/paruster/pull/25) as
 It does not register PDF or package a worker in base wheels; OS-specific resource containment, six-target worker wheels, factories and
 full-result IR/layout/option parity remain pending.
 
-The [HWPML H0 checkpoint](plans/2026-09-30-hwpml-fixture-plan.md) now has eight
-CC0 inputs and 13 pinned complete oracle observations with four offline
-provenance/inventory tests. This is reviewed fixture evidence only: HWPML
-native parsing, bounded recovery, dedicated table lowering, public Python
-integration and corpus parity remain pending. The local capture JS stays
-ignored and the oracle is never an ordinary CI/runtime/packaging dependency.
-Protected document success accounting is unchanged.
+The [HWPML H0 checkpoint](plans/2026-09-30-hwpml-fixture-plan.md) merged in
+PR [#28](https://github.com/Han-taz/paruster/pull/28) as
+`5a077eb78704b8b60e03963a22297978f9854d63`. It freezes eight CC0 inputs
+and 13 complete oracle observations with four offline provenance/inventory
+tests. The local capture JS stays ignored; ordinary CI, runtime and artifacts
+do not depend on the oracle.
+
+The locally reviewed [private HWPML text candidate](plans/2026-09-30-hwpml-private-text-plan.md)
+adds bounded valid-XML text, metadata, headings and section page selection
+inside `kordoc-hancom`, with three byte-identical crate fixture copies and a
+strict hard error for selected structural tables. Its module is unregistered;
+no public Python entry point or full-result parser claim is added. Bounded
+malformed-XML recovery, HWPML-specific table lowering, option qualification,
+corpus parity and protected document success accounting remain pending until
+their own evidence and merges.
 
 The separate [PDF worker-wheel gate](plans/2026-09-30-pdf-worker-wheel-plan.md)
 merged in PR [#27](https://github.com/Han-taz/paruster/pull/27) as
@@ -192,6 +200,15 @@ installed ASCII and Hangul/astral worker probes;
 default wheels, ordinary PEP 517/sdist worker builds and public PDF registration
 are unchanged. Windows ARM64 uses CPython 3.12 for this feasibility gate and
 minimum-version native execution remains unproven there.
+
+The private [PDF resource-factory checkpoint](plans/2026-09-30-pdf-v8-resources-plan.md)
+is locally reviewed. An authored CID/Helvetica PDF first fails to retain Korean
+text, then passes with real CMap/font callback counts; 182 embedded mappings
+match the unchanged provenance. Bounded callback arguments/request/item/total
+bytes and strict fallback-denial behavior are verified. The next worker-wheel
+inventory has 36 notices and a third mandatory installed resource probe.
+Hosted publication, production containment/assembly and full PDF IR parity
+remain pending; this does not promote public capability or protected scoring.
 
 A [shared table-builder extraction candidate](plans/2026-09-30-shared-table-builder-plan.md)
 registers an IR-only sibling used by core and Hancom, avoiding a format-to-core
