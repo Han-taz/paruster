@@ -381,4 +381,37 @@ mod tests {
         assert_eq!(table.cells[0][0].row_span, 201);
         assert_eq!(table.rows, 201);
     }
+
+    #[test]
+    fn enforces_aggregate_cell_and_nesting_limits_at_boundaries() {
+        let one_cell =
+            parse(br#"<tbl><tr><tc><cellAddr rowAddr="0" colAddr="0"/><subList/></tc></tr></tbl>"#)
+                .unwrap();
+        let mut budget = CellBudget(1_999_999);
+        assert!(lower_table(&one_cell, 0, &mut budget).is_ok());
+        assert_eq!(budget.0, MAX_LOGICAL_CELLS);
+        assert_eq!(
+            lower_table(&one_cell, 0, &mut budget).unwrap_err().code,
+            ErrorCode::DecompressionBomb
+        );
+
+        assert!(lower_table(&one_cell, MAX_LOGICAL_DEPTH - 1, &mut CellBudget::default()).is_ok());
+        assert_eq!(
+            lower_table(&one_cell, MAX_LOGICAL_DEPTH, &mut CellBudget::default())
+                .unwrap_err()
+                .code,
+            ErrorCode::DecompressionBomb
+        );
+
+        let far_row = parse(
+            br#"<tbl><tr><tc><cellAddr rowAddr="2000000" colAddr="0"/><subList/></tc></tr></tbl>"#,
+        )
+        .unwrap();
+        assert_eq!(
+            lower_table(&far_row, 0, &mut CellBudget::default())
+                .unwrap_err()
+                .code,
+            ErrorCode::DecompressionBomb
+        );
+    }
 }
