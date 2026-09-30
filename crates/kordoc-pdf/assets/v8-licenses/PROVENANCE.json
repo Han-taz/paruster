@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "rusty_v8_tag": "v152.2.0",
+  "v8_submodule_commit": "c4ca1eccb90c5464d826b7713dc27178a53b0cfe",
+  "files": [
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/abseil-cpp/LICENSE",
+      "wheel_path": "deps/abseil-cpp/LICENSE",
+      "sha256": "c79a7fea0e3cac04cd43f20e7b648e5a0ff8fa5344e644b0ee09ca1162b62747",
+      "upstream_url": "https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp.git/+/d16e32215c3ab90ba57c2e904a5344d85c7353e4/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/dragonbox/LICENSE-Apache2-LLVM",
+      "wheel_path": "deps/dragonbox/LICENSE-Apache2-LLVM",
+      "sha256": "9e45e856bedccee9f67254082ca11851d954de2fed7448c4bed19ad9aab99a91",
+      "upstream_url": "https://raw.githubusercontent.com/jk-jeon/dragonbox/beeeef91cf6fef89a4d4ba5e95d47ca64ccb3a44/LICENSE-Apache2-LLVM"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/dragonbox/LICENSE-Boost",
+      "wheel_path": "deps/dragonbox/LICENSE-Boost",
+      "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+      "upstream_url": "https://raw.githubusercontent.com/jk-jeon/dragonbox/beeeef91cf6fef89a4d4ba5e95d47ca64ccb3a44/LICENSE-Boost"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/fast_float/LICENSE-MIT",
+      "wheel_path": "deps/fast_float/LICENSE-MIT",
+      "sha256": "e562f3f974ced7e69dd1db77b820b36bcf8f30377f1aa105723fba449c53c4e6",
+      "upstream_url": "https://raw.githubusercontent.com/fastfloat/fast_float/34164f547b7df3f5d794ff67e9f885c36819ebfc/LICENSE-MIT"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/fp16/LICENSE",
+      "wheel_path": "deps/fp16/LICENSE",
+      "sha256": "17e4f539024be2749ee729d1e2f01d24cef12ece8c9bf18e91a4349be29c80bf",
+      "upstream_url": "https://raw.githubusercontent.com/Maratyszcza/FP16/782eea126dc5c755827be751a099eb01826175cf/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/highway/LICENSE",
+      "wheel_path": "deps/highway/LICENSE",
+      "sha256": "e340270d4f64384569a91d546acb5b094d69ce47f0c015db77abb74dc6f815af",
+      "upstream_url": "https://raw.githubusercontent.com/google/highway/2607d3b5b0113992fe84d3848859eae13b3b52c1/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/icu/LICENSE",
+      "wheel_path": "deps/icu/LICENSE",
+      "sha256": "e55522d81edc687a341a4411e0776e54ca654e90147f354a90458aaced4116af",
+      "upstream_url": "https://chromium.googlesource.com/chromium/deps/icu/+/d578f2e8b7bd5938e21cfb6bf15c079e0aa5b738/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/libcxx/LICENSE.TXT",
+      "wheel_path": "deps/libcxx/LICENSE.TXT",
+      "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b",
+      "upstream_url": "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git/+/b16984ce99c702355a5b2b4c52574e82cec41fb9/LICENSE.TXT"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/libcxxabi/LICENSE.TXT",
+      "wheel_path": "deps/libcxxabi/LICENSE.TXT",
+      "sha256": "e2b35be49f7284a45b7baca8fc7b3ab7440e7902392b2528a457816b5bb2a15c",
+      "upstream_url": "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git/+/8f11bb1d4438d0239d0dfc1bd9456a9f31629dda/LICENSE.TXT"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/libunwind/LICENSE.TXT",
+      "wheel_path": "deps/libunwind/LICENSE.TXT",
+      "sha256": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d",
+      "upstream_url": "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git/+/1fd455816c724182cf8736811182bf0c37b03035/LICENSE.TXT"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/llvm-libc/LICENSE.TXT",
+      "wheel_path": "deps/llvm-libc/LICENSE.TXT",
+      "sha256": "ebcd9bbf783a73d05c53ba4d586b8d5813dcdf3bbec50265860ccc885e606f47",
+      "upstream_url": "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libc.git/+/75ae50cd48c8a9d70f552ccff040029968778da9/LICENSE.TXT"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/partition_alloc/LICENSE.chromium",
+      "wheel_path": "deps/partition_alloc/LICENSE.chromium",
+      "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+      "upstream_url": "https://chromium.googlesource.com/chromium/src/+/4c821bd6aab00d8c3129d35d9d522310a8cee802/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/deps/simdutf/LICENSE",
+      "wheel_path": "deps/simdutf/LICENSE",
+      "sha256": "fc8dbc04e03ad4efc08a647ffe7f995b811a95bc04c0e85a56d5277c6593fa5f",
+      "upstream_url": "https://chromium.googlesource.com/chromium/src/third_party/simdutf/+/f7356eed293f8208c40b3c1b344a50bd70971983/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/pdfjs/LICENSE",
+      "wheel_path": "pdfjs/LICENSE",
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+      "upstream_url": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-4.10.38.tgz#package/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/rusty_v8/LICENSE",
+      "wheel_path": "rusty_v8/LICENSE",
+      "sha256": "1c6356fb751d45f0c53093ebf8a7f5e580e802f51999178e19d60f3ec39e147d",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/rusty_v8/v152.2.0/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/LICENSE",
+      "wheel_path": "v8/LICENSE",
+      "sha256": "6ab33af8774a0f396ee3aeeb761e3229057682d6f9fa7f572e390c2cb3a6e509",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/LICENSE.v8",
+      "wheel_path": "v8/LICENSE.v8",
+      "sha256": "4af93c12062c58058378de2397dc1c92bbff9ddfb1d583a01c84127557ce97ca",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/LICENSE.v8"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/colorama/LICENSE",
+      "wheel_path": "v8/third_party/colorama/LICENSE",
+      "sha256": "15137d6c822e3ab097093a33c3a39a9df699f373f6438867ad534ff60762a947",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/colorama/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/disarm/LICENSE",
+      "wheel_path": "v8/third_party/disarm/LICENSE",
+      "sha256": "4f576036de0aef8e65f1909c2b08411902cd6de1f3b9d35e0cfe9c223aac2155",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/disarm/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/fadec/LICENSE",
+      "wheel_path": "v8/third_party/fadec/LICENSE",
+      "sha256": "859902e8fdb8978c08ddd9b3fd62f9b704f88fc8a696f7bfd451d54bfcd579dc",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/fadec/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/fp16/LICENSE",
+      "wheel_path": "v8/third_party/fp16/LICENSE",
+      "sha256": "c91377adafa2f498211a4fe017788e20c38892124673860f068f2919c289193d",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/fp16/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/highway/LICENSE",
+      "wheel_path": "v8/third_party/highway/LICENSE",
+      "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/highway/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/inspector_protocol/LICENSE",
+      "wheel_path": "v8/third_party/inspector_protocol/LICENSE",
+      "sha256": "450ebb9e9e50c2809d9ca581931fc8946d8d5aa0c8c35aae9ac471342fe4a88e",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/inspector_protocol/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/jsoncpp/LICENSE",
+      "wheel_path": "v8/third_party/jsoncpp/LICENSE",
+      "sha256": "76c45ece83a26117f86f4e349e7df118708e061e87225328fb478ce1e8b3eb86",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/jsoncpp/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/rapidhash-v8/LICENSE",
+      "wheel_path": "v8/third_party/rapidhash-v8/LICENSE",
+      "sha256": "db672df7faf793fbe28b8074fdd10822363e1525816b45c9627754885de842b0",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/rapidhash-v8/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/re2/LICENSE",
+      "wheel_path": "v8/third_party/re2/LICENSE",
+      "sha256": "6040cda75d90b1738292a631d89934c411ef7ffd543c4d6a1b7edfc8edf29449",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/re2/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/siphash/LICENSE",
+      "wheel_path": "v8/third_party/siphash/LICENSE",
+      "sha256": "36ffd9dc085d529a7e60e1276d73ae5a030b020313e6c5408593a6ae2af39673",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/siphash/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/utf8-decoder/LICENSE",
+      "wheel_path": "v8/third_party/utf8-decoder/LICENSE",
+      "sha256": "3f712e5fbdfdbd5ee7d9b8c8152580220df55de47f4eba2f26c95c4de19ad096",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/utf8-decoder/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/v8/builtins/LICENSE",
+      "wheel_path": "v8/third_party/v8/builtins/LICENSE",
+      "sha256": "b9a6d9320b8f2693e8d41e496ce56caadacaddcca9be2a64a61749278f425cf2",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/v8/builtins/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/v8/codegen/LICENSE",
+      "wheel_path": "v8/third_party/v8/codegen/LICENSE",
+      "sha256": "17e4f539024be2749ee729d1e2f01d24cef12ece8c9bf18e91a4349be29c80bf",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/v8/codegen/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/valgrind/LICENSE",
+      "wheel_path": "v8/third_party/valgrind/LICENSE",
+      "sha256": "ebf25b8ce59c9e8883acd1ca75b6fc121937ca034f666c4077d2be739d2e1622",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/valgrind/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/vtune/LICENSE",
+      "wheel_path": "v8/third_party/vtune/LICENSE",
+      "sha256": "02aea3ade0c02470335987f7d93ffaed877bcefc8414a416e2e548665bb0bfd0",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/vtune/LICENSE"
+    },
+    {
+      "source": "crates/kordoc-pdf/assets/v8-licenses/v8/third_party/wasm-api/LICENSE",
+      "wheel_path": "v8/third_party/wasm-api/LICENSE",
+      "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+      "upstream_url": "https://raw.githubusercontent.com/denoland/v8/c4ca1eccb90c5464d826b7713dc27178a53b0cfe/third_party/wasm-api/LICENSE"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ This directory contains the current, normative description of paruster. A code c
 - [`migration/plans/2026-09-30-hwpx-option-parity-plan.md`](migration/plans/2026-09-30-hwpx-option-parity-plan.md): focused restoration of the five frozen HWPX options and bounded finalization
 - [`migration/plans/2026-09-30-hwpx-warning-parity-plan.md`](migration/plans/2026-09-30-hwpx-warning-parity-plan.md): focused bounded EOF diagnostic restoration against the unchanged malformed-section capture
 - [`migration/plans/2026-09-30-pdf-v8-worker-plan.md`](migration/plans/2026-09-30-pdf-v8-worker-plan.md): private one-document native worker framing, supervision and lifecycle gates
+- [`migration/plans/2026-09-30-pdf-worker-wheel-plan.md`](migration/plans/2026-09-30-pdf-worker-wheel-plan.md): separate six-target worker-wheel stage, notice, architecture and installed-execution gate
 - [`migration/plans/2026-09-30-pdf-v8-runtime-plan.md`](migration/plans/2026-09-30-pdf-v8-runtime-plan.md): active private embedded V8/PDF.js runtime plan
 - [`migration/plans/2026-09-30-pdf-implementation-plan.md`](migration/plans/2026-09-30-pdf-implementation-plan.md): superseded P2 semantic-backend plan; retained layout/table/parity requirements
 - [`migration/plans/2026-09-30-hwpml-fixture-plan.md`](migration/plans/2026-09-30-hwpml-fixture-plan.md): fixed HWPML inputs and complete oracle observations before private Rust implementation

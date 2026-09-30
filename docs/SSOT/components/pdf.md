@@ -66,6 +66,42 @@ supervised tests remain mandatory before production registration. Existing
 in-isolate buffer/heap/watchdog caps remain unchanged; no production RSS or
 full PDF support claim is made.
 
+## Separate worker-wheel feasibility gate
+
+The [worker-wheel plan](../migration/plans/2026-09-30-pdf-worker-wheel-plan.md)
+adds a separate CI workflow that stages the optional native worker into
+`kordoc/_bin/pdfjs-worker[.exe]`. Fresh default wheels do not run this staging
+step. This establishes a packaging checkpoint, not a public parser or an
+ordinary PEP 517/sdist worker build.
+
+Six native targets build the worker and abi3 extension, audit actual
+ELF/PE/thin-Mach-O architecture and archive executable mode, then install and
+execute the worker against the unchanged Helvetica and Hangul/astral probes.
+Linux builds inside the manylinux 2.28 container and repeats the installed
+probes in a matching baseline runtime. Windows ARM64 uses available native
+CPython 3.12; its CPython 3.10 runtime floor remains unproven. Hosted six-target
+success remains pending until the new workflow passes.
+
+The notice-only [provenance manifest](../../../crates/kordoc-pdf/assets/v8-licenses/PROVENANCE.json)
+pins 33 upstream notices totaling 221,177 bytes for PDF.js, Rusty V8, pinned V8
+and identified native dependencies. Source, staged, wheel and installed bytes
+are SHA-256 checked; omitted inventory and duplicate ZIP entries fail closed.
+Targeted Git attributes preserve pinned assets and PDF inputs during Windows
+checkout. A defensive CRLF restoration is accepted only when it reproduces the
+same pinned notice hash; tampered bytes still fail. Both probe inputs and the
+existing legacy PDF fixture keep exact checkout bytes.
+All upstream sources were independently reverified, including the original
+PDF.js npm tarball SHA-512 and `package/LICENSE`. This is a notice bundle for
+identified embedded assets, not a blanket audit of every Rust dependency.
+
+A macOS arm64 wheel built after the HWPX warning merge passes archive/artifact
+audits and **339** tests in isolated CPython 3.10.19 (320 existing API/contract/
+parity cases plus 18 tooling regressions), then extracts exact ASCII and
+`한글🧪` through the installed worker. Its worker is 61,976,928 bytes with mode
+0755 and declares macOS 11.0, matching this local wheel tag. Other targets
+require hosted execution evidence; OS memory containment, fixed production
+resolver, resource factories and full IR/layout/option parity remain pending.
+
 ## Historical private reader
 
 This page defines the private PDF object-access substrate established by P2a
@@ -122,3 +158,13 @@ allocation-free oversized token/filter/index/reference inputs, encryption
 trailer lexical evasions, stream-payload false references, and the 500 MiB
 sparse probe. These are substrate checks only; they do not advance the
 real-document parity numerator.
+
+Installed worker probes explicitly use `python -I -X utf8`: isolated mode
+ignores environment-based `PYTHONUTF8`, and the explicit flag preserves exact
+Hangul/astral status output on Windows. All six targets remain mandatory.
+
+The separate worker-wheel feasibility checkpoint merged in PR
+[#27](https://github.com/Han-taz/paruster/pull/27) as
+`8d565cc6e4a05ffd16c3686a87f4cc4449b3008f`. All six installed-worker targets
+and required CI/security/wheel/fuzz gates passed on final head `e981f6c`.
+This remains CI-only staging and does not register a production PDF parser.
