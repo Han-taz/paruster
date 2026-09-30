@@ -13,6 +13,8 @@ use kordoc_ir::{
 use crate::hwpx::styles::StyleCatalog;
 use crate::hwpx::xml::{XmlContent, XmlNode, parse};
 
+const MAX_PAGE_EVIDENCE_ENTRIES: u32 = 100_000;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SectionInput {
     pub(crate) path: String,
@@ -43,11 +45,18 @@ struct SectionDelta {
     outline: Vec<(usize, OutlineItem)>,
     layout_positions: Vec<ParagraphLayout>,
     layout_usable: bool,
+    multi_column: bool,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct LinePosition {
+    vertical: f64,
+    horizontal: f64,
 }
 
 #[derive(Debug, Default)]
 struct ParagraphLayout {
-    line_positions: Vec<u32>,
+    line_positions: Vec<LinePosition>,
     explicit_page_break: bool,
     has_lines: bool,
     block_index: Option<usize>,
@@ -129,13 +138,20 @@ pub(crate) fn lower_sections(
     for (index, input) in inputs.iter().enumerate() {
         match parse(&input.bytes) {
             Ok(root) => {
-                let mut delta = SectionDelta::default();
+                let multi_column = find_descendant(&root, "colPr", 8)
+                    .and_then(|columns| columns.attr("colCount"))
+                    .and_then(|value| value.parse::<f64>().ok())
+                    .is_some_and(|count| count > 1.0);
                 let top_level_paragraphs = root.children.iter().filter(|child| child.name == "p");
                 let paragraph_layouts: Vec<_> = top_level_paragraphs
                     .map(paragraph_layout_position)
                     .collect();
-                delta.layout_usable = !paragraph_layouts.is_empty()
-                    && paragraph_layouts.iter().all(|layout| layout.has_lines);
+                let mut delta = SectionDelta {
+                    layout_usable: !paragraph_layouts.is_empty()
+                        && paragraph_layouts.iter().all(|layout| layout.has_lines),
+                    multi_column,
+                    ..SectionDelta::default()
+                };
                 let note_formats = parse_note_number_formats(&root);
                 lower_content(
                     &root,
@@ -181,17 +197,35 @@ pub(crate) fn lower_sections(
     let mut pages_seen = BTreeSet::new();
     if let Some(xml_layout_cache) = &xml_layout_cache {
         pages_seen.extend(xml_layout_cache.evidence_pages.iter().copied());
+    } else if supplied_layout_usable {
+        let max_page = layout_cache
+            .into_iter()
+            .flatten()
+            .flatten()
+            .copied()
+            .max()
+            .unwrap_or(0);
+        if max_page > MAX_PAGE_EVIDENCE_ENTRIES {
+            return Err(KordocError::new(
+                ErrorCode::DecompressionBomb,
+                "layout cache page evidence exceeds the page limit",
+            ));
+        }
+        pages_seen.extend(1..=max_page);
     }
     for (index, delta) in deltas.into_iter().enumerate() {
-        let Some(mut delta) = delta else {
-            continue;
-        };
         let fallback_page = u32::try_from(index + 1).map_err(|_| {
             KordocError::new(
                 ErrorCode::DecompressionBomb,
                 "section count exceeds page limit",
             )
         })?;
+        if !layout_usable {
+            pages_seen.insert(fallback_page);
+        }
+        let Some(mut delta) = delta else {
+            continue;
+        };
         let cache_pages = selected_layout_cache.map(|cache| &cache[index]);
         for (block_index, block) in delta.blocks.iter_mut().enumerate() {
             let page = cache_pages.map_or(fallback_page, |pages| pages[block_index]);
@@ -208,9 +242,6 @@ pub(crate) fn lower_sections(
         output
             .outline
             .extend(delta.outline.into_iter().map(|(_, item)| item));
-        if !layout_usable {
-            pages_seen.insert(fallback_page);
-        }
     }
 
     output.page_mode = Some(if layout_usable {
@@ -287,34 +318,56 @@ fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<XmlLayoutC
             return None;
         }
         let mut page = last_page.checked_add(1)?;
+        evidence_pages.insert(page);
         let mut previous_position = None;
+        let mut previous_horizontal = None;
         let mut section_pages = vec![page; delta.blocks.len()];
         let mut saw_paragraph = false;
         for layout in &delta.layout_positions {
-            let first_position = layout.line_positions.first().copied();
             let explicit_break = layout.explicit_page_break && saw_paragraph;
-            let line_reset = first_position
-                .zip(previous_position)
-                .is_some_and(|(position, previous)| position < previous);
-            if explicit_break || line_reset {
+            if explicit_break {
                 page = page.checked_add(1)?;
+                evidence_pages.insert(page);
+            }
+            let mut first_line = true;
+            let mut broke_by_explicit = explicit_break;
+            for position in &layout.line_positions {
+                let line_reset = previous_position.is_some_and(|previous| {
+                    if position.vertical < previous {
+                        !delta.multi_column
+                            || previous_horizontal
+                                .is_none_or(|horizontal| position.horizontal <= horizontal)
+                    } else {
+                        first_line
+                            && position.vertical == previous
+                            && previous_horizontal
+                                .is_none_or(|horizontal| position.horizontal <= horizontal)
+                    }
+                });
+                if line_reset && !(first_line && broke_by_explicit) {
+                    page = page.checked_add(1)?;
+                    evidence_pages.insert(page);
+                }
+                if first_line {
+                    if let Some(block_index) = layout.block_index {
+                        section_pages[block_index] = page;
+                        evidence_pages.insert(page);
+                    }
+                    broke_by_explicit = false;
+                }
+                previous_position = Some(position.vertical);
+                previous_horizontal = Some(position.horizontal);
+                first_line = false;
+            }
+            if first_line && let Some(block_index) = layout.block_index {
+                section_pages[block_index] = page;
                 evidence_pages.insert(page);
             }
             saw_layout_hint |= explicit_break || !layout.line_positions.is_empty();
             if let Some(block_index) = layout.block_index {
-                section_pages[block_index] = page;
-                evidence_pages.insert(page);
+                evidence_pages.insert(section_pages[block_index]);
             }
             saw_paragraph |= layout.is_paragraph;
-            let mut previous_line = first_position;
-            for position in layout.line_positions.iter().copied().skip(1) {
-                if previous_line.is_some_and(|previous| position < previous) {
-                    page = page.checked_add(1)?;
-                    evidence_pages.insert(page);
-                }
-                previous_line = Some(position);
-            }
-            previous_position = previous_line.or(previous_position);
         }
         if !delta.blocks.is_empty() {
             evidence_pages.insert(page);
@@ -684,9 +737,13 @@ fn paragraph_layout_position(node: &XmlNode) -> ParagraphLayout {
     let line_positions = linesegarray
         .map(|line_segments| {
             line_segments
-                .descendants("lineseg")
-                .into_iter()
-                .filter_map(|line| line.attr("vertpos").and_then(|value| value.parse().ok()))
+                .children
+                .iter()
+                .filter(|line| line.name == "lineseg")
+                .map(|line| LinePosition {
+                    vertical: numeric_attribute(line, "vertpos"),
+                    horizontal: numeric_attribute(line, "horzpos"),
+                })
                 .collect()
         })
         .unwrap_or_default();
@@ -698,6 +755,28 @@ fn paragraph_layout_position(node: &XmlNode) -> ParagraphLayout {
         is_paragraph: true,
         ..ParagraphLayout::default()
     }
+}
+
+fn numeric_attribute(node: &XmlNode, name: &str) -> f64 {
+    node.attr(name)
+        .and_then(|value| value.parse::<f64>().ok())
+        .filter(|value| value.is_finite())
+        .unwrap_or(0.0)
+}
+
+fn find_descendant<'a>(node: &'a XmlNode, name: &str, max_depth: usize) -> Option<&'a XmlNode> {
+    if max_depth == 0 {
+        return None;
+    }
+    for child in &node.children {
+        if child.name == name {
+            return Some(child);
+        }
+        if let Some(found) = find_descendant(child, name, max_depth - 1) {
+            return Some(found);
+        }
+    }
+    None
 }
 
 pub(crate) fn assign_page_recursive(block: &mut IrBlock, page: u32) {

@@ -1,8 +1,8 @@
 use crate::hwpx::sections::{SectionInput, lower_sections, order_section_paths};
 use crate::hwpx::styles::StyleCatalog;
 use kordoc_ir::{
-    IrBlock, IrBlockType, IrCell, IrTable, PageMode, PageNumber, PageSelection, ParseOptions,
-    WarningCode,
+    ErrorCode, IrBlock, IrBlockType, IrCell, IrTable, PageMode, PageNumber, PageSelection,
+    ParseOptions, WarningCode,
 };
 
 fn section(path: &str, body: &str) -> SectionInput {
@@ -448,6 +448,135 @@ fn dropped_empty_paragraph_keeps_its_explicit_layout_page_break() {
 }
 
 #[test]
+fn layout_page_evidence_keeps_empty_initial_page() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"3000\"/><hp:lineseg vertpos=\"0\"/></hp:linesegarray></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"100\"/></hp:linesegarray><hp:run><hp:t>page two</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.page_mode, Some(PageMode::Layout));
+    assert_eq!(output.blocks[0].page_number, Some(2));
+    assert_eq!(
+        output
+            .page_evidence
+            .iter()
+            .map(|evidence| evidence.page_number)
+            .collect::<Vec<_>>(),
+        [1, 2]
+    );
+}
+
+#[test]
+fn all_empty_layout_document_still_has_page_one_evidence() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.page_mode, Some(PageMode::Layout));
+    assert!(output.blocks.is_empty());
+    assert_eq!(
+        output
+            .page_evidence
+            .iter()
+            .map(|evidence| evidence.page_number)
+            .collect::<Vec<_>>(),
+        [1]
+    );
+}
+
+#[test]
+fn malformed_middle_section_remains_in_section_page_evidence() {
+    let inputs = [
+        section(
+            "Contents/section0.xml",
+            "<hp:p><hp:run><hp:t>first</hp:t></hp:run></hp:p>",
+        ),
+        SectionInput::new("Contents/section1.xml", b"<hs:sec><hp:p>broken".to_vec()),
+        section(
+            "Contents/section2.xml",
+            "<hp:p><hp:run><hp:t>third</hp:t></hp:run></hp:p>",
+        ),
+    ];
+    let output = lower_sections(
+        &inputs,
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.page_mode, Some(PageMode::Section));
+    assert_eq!(
+        output
+            .page_evidence
+            .iter()
+            .map(|evidence| evidence.page_number)
+            .collect::<Vec<_>>(),
+        [1, 2, 3]
+    );
+}
+
+#[test]
+fn multi_column_layout_suppresses_rightward_vertical_resets() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:secPr><hp:colPr colCount=\"2\"/></hp:secPr><hp:p><hp:linesegarray><hp:lineseg vertpos=\"3000\" horzpos=\"0\"/><hp:lineseg vertpos=\"0\" horzpos=\"10000\"/></hp:linesegarray><hp:run><hp:t>columns</hp:t></hp:run></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"1000\" horzpos=\"0\"/></hp:linesegarray><hp:run><hp:t>same page</hp:t></hp:run></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\" horzpos=\"0\"/></hp:linesegarray><hp:run><hp:t>next page</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.page_mode, Some(PageMode::Layout));
+    assert_eq!(
+        output
+            .blocks
+            .iter()
+            .map(|block| block.page_number)
+            .collect::<Vec<_>>(),
+        [Some(1), Some(1), Some(2)]
+    );
+}
+
+#[test]
+fn multi_column_layout_suppresses_rightward_resets_between_paragraphs() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:secPr><hp:colPr colCount=\"2\"/></hp:secPr><hp:p><hp:linesegarray><hp:lineseg vertpos=\"3000\" horzpos=\"0\"/></hp:linesegarray><hp:run><hp:t>first column</hp:t></hp:run></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\" horzpos=\"10000\"/></hp:linesegarray><hp:run><hp:t>second column</hp:t></hp:run></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\" horzpos=\"0\"/></hp:linesegarray><hp:run><hp:t>next page</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.page_mode, Some(PageMode::Layout));
+    assert_eq!(
+        output
+            .blocks
+            .iter()
+            .map(|block| block.page_number)
+            .collect::<Vec<_>>(),
+        [Some(1), Some(1), Some(2)]
+    );
+}
+
+#[test]
 fn honors_keep_empty_paragraphs_only_when_true() {
     let input = section(
         "Contents/section0.xml",
@@ -503,6 +632,83 @@ fn uses_layout_cache_when_all_sections_usable() {
     assert_eq!(output.page_mode, Some(PageMode::Layout));
     assert_eq!(output.blocks[0].page_number, Some(1));
     assert_eq!(output.blocks[1].page_number, Some(2));
+}
+
+#[test]
+fn supplied_layout_cache_evidence_includes_sparse_intermediate_pages() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:run><hp:t>first</hp:t></hp:run></hp:p><hp:p><hp:run><hp:t>third</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        Some(&[vec![1, 3]]),
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.page_mode, Some(PageMode::Layout));
+    assert_eq!(
+        output
+            .page_evidence
+            .iter()
+            .map(|evidence| evidence.page_number)
+            .collect::<Vec<_>>(),
+        [1, 2, 3]
+    );
+}
+
+#[test]
+fn supplied_layout_cache_evidence_includes_initial_pages_before_first_block() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:run><hp:t>second</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        Some(&[vec![2]]),
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.blocks[0].page_number, Some(2));
+    assert_eq!(
+        output
+            .page_evidence
+            .iter()
+            .map(|evidence| evidence.page_number)
+            .collect::<Vec<_>>(),
+        [1, 2]
+    );
+}
+
+#[test]
+fn supplied_layout_cache_page_evidence_is_bounded_before_allocation() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:run><hp:t>far page</hp:t></hp:run></hp:p>",
+    );
+    let within_limit = lower_sections(
+        std::slice::from_ref(&input),
+        &StyleCatalog::default(),
+        Some(&[vec![100_000]]),
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(within_limit.page_evidence.len(), 100_000);
+    assert_eq!(within_limit.page_evidence[0].page_number, 1);
+    assert_eq!(within_limit.page_evidence[99_999].page_number, 100_000);
+
+    for page in [100_001, u32::MAX] {
+        let error = lower_sections(
+            std::slice::from_ref(&input),
+            &StyleCatalog::default(),
+            Some(&[vec![page]]),
+            &ParseOptions::default(),
+        )
+        .unwrap_err();
+        assert_eq!(error.code, ErrorCode::DecompressionBomb);
+    }
 }
 
 #[test]
