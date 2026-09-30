@@ -43,3 +43,11 @@ complete `tests/` suite with 360 passed and 10 subtests, with one expected
 duplicate-ZIP-name warning from the hostile archive test. The CPython 3.10
 sdist installed and passed the PDF format-detection smoke check. These are
 local macOS arm64 builds, not evidence for other wheel targets.
+
+## Protected metadata mainline integration
+
+Merged main34 `bc61d32` and retained all authored collision bytes. Fresh locked
+workspace tests and strict all-feature Clippy pass. A freshly rebuilt base
+wheel passes artifact audit and 362 isolated Python/helper cases plus ten
+subtests. Ruff, typing and indexed documentation checks pass. Shared table and
+Hancom parser source remain byte-identical to main.

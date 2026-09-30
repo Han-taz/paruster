@@ -275,3 +275,7 @@ establishes known divergences, preserves blank-collision owner structure, and
 changes no parser or protected scoring. Offline checks and independent review
 pass; final-head publication remains pending. Private unique-anchor tables
 merged in PR #33 after all required gates and six worker targets passed.
+
+The private Rust metadata checkpoint merged in PR [#34](https://github.com/Han-taz/paruster/pull/34)
+as `bc61d32a8fbf2fdea2e2ace3e36104d3eb1e56c6` after final-head required
+gates, CodeQL and all six installed worker targets passed.
