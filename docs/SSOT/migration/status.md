@@ -275,6 +275,15 @@ review. Invalid/overflowing geometry rejects without clamping. Full PDF item
 normalization/layout and public registration remain pending; final-head
 artifact and hosted qualification precede publication.
 
+The separately authored [HWPML collision captures](plans/2026-09-30-hwpml-collision-capture-plan.md)
+freeze five complete source successes across three inputs. Unmatched and
+repeated-text collisions reveal source structure loss/wrong-cell attachment;
+private Rust deliberately rejects those ambiguities. This capture-only change
+establishes known divergences, preserves blank-collision owner structure, and
+changes no parser or protected scoring. Offline checks and independent review
+pass; final-head publication remains pending. Private unique-anchor tables
+merged in PR #33 after all required gates and six worker targets passed.
+
 The private Rust metadata checkpoint merged in PR [#34](https://github.com/Han-taz/paruster/pull/34)
 as `bc61d32a8fbf2fdea2e2ace3e36104d3eb1e56c6` after final-head required
 gates, CodeQL and all six installed worker targets passed.

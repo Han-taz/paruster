@@ -93,4 +93,6 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 
 - [`2026/09/2026-09-30-pdf-rust-geometry.md`](2026/09/2026-09-30-pdf-rust-geometry.md)
 
+- [`2026/09/2026-09-30-hwpml-collision-captures.md`](2026/09/2026-09-30-hwpml-collision-captures.md)
+
 - [`2026/09/2026-09-30-pdf-rust-metadata-merge.md`](2026/09/2026-09-30-pdf-rust-metadata-merge.md)

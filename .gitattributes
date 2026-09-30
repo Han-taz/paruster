@@ -18,6 +18,11 @@ crates/kordoc-hancom/tests/support/hwpml/table_fixture_inputs/*.xml -text
 crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/expected.json -text
 crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/generate.py -text
 
+# Preserve authored collision inputs and frozen complete source observations.
+tests/golden/document/hwpml-collision/fixtures/*.xml -text
+tests/golden/document/hwpml-collision/generate.py -text
+tests/golden/document/hwpml-collision/oracle-results.jsonl -text
+
 # Preserve independently authored metadata recipe and captured observation pins.
 crates/kordoc-pdf/tests/fixtures/pdfjs_metadata/generate.py -text
 crates/kordoc-pdf/tests/fixtures/pdfjs_metadata/oracle-captures.jsonl -text

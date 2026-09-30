@@ -267,6 +267,7 @@ micro-contract. Nine focused cases and 252 scoped feature executions pass with
 independent review. Full text normalization, filtering, annotation/operator
 handling, IR/layout and public PDF registration remain pending.
 
+
 PR [#34](https://github.com/Han-taz/paruster/pull/34) merged private Rust
 metadata as `bc61d32a8fbf2fdea2e2ace3e36104d3eb1e56c6` after all
 required checks and six installed worker targets passed.
