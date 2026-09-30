@@ -112,6 +112,13 @@ deterministic synthetic fixture checks. These do not establish public parser
 registration, Python behavior, or real-document parity. HWPX capability stays
 pending; the parser-oracle success numerator remains zero.
 
+PDF P2a Task 0 has a reviewed private bounded-reader candidate. The pinned
+`lopdf 0.45.0` eager loader failed the pre-allocation and cumulative-budget
+gate, so runtime object access uses the in-crate borrowed-source substrate
+described in the [PDF component page](../components/pdf.md). This checkpoint
+does not parse pages or glyphs, expose a public function, or advance PDF parity;
+those remain pending until the rest of P2a and its protected merge complete.
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy
