@@ -29,24 +29,28 @@ def test_hwpx_plan_locks_security_and_ownership_decisions() -> None:
     assert all(item in text for item in required)
 
 
-def test_pdf_plan_locks_pure_rust_semantics_and_budgets() -> None:
+def test_pdf_plans_record_superseded_backend_and_active_v8_boundaries() -> None:
     text = PDF.read_text(encoding="utf-8")
+    assert "**Status:** Superseded" in text
     required = (
-        "pure-Rust PDF semantic parser",
-        "depends on `kordoc-ir` only",
-        "PDFium may later supply bounded raster pages",
-        "never needed for the base parse",
-        "Neither Node nor pdfjs is a product dependency",
-        "Spike exit criterion",
-        "PDFium/pdfjs are not fallback semantic parsers",
         "At most 1,000,000 distinct object IDs",
         "32 MiB per stream and 256 MiB cumulative decoded bytes",
         "36,000,000 pixels per image",
-        "P2a, Luna A",
-        "P2b, Luna B",
         "coordinator core/Python checkpoint",
     )
     assert all(item in text for item in required)
+    active = (PLANS / "2026-09-30-pdf-v8-runtime-plan.md").read_text(encoding="utf-8")
+    boundaries = (
+        "explicitly supersedes the earlier pure-Rust",
+        "v8 = 152.2.0",
+        "PDF.js 4.10.38",
+        "No filesystem, network, Node module loader",
+        "isEvalSupported:false",
+        "external-buffer allocator cap",
+        "supervised native worker process",
+        "Production `parse_pdf` remains unregistered",
+    )
+    assert all(item in active for item in boundaries)
 
 
 def test_parser_wave_plans_preserve_oracle_and_parity_boundaries() -> None:
