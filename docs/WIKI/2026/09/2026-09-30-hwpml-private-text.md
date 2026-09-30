@@ -42,6 +42,25 @@ Clippy, formatting and a clean authored diff check. A 50 MiB + 1 input with
 `&nbsp;` verifies preflight before normalization budgeting; reduced-budget
 N/N-minus-one and XML resource tests verify typed hard failures.
 
+After merging the H0 squash and PDF worker-wheel mainline into this branch,
+fresh macOS arm64 `cp310-abi3` wheel and sdist builds passed the artifact policy
+(`validated 2 artifact(s)`). The sdist contains `src/hwpml.rs` and the three
+crate-local XML test inputs with exactly the H0 SHA-256 bytes; the wheel omits
+test fixtures, and neither archive contains migration-oracle source. The wheel
+installed in a new isolated CPython 3.10.19 environment passes **325**
+Python API, contract and parity tests. The installed package path is under
+that environment's `site-packages`. Ruff check/format and mypy pass; the
+separate worker-wheel helper suite passes **19** tests against its fixtures.
+The private module has no Python export, so these installed-wheel results do
+not establish HWPML document-output parity.
+
+Locked workspace Rust tests, strict workspace all-target/all-feature Clippy,
+and warning-free workspace rustdoc pass against CPython 3.10.19 after the
+mainline merge. Documentation links/indexes also pass. The first local Rust
+test invocation picked up system Python 3.9, below the project's abi3 3.10
+minimum; setting `PYO3_PYTHON` to the fresh 3.10 environment and its matching
+`PYTHONHOME` resolved that environment issue without source changes.
+
 ## Scope and follow-ups
 
 The unchanged H0 captures document private valid-text behavior. The security
