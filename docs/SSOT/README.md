@@ -11,8 +11,6 @@ This directory contains the current, normative description of paruster. A code c
 - [`migration/plans/2026-09-30-ir-projections-implementation-plan.md`](migration/plans/2026-09-30-ir-projections-implementation-plan.md): focused P7 Markdown, page/chunk, table policy, and shared table-unit execution plan
 - [`migration/plans/2026-09-30-hwpx-implementation-plan.md`](migration/plans/2026-09-30-hwpx-implementation-plan.md): focused P1 bounded HWPX package, XML, semantic lowering, validation, crypto, and Python integration plan
 - [`migration/plans/2026-09-30-hwpx-option-parity-plan.md`](migration/plans/2026-09-30-hwpx-option-parity-plan.md): focused restoration of the five frozen HWPX options and bounded finalization
-- [`migration/plans/2026-09-30-pdf-implementation-plan.md`](migration/plans/2026-09-30-pdf-implementation-plan.md): focused P2 pure-Rust PDF semantic, layout, table, quality, and optional raster-boundary plan
-- [`components/hwpx.md`](components/hwpx.md): private HWPX package, XML, and section implementation candidate and current review boundaries
 - [`migration/plans/2026-09-30-pdf-v8-runtime-plan.md`](migration/plans/2026-09-30-pdf-v8-runtime-plan.md): active private embedded V8/PDF.js runtime plan
 - [`migration/plans/2026-09-30-pdf-implementation-plan.md`](migration/plans/2026-09-30-pdf-implementation-plan.md): superseded P2 semantic-backend plan; retained layout/table/parity requirements
 - [`migration/status.md`](migration/status.md): live implementation and parity status
@@ -24,8 +22,8 @@ This directory contains the current, normative description of paruster. A code c
 - [`contracts/compatibility-manifest.md`](contracts/compatibility-manifest.md): classified TypeScript-to-Python export and removal inventory
 - [`components/detection.md`](components/detection.md): bounded format detection, container preflight, and foundation dispatch rules
 - [`components/normalization.md`](components/normalization.md): bounded Markdown, page, chunk, and table-policy projection semantics
-- [`components/hwpx.md`](components/hwpx.md): bounded HWPX package, crypto, semantic lowering, and local parser candidate
-- [`components/pdf.md`](components/pdf.md): private bounded PDF object-reader decision, supported surface, and security evidence
+- [`components/hwpx.md`](components/hwpx.md): bounded HWPX package, crypto, semantic lowering, Python candidate and option restoration
+- [`components/pdf.md`](components/pdf.md): merged private V8/PDF.js runtime, security evidence and historical object-reader research
 - [`quality/parity.md`](quality/parity.md): allowed normalization and parity evaluation policy
 - [Operations guide](operations/README.md): index for the current [development](operations/development.md) and [release](operations/release.md) procedures
 
