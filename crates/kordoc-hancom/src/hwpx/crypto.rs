@@ -143,6 +143,8 @@ pub(crate) fn decrypt_package(
             "A password is required to read this HWPX document",
         )
     })?;
+    // ODF 1.3 Part 2 §§4.6, 4.16.6 requires this start-key digest before salted PBKDF2.
+    // It is never stored or exposed as a password verifier; decrypt_entry derives the AES key.
     let start_key = Sha256::digest(password.as_bytes());
     let mut staged = Vec::with_capacity(encrypted.len());
     for entry in &encrypted {
