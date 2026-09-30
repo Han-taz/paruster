@@ -168,3 +168,32 @@ The separate worker-wheel feasibility checkpoint merged in PR
 `8d565cc6e4a05ffd16c3686a87f4cc4449b3008f`. All six installed-worker targets
 and required CI/security/wheel/fuzz gates passed on final head `e981f6c`.
 This remains CI-only staging and does not register a production PDF parser.
+
+## Private embedded CMap and standard-font factories
+
+The locally reviewed [resource checkpoint](../migration/plans/2026-09-30-pdf-v8-resources-plan.md)
+adds custom PDF.js factories backed by Rust `include_bytes!` assets: 168 CMaps
+and 14 standard-font payloads, 1,940,006 bytes total. Exact allowlisted names,
+kinds and ASCII basenames <=128 bytes are mandatory. Resource URL options are
+null, `useWorkerFetch` and `useSystemFonts` are false, and no I/O host APIs are
+introduced. Every callback counts before argument conversion; a cheap UTF-16
+length check bounds subsequent UTF-8 scanning and copying. V8's existing
+allocator charges the returned `Uint8Array` backing store.
+
+Per-document bounds are inclusive: 192 KiB per item, 512 requests and 8 MiB
+cumulative served bytes. The existing heap, allocator, input, output, page and
+watchdog limits stay intact. Unsupported requests yield a recorded `PARSE_ERROR`,
+resource exhaustion yields `OUTPUT_TOO_LARGE`, and recorded callback denials
+override PDF.js fallback success. Private counters remain outside the worker
+wire and public IR.
+
+The new CC0 CID/Helvetica input restores previously missing Korean text;
+real callback counts prove both resource types are supplied. Boundary, unknown
+name/path/URL, huge/non-string argument, strict typed failure, initialized
+no-I/O and subprocess-equivalence tests pass. All 182 embedded byte/name/hash
+mappings match unchanged upstream provenance. The strict wheel notice inventory
+now includes the existing CMap, Foxit and Liberation notices: 36 entries,
+229,224 bytes. The separate six-target workflow retains both old probes and
+adds the new resource probe. Hosted results for this checkpoint remain pending;
+full PDF IR/layout/metadata/options/corpus and production containment/assembly
+are still separate gates.

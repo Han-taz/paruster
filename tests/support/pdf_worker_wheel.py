@@ -21,6 +21,15 @@ HEADER_BYTES = 10
 NOTICE_PREFIX = "kordoc/_licenses/pdfjs-v8/"
 NOTICE_MANIFEST = Path("crates/kordoc-pdf/assets/v8-licenses/PROVENANCE.json")
 REQUIRED_NOTICE_FILES = {
+    ("crates/kordoc-pdf/assets/pdfjs/cmaps/LICENSE", "pdfjs/cmaps/LICENSE"),
+    (
+        "crates/kordoc-pdf/assets/pdfjs/standard_fonts/LICENSE_FOXIT",
+        "pdfjs/standard_fonts/LICENSE_FOXIT",
+    ),
+    (
+        "crates/kordoc-pdf/assets/pdfjs/standard_fonts/LICENSE_LIBERATION",
+        "pdfjs/standard_fonts/LICENSE_LIBERATION",
+    ),
     ("crates/kordoc-pdf/assets/pdfjs/LICENSE", "pdfjs/LICENSE"),
     ("crates/kordoc-pdf/assets/v8-licenses/rusty_v8/LICENSE", "rusty_v8/LICENSE"),
     ("crates/kordoc-pdf/assets/v8-licenses/v8/LICENSE", "v8/LICENSE"),
@@ -42,6 +51,9 @@ EXPECTED_NOTICE_PATHS = frozenset(
         "deps/partition_alloc/LICENSE.chromium",
         "deps/simdutf/LICENSE",
         "pdfjs/LICENSE",
+        "pdfjs/cmaps/LICENSE",
+        "pdfjs/standard_fonts/LICENSE_FOXIT",
+        "pdfjs/standard_fonts/LICENSE_LIBERATION",
         "rusty_v8/LICENSE",
         "v8/LICENSE",
         "v8/LICENSE.v8",
