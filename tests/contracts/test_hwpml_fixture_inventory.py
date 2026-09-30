@@ -169,3 +169,11 @@ def test_hwpml_captures_distinguish_entity_recovery_and_fatal_xml() -> None:
         "generate.py",
         "hwpml-oracle-results.jsonl",
     }
+
+
+def test_private_rust_text_inputs_copy_only_the_exact_authored_h0_bytes() -> None:
+    copies = SUPPORT / "text_fixture_inputs"
+    expected = {"normal_metadata_styles.xml", "empty_body.xml", "empty_sections.xml"}
+    assert {p.name for p in copies.iterdir() if p.suffix == ".xml"} == expected
+    for name in expected:
+        assert (copies / name).read_bytes() == (FIXTURES / name).read_bytes()
