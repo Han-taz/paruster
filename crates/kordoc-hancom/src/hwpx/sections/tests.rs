@@ -659,6 +659,25 @@ fn supplied_layout_cache_evidence_includes_sparse_intermediate_pages() {
 }
 
 #[test]
+fn empty_supplied_layout_cache_uses_section_page_evidence() {
+    let input = section("Contents/section0.xml", "<hp:p/>");
+    let cache = vec![vec![]];
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        Some(&cache),
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert!(output.blocks.is_empty());
+    assert_eq!(output.page_mode, Some(PageMode::Section));
+    assert_eq!(
+        output.page_evidence,
+        vec![kordoc_ir::PageEvidence { page_number: 1 }]
+    );
+}
+
+#[test]
 fn supplied_layout_cache_evidence_includes_initial_pages_before_first_block() {
     let input = section(
         "Contents/section0.xml",

@@ -184,7 +184,9 @@ pub(crate) fn lower_sections(
         cache.len() == deltas.len()
             && deltas.iter().zip(cache).all(|(delta, pages)| {
                 delta.as_ref().is_some_and(|delta| {
-                    delta.blocks.len() == pages.len() && pages.iter().all(|page| *page > 0)
+                    !pages.is_empty()
+                        && delta.blocks.len() == pages.len()
+                        && pages.iter().all(|page| *page > 0)
                 })
             })
     });
