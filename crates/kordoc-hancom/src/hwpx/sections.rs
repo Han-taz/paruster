@@ -42,12 +42,16 @@ struct SectionDelta {
     blocks: Vec<IrBlock>,
     outline: Vec<(usize, OutlineItem)>,
     layout_positions: Vec<ParagraphLayout>,
+    layout_usable: bool,
 }
 
 #[derive(Debug, Default)]
 struct ParagraphLayout {
     line_positions: Vec<u32>,
     explicit_page_break: bool,
+    has_lines: bool,
+    block_index: Option<usize>,
+    is_paragraph: bool,
 }
 
 #[derive(Debug)]
@@ -126,6 +130,12 @@ pub(crate) fn lower_sections(
         match parse(&input.bytes) {
             Ok(root) => {
                 let mut delta = SectionDelta::default();
+                let top_level_paragraphs = root.children.iter().filter(|child| child.name == "p");
+                let paragraph_layouts: Vec<_> = top_level_paragraphs
+                    .map(paragraph_layout_position)
+                    .collect();
+                delta.layout_usable = !paragraph_layouts.is_empty()
+                    && paragraph_layouts.iter().all(|layout| layout.has_lines);
                 let note_formats = parse_note_number_formats(&root);
                 lower_content(
                     &root,
@@ -266,15 +276,23 @@ fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<XmlLayoutC
     let mut saw_layout_hint = false;
     for delta in deltas {
         let delta = delta.as_ref()?;
-        if delta.layout_positions.len() != delta.blocks.len() {
+        if !delta.layout_usable
+            || delta
+                .layout_positions
+                .iter()
+                .filter(|layout| layout.block_index.is_some())
+                .count()
+                != delta.blocks.len()
+        {
             return None;
         }
         let mut page = last_page.checked_add(1)?;
         let mut previous_position = None;
-        let mut section_pages = Vec::with_capacity(delta.blocks.len());
-        for (block_index, layout) in delta.layout_positions.iter().enumerate() {
+        let mut section_pages = vec![page; delta.blocks.len()];
+        let mut saw_paragraph = false;
+        for layout in &delta.layout_positions {
             let first_position = layout.line_positions.first().copied();
-            let explicit_break = layout.explicit_page_break && block_index > 0;
+            let explicit_break = layout.explicit_page_break && saw_paragraph;
             let line_reset = first_position
                 .zip(previous_position)
                 .is_some_and(|(position, previous)| position < previous);
@@ -283,8 +301,11 @@ fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<XmlLayoutC
                 evidence_pages.insert(page);
             }
             saw_layout_hint |= explicit_break || !layout.line_positions.is_empty();
-            section_pages.push(page);
-            evidence_pages.insert(page);
+            if let Some(block_index) = layout.block_index {
+                section_pages[block_index] = page;
+                evidence_pages.insert(page);
+            }
+            saw_paragraph |= layout.is_paragraph;
             let mut previous_line = first_position;
             for position in layout.line_positions.iter().copied().skip(1) {
                 if previous_line.is_some_and(|previous| position < previous) {
@@ -319,12 +340,16 @@ fn lower_content(
         "footNote" | "endNote" => {
             let text = node.text_content();
             if !text.is_empty() {
+                let block_index = delta.blocks.len();
                 delta.blocks.push(IrBlock {
                     text: Some(text.clone()),
                     footnote_text: Some(text),
                     ..IrBlock::default()
                 });
-                delta.layout_positions.push(ParagraphLayout::default());
+                delta.layout_positions.push(ParagraphLayout {
+                    block_index: Some(block_index),
+                    ..ParagraphLayout::default()
+                });
             }
         }
         _ => {
@@ -392,6 +417,7 @@ fn lower_paragraph(
         }
     }
     if spans.is_empty() && !keep_empty_paragraphs && notes.is_empty() {
+        delta.layout_positions.push(paragraph_layout_position(node));
         return;
     }
     let text = spans
@@ -423,7 +449,10 @@ fn lower_paragraph(
         ));
     }
     delta.blocks.push(block);
-    delta.layout_positions.push(layout_position);
+    delta.layout_positions.push(ParagraphLayout {
+        block_index: Some(block_index),
+        ..layout_position
+    });
 }
 
 fn append_inline_content(
@@ -507,7 +536,7 @@ fn parse_note_number_formats(root: &XmlNode) -> NoteNumberFormats {
             kind: format.attr("type").unwrap_or("DIGIT").to_owned(),
             user_char: format.attr("userChar").unwrap_or_default().to_owned(),
             prefix: format.attr("prefixChar").unwrap_or_default().to_owned(),
-            suffix: format.attr("suffixChar").unwrap_or(")").to_owned(),
+            suffix: format.attr("suffixChar").unwrap_or_default().to_owned(),
         })
     }
 
@@ -648,10 +677,11 @@ fn roman_numeral(number: u32, uppercase: bool) -> String {
 }
 
 fn paragraph_layout_position(node: &XmlNode) -> ParagraphLayout {
-    let line_positions = node
+    let linesegarray = node
         .children
         .iter()
-        .find(|child| child.name == "linesegarray")
+        .find(|child| child.name == "linesegarray");
+    let line_positions = linesegarray
         .map(|line_segments| {
             line_segments
                 .descendants("lineseg")
@@ -663,6 +693,10 @@ fn paragraph_layout_position(node: &XmlNode) -> ParagraphLayout {
     ParagraphLayout {
         line_positions,
         explicit_page_break: node.attr("pageBreak") == Some("1"),
+        has_lines: linesegarray
+            .is_some_and(|array| array.children.iter().any(|child| child.name == "lineseg")),
+        is_paragraph: true,
+        ..ParagraphLayout::default()
     }
 }
 

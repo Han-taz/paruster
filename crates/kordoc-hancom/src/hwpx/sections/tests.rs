@@ -227,6 +227,35 @@ fn inherits_user_character_note_format_and_honors_note_local_user_character() {
 }
 
 #[test]
+fn distinguishes_missing_note_suffix_from_absent_note_format() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:run><hp:secPr><hp:footNotePr><hp:autoNumFormat type=\"USER_CHAR\" userChar=\"*\"/></hp:footNotePr><hp:endNotePr><hp:autoNumFormat type=\"USER_CHAR\" userChar=\"+\" suffixChar=\"\"/></hp:endNotePr></hp:secPr><hp:t>A</hp:t><hp:ctrl><hp:footNote number=\"3\"><hp:subList><hp:p><hp:run><hp:t>foot</hp:t></hp:run></hp:p></hp:subList></hp:footNote></hp:ctrl><hp:t>B</hp:t><hp:ctrl><hp:endNote number=\"4\"><hp:subList><hp:p><hp:run><hp:t>end</hp:t></hp:run></hp:p></hp:subList></hp:endNote></hp:ctrl><hp:t>C</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.blocks[0].text.as_deref(), Some("A*B+C"));
+
+    let no_formats = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:run><hp:t>A</hp:t><hp:ctrl><hp:footNote number=\"3\"><hp:subList><hp:p><hp:run><hp:t>foot</hp:t></hp:run></hp:p></hp:subList></hp:footNote></hp:ctrl><hp:t>B</hp:t><hp:ctrl><hp:endNote number=\"4\"><hp:subList><hp:p><hp:run><hp:t>end</hp:t></hp:run></hp:p></hp:subList></hp:endNote></hp:ctrl><hp:t>C</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[no_formats],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.blocks[0].text.as_deref(), Some("A3)B4)C"));
+}
+
+#[test]
 fn resets_layout_page_number_between_sections() {
     let inputs = [
         section(
@@ -316,6 +345,106 @@ fn derives_layout_pages_from_linesegarray() {
     assert_eq!(selected.page_mode, Some(PageMode::Layout));
     assert_eq!(selected.blocks.len(), 1);
     assert_eq!(selected.blocks[0].text.as_deref(), Some("page two"));
+}
+
+#[test]
+fn incomplete_paragraph_layout_falls_back_for_the_whole_section() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>first</hp:t></hp:run></hp:p><hp:p><hp:run><hp:t>missing layout</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.page_mode, Some(PageMode::Section));
+    assert_eq!(
+        output
+            .blocks
+            .iter()
+            .map(|block| block.page_number)
+            .collect::<Vec<_>>(),
+        [Some(1), Some(1)]
+    );
+    assert_eq!(
+        output
+            .page_evidence
+            .iter()
+            .map(|evidence| evidence.page_number)
+            .collect::<Vec<_>>(),
+        [1]
+    );
+}
+
+#[test]
+fn incomplete_layout_in_any_section_uses_section_pages_for_page_selection() {
+    let inputs = [
+        section(
+            "Contents/section0.xml",
+            "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>first section</hp:t></hp:run></hp:p>",
+        ),
+        section(
+            "Contents/section1.xml",
+            "<hp:p><hp:run><hp:t>second section</hp:t></hp:run></hp:p>",
+        ),
+    ];
+    let output = lower_sections(
+        &inputs,
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions {
+            pages: Some(PageSelection::Numbers(vec![PageNumber::new(2.0).unwrap()])),
+            ..ParseOptions::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(output.page_mode, Some(PageMode::Section));
+    assert_eq!(output.blocks.len(), 1);
+    assert_eq!(output.blocks[0].text.as_deref(), Some("second section"));
+    assert_eq!(output.blocks[0].page_number, Some(2));
+    assert_eq!(
+        output
+            .page_evidence
+            .iter()
+            .map(|evidence| evidence.page_number)
+            .collect::<Vec<_>>(),
+        [2]
+    );
+}
+
+#[test]
+fn dropped_empty_paragraph_keeps_its_explicit_layout_page_break() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:t>first</hp:t></hp:run></hp:p><hp:p pageBreak=\"1\"><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"100\"/></hp:linesegarray><hp:run><hp:t>next</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.page_mode, Some(PageMode::Layout));
+    assert_eq!(
+        output
+            .blocks
+            .iter()
+            .map(|block| (block.text.as_deref(), block.page_number))
+            .collect::<Vec<_>>(),
+        [(Some("first"), Some(1)), (Some("next"), Some(2))]
+    );
+    assert_eq!(
+        output
+            .page_evidence
+            .iter()
+            .map(|evidence| evidence.page_number)
+            .collect::<Vec<_>>(),
+        [1, 2]
+    );
 }
 
 #[test]
