@@ -4,6 +4,14 @@ mod allocator;
 mod engine;
 mod host;
 mod resources;
+#[cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "the rich DTO decoder is exercised by its focused integration target and text-worker boundary"
+    )
+)]
+pub(crate) mod text_document;
 
 use kordoc_ir::{ErrorCode, KordocError};
 
@@ -39,6 +47,63 @@ pub(crate) fn probe_with_limits(
         ));
     }
     engine::probe(bytes, max_pages, max_output)
+}
+
+#[cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "the rich DTO entry point is used by the kind-3 worker and focused integration test"
+    )
+)]
+pub(crate) fn extract_text_document(
+    bytes: &[u8],
+) -> Result<text_document::PdfJsTextDocument, KordocError> {
+    text_document::extract(bytes, text_document::TextDocumentLimits::default())
+}
+
+#[cfg(test)]
+#[cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "this focused test hook is used only by the text-document integration target"
+    )
+)]
+pub(crate) fn test_extract_text_document_with_limits(
+    bytes: &[u8],
+    limits: text_document::TextDocumentLimits,
+) -> Result<text_document::PdfJsTextDocument, KordocError> {
+    text_document::extract(bytes, limits)
+}
+
+#[cfg(test)]
+#[cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "this focused test hook is used only by the text-document integration target"
+    )
+)]
+pub(crate) fn test_stream_matches_default_get_text_content(
+    bytes: &[u8],
+) -> Result<bool, KordocError> {
+    engine::test_stream_matches_default_get_text_content(bytes)
+}
+
+#[cfg(test)]
+#[cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "this focused test hook is used only by the text-document integration target"
+    )
+)]
+pub(crate) fn test_text_document_json_bytes(
+    bytes: &[u8],
+    limits: text_document::TextDocumentLimits,
+) -> Result<usize, KordocError> {
+    engine::test_text_document_json_bytes(bytes, limits)
 }
 
 #[cfg(test)]

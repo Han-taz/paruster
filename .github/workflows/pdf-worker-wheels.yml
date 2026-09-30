@@ -158,6 +158,11 @@ jobs:
             --fixture crates/kordoc-pdf/tests/fixtures/pdfjs_resource_probe/resource_probe.pdf \
             --expected-text '한글V8 resource probe'
 
+          "$worker_python" -I -X utf8 tests/support/pdf_worker_wheel.py smoke-text-document \
+            --target "${{ matrix.target }}" \
+            --fixture crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/document.pdf \
+            --expected-json crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/expected.json
+
       - name: Probe Linux worker under manylinux 2.28 runtime
         if: runner.os == 'Linux'
         shell: bash
@@ -183,6 +188,10 @@ jobs:
                 --target "${{ matrix.target }}" \
                 --fixture /work/crates/kordoc-pdf/tests/fixtures/pdfjs_resource_probe/resource_probe.pdf \
                 --expected-text "한글V8 resource probe"
+              "$venv/bin/python" -I -X utf8 /work/tests/support/pdf_worker_wheel.py smoke-text-document \
+                --target "${{ matrix.target }}" \
+                --fixture /work/crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/document.pdf \
+                --expected-json /work/crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/expected.json
             '
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

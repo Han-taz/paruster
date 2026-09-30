@@ -1,10 +1,11 @@
 //! Private one-shot subprocess supervision for the embedded PDF.js worker.
 
 use crate::v8_runtime::PdfJsProbe;
+use crate::v8_runtime::text_document::PdfJsTextDocument;
 use crate::worker_protocol::{self, ProtocolError};
 use kordoc_ir::{ErrorCode, KordocError};
 use std::path::Path;
-use std::process::{Child, Command, ExitStatus, Stdio};
+use std::process::{Child, ChildStdin, ChildStdout, Command, ExitStatus, Stdio};
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::sync::{Condvar, Mutex};
 use std::thread::{self, JoinHandle};
@@ -25,7 +26,31 @@ pub(crate) fn supervise_worker(
     pdf: &[u8],
     timeout: Duration,
 ) -> Result<PdfJsProbe, KordocError> {
-    supervise_worker_with_args(executable, &[], pdf, timeout)
+    supervise_worker_with_args(
+        executable,
+        &[],
+        pdf,
+        timeout,
+        worker_protocol::write_request::<ChildStdin>,
+        worker_protocol::read_response::<ChildStdout>,
+        protocol_error,
+    )
+}
+
+pub(crate) fn supervise_text_document_worker(
+    executable: &Path,
+    pdf: &[u8],
+    timeout: Duration,
+) -> Result<PdfJsTextDocument, KordocError> {
+    supervise_worker_with_args(
+        executable,
+        &[],
+        pdf,
+        timeout,
+        worker_protocol::write_text_request::<ChildStdin>,
+        worker_protocol::read_text_response::<ChildStdout>,
+        text_protocol_error,
+    )
 }
 
 #[cfg(feature = "pdfjs-worker-tests")]
@@ -35,15 +60,26 @@ pub(crate) fn supervise_test_worker(
     pdf: &[u8],
     timeout: Duration,
 ) -> Result<PdfJsProbe, KordocError> {
-    supervise_worker_with_args(executable, arguments, pdf, timeout)
+    supervise_worker_with_args(
+        executable,
+        arguments,
+        pdf,
+        timeout,
+        worker_protocol::write_request::<ChildStdin>,
+        worker_protocol::read_response::<ChildStdout>,
+        protocol_error,
+    )
 }
 
-fn supervise_worker_with_args(
+fn supervise_worker_with_args<T: Send + 'static>(
     executable: &Path,
     arguments: &[&str],
     pdf: &[u8],
     timeout: Duration,
-) -> Result<PdfJsProbe, KordocError> {
+    write_request: fn(&mut ChildStdin, &[u8]) -> Result<(), ProtocolError>,
+    read_response: fn(&mut ChildStdout) -> Result<Result<T, KordocError>, ProtocolError>,
+    map_protocol_error: fn(ProtocolError) -> KordocError,
+) -> Result<T, KordocError> {
     if pdf.len() > worker_protocol::MAX_REQUEST_BYTES {
         return Err(worker_error(
             ErrorCode::OutputTooLarge,
@@ -106,7 +142,7 @@ fn supervise_worker_with_args(
         .name("pdfjs-worker-stdin".to_owned())
         .spawn(move || {
             let mut stdin = child_stdin;
-            let result = worker_protocol::write_request(&mut stdin, &request);
+            let result = write_request(&mut stdin, &request);
             let _ = writer_tx.send(result);
         }) {
         Ok(thread) => thread,
@@ -124,7 +160,7 @@ fn supervise_worker_with_args(
         .name("pdfjs-worker-stdout".to_owned())
         .spawn(move || {
             let mut stdout = child_stdout;
-            let result = worker_protocol::read_response(&mut stdout);
+            let result = read_response(&mut stdout);
             let _ = reader_tx.send(result);
         }) {
         Ok(thread) => thread,
@@ -137,7 +173,13 @@ fn supervise_worker_with_args(
         }
     };
 
-    let outcome = wait_for_worker(&mut child, &writer_rx, &reader_rx, deadline);
+    let outcome = wait_for_worker(
+        &mut child,
+        &writer_rx,
+        &reader_rx,
+        deadline,
+        map_protocol_error,
+    );
     match outcome {
         Ok((status, response)) if status.success() => {
             join_io_threads(vec![writer, reader])?;
@@ -157,14 +199,15 @@ fn supervise_worker_with_args(
     }
 }
 
-type WorkerResponse = Result<Result<PdfJsProbe, KordocError>, ProtocolError>;
+type WorkerResponse<T> = Result<Result<T, KordocError>, ProtocolError>;
 
-fn wait_for_worker(
+fn wait_for_worker<T>(
     child: &mut Child,
     writer: &Receiver<Result<(), ProtocolError>>,
-    reader: &Receiver<WorkerResponse>,
+    reader: &Receiver<WorkerResponse<T>>,
     deadline: Instant,
-) -> Result<(ExitStatus, Result<PdfJsProbe, KordocError>), KordocError> {
+    map_protocol_error: fn(ProtocolError) -> KordocError,
+) -> Result<(ExitStatus, Result<T, KordocError>), KordocError> {
     let mut writer_finished = false;
     let mut reader_result = None;
     let mut exit_status = None;
@@ -175,7 +218,7 @@ fn wait_for_worker(
         if !writer_finished {
             match writer.try_recv() {
                 Ok(Ok(())) => writer_finished = true,
-                Ok(Err(error)) => return Err(protocol_error(error)),
+                Ok(Err(error)) => return Err(map_protocol_error(error)),
                 Err(TryRecvError::Disconnected) => {
                     return Err(worker_error(
                         ErrorCode::ParseError,
@@ -188,7 +231,7 @@ fn wait_for_worker(
         if reader_result.is_none() {
             match reader.try_recv() {
                 Ok(Ok(response)) => reader_result = Some(response),
-                Ok(Err(error)) => return Err(protocol_error(error)),
+                Ok(Err(error)) => return Err(map_protocol_error(error)),
                 Err(TryRecvError::Disconnected) => {
                     return Err(worker_error(
                         ErrorCode::ParseError,
@@ -275,6 +318,17 @@ fn join_io_threads(threads: Vec<JoinHandle<()>>) -> Result<(), KordocError> {
 
 fn protocol_error(_error: ProtocolError) -> KordocError {
     worker_error(ErrorCode::ParseError, "PDF.js worker protocol failed")
+}
+
+fn text_protocol_error(error: ProtocolError) -> KordocError {
+    if error == ProtocolError::TooLarge {
+        worker_error(
+            ErrorCode::OutputTooLarge,
+            "PDF.js worker response exceeds its limit",
+        )
+    } else {
+        protocol_error(error)
+    }
 }
 
 fn worker_timeout() -> KordocError {

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import shutil
@@ -349,9 +350,22 @@ def _request_frame(pdf: bytes) -> bytes:
 
 
 def _decode_response(frame: bytes) -> dict[str, object]:
+    return _decode_frame(frame, 2)
+
+
+def _text_document_request_frame(pdf: bytes) -> bytes:
+    frame = _request_frame(pdf)
+    return frame[:5] + b"\x03" + frame[6:]
+
+
+def _decode_text_document_response(frame: bytes) -> dict[str, object]:
+    return _decode_frame(frame, 4)
+
+
+def _decode_frame(frame: bytes, expected_kind: int) -> dict[str, object]:
     if len(frame) < HEADER_BYTES or frame[:4] != b"KPDF":
         raise ValueError("worker response has an invalid frame header")
-    if frame[4] != 1 or frame[5] != 2:
+    if frame[4] != 1 or frame[5] != expected_kind:
         raise ValueError("worker response has an unsupported version or frame kind")
     payload_length = struct.unpack(">I", frame[6:10])[0]
     if payload_length > MAX_RESPONSE_BYTES:
@@ -381,7 +395,32 @@ def _smoke_success_message(target: str, expected_text: str) -> str:
     return f"installed {target} worker extracted {expected_text!r}"
 
 
-def smoke(target: str, fixture: Path, expected_text: str) -> None:
+def _same_json(actual: object, expected: object) -> bool:
+    if type(actual) in (int, float) and type(expected) in (int, float):
+        return math.isfinite(actual) and math.isfinite(expected) and actual == expected
+    if type(actual) is not type(expected):
+        return False
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        return actual.keys() == expected.keys() and all(
+            _same_json(actual[key], value) for key, value in expected.items()
+        )
+    if isinstance(expected, list) and isinstance(actual, list):
+        return len(actual) == len(expected) and all(
+            _same_json(left, right) for left, right in zip(actual, expected)
+        )
+    return actual == expected
+
+
+def _expect_text_document(
+    response: dict[str, object], expected: dict[str, object]
+) -> None:
+    if set(response) != {"status", "result"} or response["status"] != "success":
+        raise ValueError("worker returned a non-success text-document response")
+    if not _same_json(response["result"], expected):
+        raise ValueError("worker extracted an unexpected text document")
+
+
+def _installed_worker(target: str) -> Path:
     import kordoc
 
     _, _, _, name = _target_info(target)
@@ -406,19 +445,45 @@ def smoke(target: str, fixture: Path, expected_text: str) -> None:
         notice = notice_root / entry["wheel_path"]
         if _sha256(notice.read_bytes()) != entry["sha256"]:
             raise ValueError(f"installed notice digest mismatch: {entry['wheel_path']}")
+    return worker
+
+
+def _run_worker(target: str, request: bytes) -> bytes:
+    worker = _installed_worker(target)
 
     completed = subprocess.run(
         [str(worker)],
-        input=_request_frame(fixture.read_bytes()),
+        input=request,
         capture_output=True,
         timeout=30,
         check=False,
     )
     if completed.returncode != 0:
         raise ValueError(f"worker exited with status {completed.returncode}")
-    response = _decode_response(completed.stdout)
+    return completed.stdout
+
+
+def smoke(target: str, fixture: Path, expected_text: str) -> None:
+    response = _decode_response(
+        _run_worker(target, _request_frame(fixture.read_bytes()))
+    )
     _expect_probe(response, expected_text)
     print(_smoke_success_message(target, expected_text))
+
+
+def smoke_text_document(target: str, fixture: Path, expected_json: Path) -> None:
+    with expected_json.open("rb") as source:
+        expected_bytes = source.read(MAX_RESPONSE_BYTES + 1)
+    if len(expected_bytes) > MAX_RESPONSE_BYTES:
+        raise ValueError("expected text document exceeds the 4 MiB response cap")
+    expected = json.loads(expected_bytes.decode("utf-8"))
+    if not isinstance(expected, dict):
+        raise TypeError("expected text document must be an object")
+    response = _decode_text_document_response(
+        _run_worker(target, _text_document_request_frame(fixture.read_bytes()))
+    )
+    _expect_text_document(response, expected)
+    print(f"installed {target} worker returned the exact text document")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -436,16 +501,25 @@ def main(argv: list[str] | None = None) -> int:
     smoke_parser.add_argument("--target", required=True, choices=TARGETS)
     smoke_parser.add_argument("--fixture", type=Path, required=True)
     smoke_parser.add_argument("--expected-text", required=True)
+    document_parser = commands.add_parser("smoke-text-document")
+    document_parser.add_argument("--target", required=True, choices=TARGETS)
+    document_parser.add_argument("--fixture", type=Path, required=True)
+    document_parser.add_argument("--expected-json", type=Path, required=True)
     arguments = parser.parse_args(argv)
     try:
         if arguments.command == "stage":
             stage(arguments.target, arguments.binary, arguments.manifest)
         elif arguments.command == "check-wheel":
             check_wheel(arguments.target, arguments.wheel, arguments.manifest)
-        else:
+        elif arguments.command == "smoke":
             smoke(arguments.target, arguments.fixture, arguments.expected_text)
+        else:
+            smoke_text_document(
+                arguments.target, arguments.fixture, arguments.expected_json
+            )
     except (
         OSError,
+        TypeError,
         ValueError,
         subprocess.SubprocessError,
         zipfile.BadZipFile,

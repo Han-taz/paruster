@@ -8,3 +8,7 @@ tests/golden/document/hwpml/fixtures/*.xml -text
 crates/kordoc-pdf/assets/** -text
 crates/kordoc-pdf/tests/fixtures/**/*.pdf -text
 tests/golden/document/pdf/**/*.pdf -text
+
+# Preserve the pinned text-document recipe and complete expected DTO bytes.
+crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/expected.json -text
+crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/generate.py -text

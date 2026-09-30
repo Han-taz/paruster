@@ -100,6 +100,97 @@ class ProtocolSmokeTests(unittest.TestCase):
             pdf_worker_wheel._decode_response(oversized)
 
 
+class TextDocumentSmokeTests(unittest.TestCase):
+    def _document(self) -> dict[str, object]:
+        return {
+            "page_count": 1,
+            "metadata": {
+                "title": "  한글🧪  ",
+                "author": None,
+                "creator": "",
+                "subject": None,
+                "keywords": "alpha; beta",
+                "creation_date": "D:20250930123456Z",
+                "modified_date": None,
+            },
+            "pages": [
+                {
+                    "page_number": 1,
+                    "view_box": [100.0, 200.0, 500.0, 700.0],
+                    "rotation": 90,
+                    "items": [
+                        {
+                            "text": "한글🧪",
+                            "width": 24.0,
+                            "height": 12.0,
+                            "transform": [12.0, 0.0, 0.0, 12.0, 150.0, 650.0],
+                            "font_name": "g_d0_f1",
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def test_new_request_has_explicit_kind_three_and_preserves_old_bytes(self) -> None:
+        pdf = b"%PDF-1.7\n"
+        suffix = struct.pack(">I", len(pdf)) + pdf
+        self.assertEqual(pdf_worker_wheel._request_frame(pdf), b"KPDF\x01\x01" + suffix)
+        self.assertEqual(
+            pdf_worker_wheel._text_document_request_frame(pdf), b"KPDF\x01\x03" + suffix
+        )
+
+    def test_new_response_requires_kind_four_and_exact_metadata_and_geometry(
+        self,
+    ) -> None:
+        expected = self._document()
+        response = {"status": "success", "result": expected}
+        payload = json.dumps(response, ensure_ascii=False).encode("utf-8")
+        frame = b"KPDF\x01\x04" + struct.pack(">I", len(payload)) + payload
+        actual = pdf_worker_wheel._decode_text_document_response(frame)
+        pdf_worker_wheel._expect_text_document(actual, expected)
+        with self.assertRaisesRegex(ValueError, "frame kind"):
+            pdf_worker_wheel._decode_response(frame)
+        with self.assertRaisesRegex(ValueError, "frame kind"):
+            pdf_worker_wheel._decode_text_document_response(
+                frame[:5] + b"\x02" + frame[6:]
+            )
+        with self.assertRaisesRegex(ValueError, "truncated or has trailing"):
+            pdf_worker_wheel._decode_text_document_response(frame + b"x")
+        with self.assertRaisesRegex(ValueError, "4 MiB cap"):
+            pdf_worker_wheel._decode_text_document_response(
+                b"KPDF\x01\x04"
+                + struct.pack(">I", pdf_worker_wheel.MAX_RESPONSE_BYTES + 1)
+            )
+
+    def test_exact_comparison_rejects_extra_fields_changed_values_and_boolean_counts(
+        self,
+    ) -> None:
+        expected = self._document()
+        for changed in (
+            {**expected, "page_count": True},
+            {**expected, "page_count": 2},
+            {**expected, "unexpected": "ignored"},
+            {**expected, "metadata": {"title": "한글🧪"}},
+        ):
+            with (
+                self.subTest(changed=changed),
+                self.assertRaisesRegex(ValueError, "unexpected"),
+            ):
+                pdf_worker_wheel._expect_text_document(
+                    {"status": "success", "result": changed}, expected
+                )
+
+    def test_comparison_rejects_nonfinite_values_and_failure_envelopes(self) -> None:
+        expected = self._document()
+        for changed in (
+            {"status": "failure", "error": {"code": "PARSE_ERROR"}},
+            {"status": "success", "result": {**expected, "page_count": float("nan")}},
+            {"status": "success", "result": expected, "unexpected": 1},
+        ):
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                pdf_worker_wheel._expect_text_document(changed, expected)
+
+
 class NoticeBundleTests(unittest.TestCase):
     def _manifest(self, root: Path) -> tuple[Path, dict[str, bytes]]:
         required_sources = {

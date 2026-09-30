@@ -70,3 +70,7 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 
 - [`2026/09/2026-09-30-pdf-worker-wheel-merge.md`](2026/09/2026-09-30-pdf-worker-wheel-merge.md)
 - [`2026/09/2026-09-30-pdf-v8-resources.md`](2026/09/2026-09-30-pdf-v8-resources.md)
+
+- [`2026/09/2026-09-30-pdf-v8-resources-merge.md`](2026/09/2026-09-30-pdf-v8-resources-merge.md)
+
+- [`2026/09/2026-09-30-pdf-v8-text-document.md`](2026/09/2026-09-30-pdf-v8-text-document.md)
