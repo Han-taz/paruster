@@ -1,0 +1,193 @@
+name: PDF worker wheel feasibility
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pdf-worker-wheels-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  worker-wheel:
+    name: PDF worker wheel (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            python: "3.10"
+            manylinux: 2_28
+            manylinux_image: quay.io/pypa/manylinux_2_28_x86_64:latest
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            python: "3.10"
+            manylinux: 2_28
+            manylinux_image: quay.io/pypa/manylinux_2_28_aarch64:latest
+          - runner: windows-2025
+            target: x86_64-pc-windows-msvc
+            python: "3.10"
+            manylinux: "off"
+          - runner: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            # The official Windows ARM64 runner image currently has 3.12–3.14 only.
+            # Keep the cp310-abi3 tag check, but exercise the worker on 3.12 here.
+            python: "3.12"
+            manylinux: "off"
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+            python: "3.10"
+            manylinux: "off"
+          - runner: macos-15
+            target: aarch64-apple-darwin
+            python: "3.10"
+            manylinux: "off"
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      CARGO_TERM_COLOR: always
+      PYO3_USE_ABI3_FORWARD_COMPATIBILITY: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: arm64
+        if: matrix.runner == 'windows-11-arm'
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+        if: matrix.runner != 'windows-11-arm'
+
+      - name: Test bounded wheel framing and architecture checks
+        run: python -m unittest discover -s tests/support -p 'test_pdf_worker_wheel.py'
+
+      - name: Build and stage Linux worker in manylinux container
+        if: runner.os == 'Linux'
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          command: build
+          maturin-version: v1.15.0
+          rust-toolchain: 1.97.0
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux }}
+          args: --release --locked --out dist
+          before-script-linux: |
+            cargo +1.97.0 build --locked --release --manifest-path crates/kordoc-pdf/Cargo.toml --bin pdfjs-worker --features pdfjs-v8 --target ${{ matrix.target }}
+            python3 tests/support/pdf_worker_wheel.py stage --target ${{ matrix.target }} --binary target/${{ matrix.target }}/release/pdfjs-worker
+
+      - name: Install pinned Rust toolchain
+        if: runner.os != 'Linux'
+        run: rustup toolchain install 1.97.0 --profile minimal
+
+      - name: Build and stage native worker
+        if: runner.os != 'Linux'
+        shell: bash
+        run: |
+          cargo +1.97.0 build --locked --release --manifest-path crates/kordoc-pdf/Cargo.toml --bin pdfjs-worker --features pdfjs-v8 --target "${{ matrix.target }}"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+          worker_binary="target/${{ matrix.target }}/release/pdfjs-worker.exe"
+          else
+            worker_binary="target/${{ matrix.target }}/release/pdfjs-worker"
+          fi
+          python tests/support/pdf_worker_wheel.py stage --target "${{ matrix.target }}" --binary "$worker_binary"
+
+      - name: Build native wheel
+        if: runner.os != 'Linux'
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          command: build
+          maturin-version: v1.15.0
+          rust-toolchain: 1.97.0
+          target: ${{ matrix.target }}
+          manylinux: "off"
+          args: --release --locked --out dist
+
+      - name: Audit wheel and worker architecture
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          wheels = list(Path("dist").glob("*.whl"))
+          assert len(wheels) == 1, f"expected exactly one wheel, got {wheels}"
+          PY
+          python tests/support/pdf_worker_wheel.py check-wheel --target "${{ matrix.target }}" --wheel "$(find dist -maxdepth 1 -name '*.whl' -type f)"
+          python scripts/check_artifacts.py dist/*.whl
+
+      - name: Install wheel in a clean environment
+        shell: bash
+        run: |
+          python -m venv .venv
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            .venv/Scripts/python.exe -m pip install dist/*.whl
+          else
+            .venv/bin/python -m pip install dist/*.whl
+          fi
+
+      - name: Probe Helvetica and Unicode PDFs through installed worker
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            worker_python=.venv/Scripts/python.exe
+          else
+            worker_python=.venv/bin/python
+          fi
+          "$worker_python" -I tests/support/pdf_worker_wheel.py smoke \
+            --target "${{ matrix.target }}" \
+            --fixture crates/kordoc-pdf/tests/fixtures/pdfjs_probe/one_page_helvetica.pdf \
+            --expected-text 'V8 PDF.js probe'
+          "$worker_python" -I tests/support/pdf_worker_wheel.py smoke \
+            --target "${{ matrix.target }}" \
+            --fixture crates/kordoc-pdf/tests/fixtures/unicode_probe/unicode_probe.pdf \
+            --expected-text '한글🧪'
+
+      - name: Probe Linux worker under manylinux 2.28 runtime
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/work" \
+            --workdir /work \
+            "${{ matrix.manylinux_image }}" \
+            /bin/bash -lc '
+              set -euo pipefail
+              venv="$(mktemp -d)/venv"
+              /opt/python/cp310-cp310/bin/python -m venv "$venv"
+              "$venv/bin/python" -m pip install /work/dist/*.whl
+              "$venv/bin/python" -I /work/tests/support/pdf_worker_wheel.py smoke \
+                --target "${{ matrix.target }}" \
+                --fixture /work/crates/kordoc-pdf/tests/fixtures/pdfjs_probe/one_page_helvetica.pdf \
+                --expected-text "V8 PDF.js probe"
+              "$venv/bin/python" -I /work/tests/support/pdf_worker_wheel.py smoke \
+                --target "${{ matrix.target }}" \
+                --fixture /work/crates/kordoc-pdf/tests/fixtures/unicode_probe/unicode_probe.pdf \
+                --expected-text "한글🧪"
+            '
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pdf-worker-wheel-${{ matrix.target }}-${{ github.sha }}
+          path: dist/*.whl
+          if-no-files-found: error
+
+  pdf-worker-wheels-gate:
+    if: ${{ always() }}
+    needs: [worker-wheel]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every worker wheel target to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: jq -e 'all(.[]; .result == "success")' <<< "$RESULTS"
