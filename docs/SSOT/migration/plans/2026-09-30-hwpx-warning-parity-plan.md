@@ -1,6 +1,6 @@
 # Bounded HWPX unfinished-XML warning parity
 
-Status: Bounded implementation, independent scoped review, final native workspace and source/isolated-wheel Python gates pass locally. Final bounded fuzz/security verification passes; protected hosted gates precede merge. No shared schema change.
+Status: Merged in PR [#26](https://github.com/Han-taz/paruster/pull/26) as `cb17578e6ee2112762b4abdb2d64f0114f3eea6b` after independent review, local verification and every protected hosted gate passed. No shared schema change.
 
 Restore the known frozen malformed-section EOF diagnostic while retaining
 transactional recovery, sound neighbors, warning code/page, and hard resource

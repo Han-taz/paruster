@@ -4,3 +4,9 @@ tests/golden/fixtures/*.pdf binary
 tests/golden/document/hwpml/fixtures/*.xml -text
 
 crates/kordoc-hancom/tests/support/hwpml/text_fixture_inputs/*.xml -text
+
+# Preserve provenance-pinned asset and PDF bytes across every checkout.
+# Keep normal diff/whitespace checks; only Git line-ending conversion is disabled.
+crates/kordoc-pdf/assets/** -text
+crates/kordoc-pdf/tests/fixtures/**/*.pdf -text
+tests/golden/document/pdf/**/*.pdf -text
