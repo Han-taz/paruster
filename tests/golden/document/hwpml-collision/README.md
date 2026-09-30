@@ -12,7 +12,7 @@ python3 tests/golden/document/hwpml-collision/generate.py
 
 The no-argument verification checks exact bytes, SHA-256 and fixture names. The
 generator SHA-256 is
-`502caa7d3dab075c05582b3ce1913522e505d0aafd1ac819080fa703d83c1be8`.
+`fe273c1d5792fd109cb363c0963378ecf2fba6522dc053d1194aac618021e9ae`.
 
 | Fixture | Bytes | SHA-256 | Observation target |
 | --- | ---: | --- | --- |

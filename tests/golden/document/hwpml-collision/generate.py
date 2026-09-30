@@ -64,7 +64,13 @@ def main() -> int:
             path.write_bytes(contents)
         elif not path.is_file() or path.read_bytes() != contents:
             raise SystemExit(f"fixture is not reproducible: {path}")
-        rows.append({"path": name, "bytes": len(contents), "sha256": hashlib.sha256(contents).hexdigest()})
+        rows.append(
+            {
+                "path": name,
+                "bytes": len(contents),
+                "sha256": hashlib.sha256(contents).hexdigest(),
+            }
+        )
     print(json.dumps(rows, ensure_ascii=False, indent=2))
     return 0
 

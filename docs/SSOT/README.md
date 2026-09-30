@@ -45,3 +45,5 @@ and data flow; `contracts/` for shared interfaces; `components/` for
 implementation truth; `quality/` for validation policy; `operations/` —
 development and release procedures; and `migration/` for plans and status. New
 sections are added only when they have canonical content.
+
+- [`migration/plans/2026-09-30-hwpml-collision-capture-plan.md`](migration/plans/2026-09-30-hwpml-collision-capture-plan.md): separately authored HWPML collision observations and deliberate private rejection boundary

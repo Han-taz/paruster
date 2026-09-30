@@ -80,3 +80,21 @@ and captions fail closed rather than silently losing blocks. Selected nested
 tables under inline note/header/footer wrappers and tables without direct cells
 also reject; the source skips those tables. Shared
 security limits and protected scoring remain unchanged.
+
+## Collision observations and deliberate divergence
+
+The [capture-only checkpoint](../migration/plans/2026-09-30-hwpml-collision-capture-plan.md)
+adds three separately authored CC0 XML inputs and five complete frozen source
+results. A nonblank coordinate collision can silently drop nested structure;
+a repeated-text decoy can receive the nested blocks at the wrong coordinate.
+The source succeeds in both cases. Private Rust deliberately rejects ambiguous
+attachments with `UNSUPPORTED_FORMAT`, so these observations establish a
+known divergence, not matching parity. The blank collision control preserves
+owner blocks. Exact offline inventory/hash/regeneration and semantic checks
+pass independent review. Existing H0 fixtures, protected scoring and native
+behavior remain unchanged. Any later recovery policy requires a separate
+coordinator-reviewed implementation change.
+
+PR [#33](https://github.com/Han-taz/paruster/pull/33) merged private unique-anchor
+tables as `e0fde7db6ed97914ed78483fd2b5f0a58a5d99a3` after required checks,
+CodeQL and all six installed worker targets passed.

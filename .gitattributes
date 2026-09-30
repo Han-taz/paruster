@@ -17,3 +17,8 @@ crates/kordoc-hancom/tests/support/hwpml/table_fixture_inputs/*.xml -text
 # Preserve the pinned text-document recipe and complete expected DTO bytes.
 crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/expected.json -text
 crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/generate.py -text
+
+# Preserve authored collision inputs and frozen complete source observations.
+tests/golden/document/hwpml-collision/fixtures/*.xml -text
+tests/golden/document/hwpml-collision/generate.py -text
+tests/golden/document/hwpml-collision/oracle-results.jsonl -text

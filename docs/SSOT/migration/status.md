@@ -255,3 +255,12 @@ All 17 MCP tools remain pending and must preserve their frozen names, schemas, d
 ## Evidence policy
 
 Detector-only and generated-IR projection goldens prove deterministic foundation behavior, not document-output parity. The parity policy in [`../quality/parity.md`](../quality/parity.md) governs allowed normalization; first-difference evidence and fixture provenance are required before any capability moves from pending to verified.
+
+The separately authored [HWPML collision captures](plans/2026-09-30-hwpml-collision-capture-plan.md)
+freeze five complete source successes across three inputs. Unmatched and
+repeated-text collisions reveal source structure loss/wrong-cell attachment;
+private Rust deliberately rejects those ambiguities. This capture-only change
+establishes known divergences, preserves blank-collision owner structure, and
+changes no parser or protected scoring. Offline checks and independent review
+pass; final-head publication remains pending. Private unique-anchor tables
+merged in PR #33 after all required gates and six worker targets passed.

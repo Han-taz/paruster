@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[2]
 CORPUS = ROOT / "tests/golden/document/hwpml-collision"
 FIXTURES = CORPUS / "fixtures"
-GENERATOR_SHA256 = "502caa7d3dab075c05582b3ce1913522e505d0aafd1ac819080fa703d83c1be8"
+GENERATOR_SHA256 = "fe273c1d5792fd109cb363c0963378ecf2fba6522dc053d1194aac618021e9ae"
 CAPTURE_SHA256 = "0387de2f63a23795a10dee84feb337f9b3f4f377d89a0edf6256415c77f1564d"
 FIXTURE_PINS = {
     "collision_unmatched.xml": (

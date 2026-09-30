@@ -1,6 +1,6 @@
 # HWPML nested-table collision captures
 
-> **Status:** Capture-only artifacts are prepared for coordinator review. No Rust adapter or shared-builder behavior is changed in this branch.
+> **Status:** Capture-only artifacts and offline contract are coordinator-approved and independently reviewed. No Rust adapter or shared-builder behavior is changed in this branch.
 
 ## Question
 
