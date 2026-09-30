@@ -233,7 +233,8 @@ authored PDFs reproduce six frozen full-parse/metadata-only observations,
 including duplicate keywords, delimiter-only empty arrays and permissive dates.
 Ten focused cases and 243 scoped feature executions pass with independent
 review. No public metadata entry point, geometry or DTO/wire change is made;
-latest-main artifact/hosted qualification remains before publication.
+fresh latest-main worker wheel checks pass all four probes and 356 isolated
+Python/helper cases; hosted qualification remains before publication.
 
 The [shared table-builder extraction](plans/2026-09-30-shared-table-builder-plan.md)
 merged in PR [#31](https://github.com/Han-taz/paruster/pull/31) as
