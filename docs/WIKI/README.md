@@ -37,3 +37,4 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 - [`2026/09/2026-09-30-hwpx-h1a-merge.md`](2026/09/2026-09-30-hwpx-h1a-merge.md)
 - [`2026/09/2026-09-30-hwpx-h2a.md`](2026/09/2026-09-30-hwpx-h2a.md)
 - [`2026/09/2026-09-30-hwpx-h1b-local.md`](2026/09/2026-09-30-hwpx-h1b-local.md)
+- [`2026/09/2026-09-30-port-resumed.md`](2026/09/2026-09-30-port-resumed.md)

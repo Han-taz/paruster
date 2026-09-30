@@ -83,8 +83,8 @@ HWPX H1a merged in PR [#18](https://github.com/Han-taz/paruster/pull/18) as
 `e33eab112999aebcf91e1593814bbec17bd1ea79`. The private package reader now
 enforces the reviewed ZIP/ZIP64, path, record-count, CRC, member-extent,
 plaintext/ciphertext, recovery, and section-order boundaries. It remains
-unregistered and exposes no parser capability. H2a is still under review; H1b
-starts only after their interface join. See the append-only
+unregistered and exposes no parser capability. The locally reviewed H2a/H1b/H2b/H3
+join below remains a separate candidate. See the append-only
 [H1a merge record](../../WIKI/2026/09/2026-09-30-hwpx-h1a-merge.md).
 
 H2a XML and section lowering is present as a crate-local candidate on
@@ -92,13 +92,21 @@ H2a XML and section lowering is present as a crate-local candidate on
 bounded XML parsing, transactional section lowering, styles/notes/page
 evidence, and focused unit coverage. Review regressions now cover mixed layout
 fallback, note suffix inheritance, and omitted-empty-paragraph page transitions.
-H2a hosted gates remain pending; the current session cannot publish GitHub writes. See the
+H2a hosted gates remain pending. GitHub publication is now available through the
+authenticated CLI. The XML slice will ship with the aggregate lowering budget
+from H3, rather than as an unbounded standalone section lowerer. See the
 [HWPX component page](../components/hwpx.md) and append-only
 [H2a candidate record](../../WIKI/2026/09/2026-09-30-hwpx-h2a.md).
 
 The reviewed H1b candidate adds crypto/metadata/validation and passes 72 unit
 plus 8 integration tests; [evidence and process/standards caveats](../../WIKI/2026/09/2026-09-30-hwpx-h1b-local.md)
-are recorded. H2b, H3/H4 integration and hosted gates remain pending.
+are recorded. H2b tables/images and H3 private composition are present in the
+recovered `feature/hwpx-private` candidate. Fresh independent SOL review found
+no Critical or Important private Hancom issue. The reviewed aggregate allocation
+guards cover nested note text and repeated inherited note prefixes before copying.
+Fresh Hancom verification passes 103 library tests and 122 integration-binary
+executions: 103 repeated unit cases and 19 distinct integration cases. H4 public
+dispatch/Python wiring and hosted gates remain separate pending checkpoints.
 The preceding H2a candidate had 53 unit tests and 8 integration tests, including
 deterministic synthetic fixture checks. These do not establish public parser
 registration, Python behavior, or real-document parity. HWPX capability stays
