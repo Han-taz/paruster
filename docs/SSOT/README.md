@@ -19,6 +19,8 @@ This directory contains the current, normative description of paruster. A code c
 - [`migration/plans/2026-09-30-hwpml-fixture-plan.md`](migration/plans/2026-09-30-hwpml-fixture-plan.md): fixed HWPML inputs and complete oracle observations before private Rust implementation
 - [`migration/plans/2026-09-30-hwpml-private-text-plan.md`](migration/plans/2026-09-30-hwpml-private-text-plan.md): private bounded HWPML text and metadata lowering before table/recovery qualification
 - [`migration/plans/2026-09-30-pdf-v8-resources-plan.md`](migration/plans/2026-09-30-pdf-v8-resources-plan.md): private bounded CMap/font factories with compile-time embedded assets
+- [`migration/plans/2026-09-30-pdf-v8-text-document-plan.md`](migration/plans/2026-09-30-pdf-v8-text-document-plan.md): bounded private text-item/Info DTO and separate rich worker frames
+
 - [`migration/plans/2026-09-30-shared-table-builder-plan.md`](migration/plans/2026-09-30-shared-table-builder-plan.md): source-neutral sibling extraction with metered fallible grid construction and unchanged core policy
 - [`migration/status.md`](migration/status.md): live implementation and parity status
 - [Workspace architecture](architecture/workspace.md): current crate boundaries, data flow, and security boundaries

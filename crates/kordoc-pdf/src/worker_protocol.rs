@@ -1,6 +1,9 @@
 //! Private one-shot framing for the supervised PDF.js worker.
 
 use crate::v8_runtime::PdfJsProbe;
+use crate::v8_runtime::text_document::{
+    PdfJsTextDocument, TextDocumentLimits, is_limit_error, validate_text_document,
+};
 use kordoc_ir::{ErrorCode, KordocError};
 use serde::de::{DeserializeSeed, Error as DeError, SeqAccess, Visitor};
 use serde::{Deserialize, Serialize};
@@ -16,6 +19,20 @@ const MAGIC: &[u8; 4] = b"KPDF";
 const VERSION: u8 = 1;
 const REQUEST_KIND: u8 = 1;
 const RESPONSE_KIND: u8 = 2;
+const TEXT_REQUEST_KIND: u8 = 3;
+const TEXT_RESPONSE_KIND: u8 = 4;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum ResponseKind {
+    Probe,
+    TextDocument,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(super) enum WorkerRequest {
+    Probe(Vec<u8>),
+    TextDocument(Vec<u8>),
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum ProtocolError {
@@ -31,15 +48,77 @@ pub(super) enum ProtocolError {
 }
 
 pub(super) fn write_request<W: Write>(writer: &mut W, bytes: &[u8]) -> Result<(), ProtocolError> {
+    write_request_kind(writer, bytes, REQUEST_KIND)
+}
+
+pub(super) fn write_text_request<W: Write>(
+    writer: &mut W,
+    bytes: &[u8],
+) -> Result<(), ProtocolError> {
+    write_request_kind(writer, bytes, TEXT_REQUEST_KIND)
+}
+
+fn write_request_kind<W: Write>(
+    writer: &mut W,
+    bytes: &[u8],
+    kind: u8,
+) -> Result<(), ProtocolError> {
     if bytes.len() > MAX_REQUEST_BYTES {
         return Err(ProtocolError::TooLarge);
     }
     let length = u32::try_from(bytes.len()).map_err(|_| ProtocolError::TooLarge)?;
     writer
-        .write_all(&make_header(REQUEST_KIND, length))
+        .write_all(&make_header(kind, length))
         .and_then(|()| writer.write_all(bytes))
         .and_then(|()| writer.flush())
         .map_err(|_| ProtocolError::Io)
+}
+
+pub(super) fn read_worker_request<R: Read>(
+    reader: &mut R,
+) -> Result<WorkerRequest, (ResponseKind, ProtocolError)> {
+    let mut prefix = [0; 6];
+    reader
+        .read_exact(&mut prefix)
+        .map_err(|error| (ResponseKind::Probe, map_read_error(error)))?;
+    let response_kind =
+        if &prefix[..4] == MAGIC && prefix[4] == VERSION && prefix[5] == TEXT_REQUEST_KIND {
+            ResponseKind::TextDocument
+        } else {
+            ResponseKind::Probe
+        };
+    let fail = |error| (response_kind, error);
+    let mut length_bytes = [0; 4];
+    reader
+        .read_exact(&mut length_bytes)
+        .map_err(|error| fail(map_read_error(error)))?;
+    if &prefix[..4] != MAGIC {
+        return Err(fail(ProtocolError::MalformedHeader));
+    }
+    if prefix[4] != VERSION {
+        return Err(fail(ProtocolError::UnsupportedVersion));
+    }
+    if prefix[5] != REQUEST_KIND && prefix[5] != TEXT_REQUEST_KIND {
+        return Err(fail(ProtocolError::WrongKind));
+    }
+    let length = u32::from_be_bytes(length_bytes) as usize;
+    if length > MAX_REQUEST_BYTES {
+        return Err(fail(ProtocolError::TooLarge));
+    }
+    let mut payload = Vec::new();
+    payload
+        .try_reserve_exact(length)
+        .map_err(|_| fail(ProtocolError::AllocationFailed))?;
+    payload.resize(length, 0);
+    reader
+        .read_exact(&mut payload)
+        .map_err(|error| fail(map_read_error(error)))?;
+    require_eof(reader).map_err(fail)?;
+    Ok(if response_kind == ResponseKind::TextDocument {
+        WorkerRequest::TextDocument(payload)
+    } else {
+        WorkerRequest::Probe(payload)
+    })
 }
 
 pub(super) fn read_request<R: Read>(reader: &mut R) -> Result<Vec<u8>, ProtocolError> {
@@ -103,6 +182,76 @@ pub(super) fn read_response<R: Read>(
                 page_count: result.page_count,
                 page_text: result.page_text.0,
             }))
+        }
+        (ResponseStatus::Failure, None, Some(error)) => {
+            Ok(Err(KordocError::new(error.code, error.message.0)))
+        }
+        _ => Err(ProtocolError::InvalidJson),
+    }
+}
+
+pub(super) fn write_text_response<W: Write>(
+    writer: &mut W,
+    result: Result<&PdfJsTextDocument, &KordocError>,
+) -> Result<(), ProtocolError> {
+    let response = match result {
+        Ok(document) => {
+            validate_text_document(document, TextDocumentLimits::default()).map_err(|error| {
+                if error.code == ErrorCode::OutputTooLarge {
+                    ProtocolError::TooLarge
+                } else {
+                    ProtocolError::InvalidJson
+                }
+            })?;
+            TextResponseOut::Success { result: document }
+        }
+        Err(error) => TextResponseOut::Failure {
+            error: WireError {
+                code: error.code,
+                message: sanitize_message(&error.message),
+            },
+        },
+    };
+    let mut payload = BoundedJson::new(MAX_RESPONSE_BYTES);
+    if serde_json::to_writer(&mut payload, &response).is_err() {
+        return Err(if payload.too_large {
+            ProtocolError::TooLarge
+        } else if payload.allocation_failed {
+            ProtocolError::AllocationFailed
+        } else {
+            ProtocolError::Io
+        });
+    }
+    let length = u32::try_from(payload.bytes.len()).map_err(|_| ProtocolError::TooLarge)?;
+    writer
+        .write_all(&make_header(TEXT_RESPONSE_KIND, length))
+        .and_then(|()| writer.write_all(&payload.bytes))
+        .and_then(|()| writer.flush())
+        .map_err(|_| ProtocolError::Io)
+}
+
+pub(super) fn read_text_response<R: Read>(
+    reader: &mut R,
+) -> Result<Result<PdfJsTextDocument, KordocError>, ProtocolError> {
+    let payload = read_payload(reader, TEXT_RESPONSE_KIND, MAX_RESPONSE_BYTES)?;
+    require_eof(reader)?;
+    let response: TextResponseIn = serde_json::from_slice(&payload).map_err(|error| {
+        if is_limit_error(&error.to_string()) {
+            ProtocolError::TooLarge
+        } else {
+            ProtocolError::InvalidJson
+        }
+    })?;
+    match (response.status, response.result, response.error) {
+        (ResponseStatus::Success, Some(document), None) => {
+            validate_text_document(&document, TextDocumentLimits::default()).map_err(|error| {
+                if error.code == ErrorCode::OutputTooLarge {
+                    ProtocolError::TooLarge
+                } else {
+                    ProtocolError::InvalidJson
+                }
+            })?;
+            Ok(Ok(document))
         }
         (ResponseStatus::Failure, None, Some(error)) => {
             Ok(Err(KordocError::new(error.code, error.message.0)))
@@ -188,6 +337,23 @@ fn sanitize_message(message: &str) -> String {
 enum ResponseOut<'a> {
     Success { result: &'a PdfJsProbe },
     Failure { error: WireError },
+}
+
+#[derive(Serialize)]
+#[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
+enum TextResponseOut<'a> {
+    Success { result: &'a PdfJsTextDocument },
+    Failure { error: WireError },
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct TextResponseIn {
+    status: ResponseStatus,
+    #[serde(default)]
+    result: Option<PdfJsTextDocument>,
+    #[serde(default)]
+    error: Option<WireErrorIn>,
 }
 
 #[derive(Deserialize)]
@@ -383,6 +549,7 @@ impl Write for BoundedJson {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::v8_runtime::text_document::{PdfJsMetadata, PdfJsPage, PdfJsTextDocument};
     use kordoc_ir::{ErrorCode, KordocError};
     use std::io::Cursor;
 
@@ -419,6 +586,131 @@ mod tests {
             read_response(&mut Cursor::new(frame)).unwrap(),
             Err(expected_error)
         );
+    }
+
+    #[test]
+    fn legacy_request_and_response_bytes_are_frozen() {
+        let mut request = Vec::new();
+        write_request(&mut request, b"%PDF-").unwrap();
+        assert_eq!(request, b"KPDF\x01\x01\x00\x00\x00\x05%PDF-");
+
+        let mut success = Vec::new();
+        write_response(&mut success, Ok(&probe("ok".to_owned()))).unwrap();
+        let success_json = br#"{"status":"success","result":{"page_count":1,"page_text":["ok"]}}"#;
+        assert_eq!(success, response_frame(success_json));
+
+        let error = KordocError::new(ErrorCode::ParseError, "bad PDF");
+        let mut failure = Vec::new();
+        write_response(&mut failure, Err(&error)).unwrap();
+        let failure_json =
+            br#"{"status":"failure","error":{"code":"PARSE_ERROR","message":"bad PDF"}}"#;
+        assert_eq!(failure, response_frame(failure_json));
+    }
+
+    #[test]
+    fn text_document_request_has_distinct_kind_and_exact_eof() {
+        let mut frame = Vec::new();
+        write_text_request(&mut frame, b"%PDF-").unwrap();
+        assert_eq!(frame, b"KPDF\x01\x03\x00\x00\x00\x05%PDF-");
+        assert_eq!(
+            read_worker_request(&mut Cursor::new(frame)).unwrap(),
+            WorkerRequest::TextDocument(b"%PDF-".to_vec())
+        );
+
+        let mut trailing = b"KPDF\x01\x03\x00\x00\x00\x00x".as_slice();
+        assert_eq!(
+            read_worker_request(&mut trailing),
+            Err((ResponseKind::TextDocument, ProtocolError::TrailingBytes))
+        );
+        let mut unknown = b"KPDF\x01\x09\x00\x00\x00\x00".as_slice();
+        assert_eq!(
+            read_worker_request(&mut unknown),
+            Err((ResponseKind::Probe, ProtocolError::WrongKind))
+        );
+    }
+
+    fn sample_text_document() -> PdfJsTextDocument {
+        PdfJsTextDocument {
+            page_count: 1,
+            metadata: PdfJsMetadata {
+                title: None,
+                author: None,
+                creator: None,
+                subject: None,
+                keywords: None,
+                creation_date: None,
+                modified_date: None,
+            },
+            pages: vec![PdfJsPage {
+                page_number: 1,
+                view_box: [0.0, 0.0, 612.0, 792.0],
+                rotation: 0,
+                items: Vec::new(),
+            }],
+        }
+    }
+
+    #[test]
+    fn text_response_uses_kind_four_and_roundtrips_strict_dto() {
+        let document = sample_text_document();
+        let mut frame = Vec::new();
+        write_text_response(&mut frame, Ok(&document)).unwrap();
+        assert_eq!(&frame[..6], b"KPDF\x01\x04");
+        assert_eq!(
+            read_text_response(&mut Cursor::new(frame)).unwrap(),
+            Ok(document)
+        );
+
+        let error = KordocError::new(ErrorCode::ParseError, "bad PDF");
+        let mut frame = Vec::new();
+        write_text_response(&mut frame, Err(&error)).unwrap();
+        assert_eq!(&frame[..6], b"KPDF\x01\x04");
+        assert_eq!(
+            read_text_response(&mut Cursor::new(frame)).unwrap(),
+            Err(error)
+        );
+    }
+
+    #[test]
+    fn text_response_rejects_wrong_kind_and_bounded_field_overflow() {
+        let mut legacy = Vec::new();
+        write_response(&mut legacy, Ok(&probe("old".to_owned()))).unwrap();
+        assert_eq!(
+            read_text_response(&mut Cursor::new(legacy)),
+            Err(ProtocolError::WrongKind)
+        );
+
+        let oversized_text = "x".repeat(64 * 1024 + 1);
+        let payload = format!(
+            "{{\"status\":\"success\",\"result\":{{\"page_count\":1,\"metadata\":{{\"title\":null,\"author\":null,\"creator\":null,\"subject\":null,\"keywords\":null,\"creation_date\":null,\"modified_date\":null}},\"pages\":[{{\"page_number\":1,\"view_box\":[0,0,612,792],\"rotation\":0,\"items\":[{{\"text\":\"{oversized_text}\",\"width\":1,\"height\":1,\"transform\":[1,0,0,1,0,0],\"font_name\":\"f\"}}]}}]}}}}"
+        );
+        let frame = [
+            make_header(TEXT_RESPONSE_KIND, payload.len() as u32).as_slice(),
+            payload.as_bytes(),
+        ]
+        .concat();
+        assert_eq!(
+            read_text_response(&mut Cursor::new(frame)),
+            Err(ProtocolError::TooLarge)
+        );
+    }
+
+    #[test]
+    fn text_response_unknown_field_cannot_spoof_a_quota_error() {
+        for payload in [
+            br#"{"status":"success","result":{"limit exceeded":0}}"#.as_slice(),
+            br#"{"status":"success","result":{" at line PDFJS_LIMIT:field byte cap exceeded":0}}"#,
+        ] {
+            let frame = [
+                make_header(TEXT_RESPONSE_KIND, payload.len() as u32).as_slice(),
+                payload,
+            ]
+            .concat();
+            assert_eq!(
+                read_text_response(&mut Cursor::new(frame)),
+                Err(ProtocolError::InvalidJson)
+            );
+        }
     }
 
     #[test]
