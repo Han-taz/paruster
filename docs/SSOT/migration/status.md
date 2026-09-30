@@ -219,7 +219,9 @@ adds bounded raw page-item geometry and seven Info metadata fields through
 new worker kinds 3/4, retaining exact kind-1/kind-2 behavior. Independent
 runtime and protocol reviews pass after boundary/typed-error fixes. The
 six-target worker workflow adds a fourth complete-result probe. A fresh macOS
-ARM worker wheel passes all four probes and 352 isolated Python/helper tests;
+ARM worker wheel passes all four probes before mainline table integration; the
+combined fresh wheel then passes 354 isolated Python/helper tests and exact DTO
+probe;
 hosted publication evidence follows. No public PDF capability,
 layout/IR parity or protected score is promoted.
 

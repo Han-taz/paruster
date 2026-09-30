@@ -87,3 +87,13 @@ plus ten subtests. Wheel and base sdist audits pass; the three HWPML fixture
 copies retain exact bytes. Private PDF worker sources are outside the base
 sdist dependency closure, as before; ordinary worker build/assembly remains a
 separate production gate. No full-source-sdist worker support is claimed.
+
+
+## Shared-table mainline join
+
+Protected PR #31 is incorporated before final hosted review. Only additive
+SSOT/WIKI merge conflicts need resolution; native PDF source is unchanged.
+Merged locked workspace tests, all-feature Clippy/rustdoc and fmt pass.
+A freshly rebuilt combined worker wheel passes 354 isolated Python/helper
+cases and ten subtests; the exact installed kind-4 probe still passes.
+Both artifact audits pass. Final-head six-platform gates remain pending.
