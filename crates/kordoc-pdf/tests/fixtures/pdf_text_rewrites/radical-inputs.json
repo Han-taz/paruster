@@ -1,0 +1,862 @@
+{
+  "schema_version": 1,
+  "description": "Every code point in the exact Kangxi radical replacement range.",
+  "items": [
+    {
+      "code_point": "U+2F00",
+      "text": "⼀"
+    },
+    {
+      "code_point": "U+2F01",
+      "text": "⼁"
+    },
+    {
+      "code_point": "U+2F02",
+      "text": "⼂"
+    },
+    {
+      "code_point": "U+2F03",
+      "text": "⼃"
+    },
+    {
+      "code_point": "U+2F04",
+      "text": "⼄"
+    },
+    {
+      "code_point": "U+2F05",
+      "text": "⼅"
+    },
+    {
+      "code_point": "U+2F06",
+      "text": "⼆"
+    },
+    {
+      "code_point": "U+2F07",
+      "text": "⼇"
+    },
+    {
+      "code_point": "U+2F08",
+      "text": "⼈"
+    },
+    {
+      "code_point": "U+2F09",
+      "text": "⼉"
+    },
+    {
+      "code_point": "U+2F0A",
+      "text": "⼊"
+    },
+    {
+      "code_point": "U+2F0B",
+      "text": "⼋"
+    },
+    {
+      "code_point": "U+2F0C",
+      "text": "⼌"
+    },
+    {
+      "code_point": "U+2F0D",
+      "text": "⼍"
+    },
+    {
+      "code_point": "U+2F0E",
+      "text": "⼎"
+    },
+    {
+      "code_point": "U+2F0F",
+      "text": "⼏"
+    },
+    {
+      "code_point": "U+2F10",
+      "text": "⼐"
+    },
+    {
+      "code_point": "U+2F11",
+      "text": "⼑"
+    },
+    {
+      "code_point": "U+2F12",
+      "text": "⼒"
+    },
+    {
+      "code_point": "U+2F13",
+      "text": "⼓"
+    },
+    {
+      "code_point": "U+2F14",
+      "text": "⼔"
+    },
+    {
+      "code_point": "U+2F15",
+      "text": "⼕"
+    },
+    {
+      "code_point": "U+2F16",
+      "text": "⼖"
+    },
+    {
+      "code_point": "U+2F17",
+      "text": "⼗"
+    },
+    {
+      "code_point": "U+2F18",
+      "text": "⼘"
+    },
+    {
+      "code_point": "U+2F19",
+      "text": "⼙"
+    },
+    {
+      "code_point": "U+2F1A",
+      "text": "⼚"
+    },
+    {
+      "code_point": "U+2F1B",
+      "text": "⼛"
+    },
+    {
+      "code_point": "U+2F1C",
+      "text": "⼜"
+    },
+    {
+      "code_point": "U+2F1D",
+      "text": "⼝"
+    },
+    {
+      "code_point": "U+2F1E",
+      "text": "⼞"
+    },
+    {
+      "code_point": "U+2F1F",
+      "text": "⼟"
+    },
+    {
+      "code_point": "U+2F20",
+      "text": "⼠"
+    },
+    {
+      "code_point": "U+2F21",
+      "text": "⼡"
+    },
+    {
+      "code_point": "U+2F22",
+      "text": "⼢"
+    },
+    {
+      "code_point": "U+2F23",
+      "text": "⼣"
+    },
+    {
+      "code_point": "U+2F24",
+      "text": "⼤"
+    },
+    {
+      "code_point": "U+2F25",
+      "text": "⼥"
+    },
+    {
+      "code_point": "U+2F26",
+      "text": "⼦"
+    },
+    {
+      "code_point": "U+2F27",
+      "text": "⼧"
+    },
+    {
+      "code_point": "U+2F28",
+      "text": "⼨"
+    },
+    {
+      "code_point": "U+2F29",
+      "text": "⼩"
+    },
+    {
+      "code_point": "U+2F2A",
+      "text": "⼪"
+    },
+    {
+      "code_point": "U+2F2B",
+      "text": "⼫"
+    },
+    {
+      "code_point": "U+2F2C",
+      "text": "⼬"
+    },
+    {
+      "code_point": "U+2F2D",
+      "text": "⼭"
+    },
+    {
+      "code_point": "U+2F2E",
+      "text": "⼮"
+    },
+    {
+      "code_point": "U+2F2F",
+      "text": "⼯"
+    },
+    {
+      "code_point": "U+2F30",
+      "text": "⼰"
+    },
+    {
+      "code_point": "U+2F31",
+      "text": "⼱"
+    },
+    {
+      "code_point": "U+2F32",
+      "text": "⼲"
+    },
+    {
+      "code_point": "U+2F33",
+      "text": "⼳"
+    },
+    {
+      "code_point": "U+2F34",
+      "text": "⼴"
+    },
+    {
+      "code_point": "U+2F35",
+      "text": "⼵"
+    },
+    {
+      "code_point": "U+2F36",
+      "text": "⼶"
+    },
+    {
+      "code_point": "U+2F37",
+      "text": "⼷"
+    },
+    {
+      "code_point": "U+2F38",
+      "text": "⼸"
+    },
+    {
+      "code_point": "U+2F39",
+      "text": "⼹"
+    },
+    {
+      "code_point": "U+2F3A",
+      "text": "⼺"
+    },
+    {
+      "code_point": "U+2F3B",
+      "text": "⼻"
+    },
+    {
+      "code_point": "U+2F3C",
+      "text": "⼼"
+    },
+    {
+      "code_point": "U+2F3D",
+      "text": "⼽"
+    },
+    {
+      "code_point": "U+2F3E",
+      "text": "⼾"
+    },
+    {
+      "code_point": "U+2F3F",
+      "text": "⼿"
+    },
+    {
+      "code_point": "U+2F40",
+      "text": "⽀"
+    },
+    {
+      "code_point": "U+2F41",
+      "text": "⽁"
+    },
+    {
+      "code_point": "U+2F42",
+      "text": "⽂"
+    },
+    {
+      "code_point": "U+2F43",
+      "text": "⽃"
+    },
+    {
+      "code_point": "U+2F44",
+      "text": "⽄"
+    },
+    {
+      "code_point": "U+2F45",
+      "text": "⽅"
+    },
+    {
+      "code_point": "U+2F46",
+      "text": "⽆"
+    },
+    {
+      "code_point": "U+2F47",
+      "text": "⽇"
+    },
+    {
+      "code_point": "U+2F48",
+      "text": "⽈"
+    },
+    {
+      "code_point": "U+2F49",
+      "text": "⽉"
+    },
+    {
+      "code_point": "U+2F4A",
+      "text": "⽊"
+    },
+    {
+      "code_point": "U+2F4B",
+      "text": "⽋"
+    },
+    {
+      "code_point": "U+2F4C",
+      "text": "⽌"
+    },
+    {
+      "code_point": "U+2F4D",
+      "text": "⽍"
+    },
+    {
+      "code_point": "U+2F4E",
+      "text": "⽎"
+    },
+    {
+      "code_point": "U+2F4F",
+      "text": "⽏"
+    },
+    {
+      "code_point": "U+2F50",
+      "text": "⽐"
+    },
+    {
+      "code_point": "U+2F51",
+      "text": "⽑"
+    },
+    {
+      "code_point": "U+2F52",
+      "text": "⽒"
+    },
+    {
+      "code_point": "U+2F53",
+      "text": "⽓"
+    },
+    {
+      "code_point": "U+2F54",
+      "text": "⽔"
+    },
+    {
+      "code_point": "U+2F55",
+      "text": "⽕"
+    },
+    {
+      "code_point": "U+2F56",
+      "text": "⽖"
+    },
+    {
+      "code_point": "U+2F57",
+      "text": "⽗"
+    },
+    {
+      "code_point": "U+2F58",
+      "text": "⽘"
+    },
+    {
+      "code_point": "U+2F59",
+      "text": "⽙"
+    },
+    {
+      "code_point": "U+2F5A",
+      "text": "⽚"
+    },
+    {
+      "code_point": "U+2F5B",
+      "text": "⽛"
+    },
+    {
+      "code_point": "U+2F5C",
+      "text": "⽜"
+    },
+    {
+      "code_point": "U+2F5D",
+      "text": "⽝"
+    },
+    {
+      "code_point": "U+2F5E",
+      "text": "⽞"
+    },
+    {
+      "code_point": "U+2F5F",
+      "text": "⽟"
+    },
+    {
+      "code_point": "U+2F60",
+      "text": "⽠"
+    },
+    {
+      "code_point": "U+2F61",
+      "text": "⽡"
+    },
+    {
+      "code_point": "U+2F62",
+      "text": "⽢"
+    },
+    {
+      "code_point": "U+2F63",
+      "text": "⽣"
+    },
+    {
+      "code_point": "U+2F64",
+      "text": "⽤"
+    },
+    {
+      "code_point": "U+2F65",
+      "text": "⽥"
+    },
+    {
+      "code_point": "U+2F66",
+      "text": "⽦"
+    },
+    {
+      "code_point": "U+2F67",
+      "text": "⽧"
+    },
+    {
+      "code_point": "U+2F68",
+      "text": "⽨"
+    },
+    {
+      "code_point": "U+2F69",
+      "text": "⽩"
+    },
+    {
+      "code_point": "U+2F6A",
+      "text": "⽪"
+    },
+    {
+      "code_point": "U+2F6B",
+      "text": "⽫"
+    },
+    {
+      "code_point": "U+2F6C",
+      "text": "⽬"
+    },
+    {
+      "code_point": "U+2F6D",
+      "text": "⽭"
+    },
+    {
+      "code_point": "U+2F6E",
+      "text": "⽮"
+    },
+    {
+      "code_point": "U+2F6F",
+      "text": "⽯"
+    },
+    {
+      "code_point": "U+2F70",
+      "text": "⽰"
+    },
+    {
+      "code_point": "U+2F71",
+      "text": "⽱"
+    },
+    {
+      "code_point": "U+2F72",
+      "text": "⽲"
+    },
+    {
+      "code_point": "U+2F73",
+      "text": "⽳"
+    },
+    {
+      "code_point": "U+2F74",
+      "text": "⽴"
+    },
+    {
+      "code_point": "U+2F75",
+      "text": "⽵"
+    },
+    {
+      "code_point": "U+2F76",
+      "text": "⽶"
+    },
+    {
+      "code_point": "U+2F77",
+      "text": "⽷"
+    },
+    {
+      "code_point": "U+2F78",
+      "text": "⽸"
+    },
+    {
+      "code_point": "U+2F79",
+      "text": "⽹"
+    },
+    {
+      "code_point": "U+2F7A",
+      "text": "⽺"
+    },
+    {
+      "code_point": "U+2F7B",
+      "text": "⽻"
+    },
+    {
+      "code_point": "U+2F7C",
+      "text": "⽼"
+    },
+    {
+      "code_point": "U+2F7D",
+      "text": "⽽"
+    },
+    {
+      "code_point": "U+2F7E",
+      "text": "⽾"
+    },
+    {
+      "code_point": "U+2F7F",
+      "text": "⽿"
+    },
+    {
+      "code_point": "U+2F80",
+      "text": "⾀"
+    },
+    {
+      "code_point": "U+2F81",
+      "text": "⾁"
+    },
+    {
+      "code_point": "U+2F82",
+      "text": "⾂"
+    },
+    {
+      "code_point": "U+2F83",
+      "text": "⾃"
+    },
+    {
+      "code_point": "U+2F84",
+      "text": "⾄"
+    },
+    {
+      "code_point": "U+2F85",
+      "text": "⾅"
+    },
+    {
+      "code_point": "U+2F86",
+      "text": "⾆"
+    },
+    {
+      "code_point": "U+2F87",
+      "text": "⾇"
+    },
+    {
+      "code_point": "U+2F88",
+      "text": "⾈"
+    },
+    {
+      "code_point": "U+2F89",
+      "text": "⾉"
+    },
+    {
+      "code_point": "U+2F8A",
+      "text": "⾊"
+    },
+    {
+      "code_point": "U+2F8B",
+      "text": "⾋"
+    },
+    {
+      "code_point": "U+2F8C",
+      "text": "⾌"
+    },
+    {
+      "code_point": "U+2F8D",
+      "text": "⾍"
+    },
+    {
+      "code_point": "U+2F8E",
+      "text": "⾎"
+    },
+    {
+      "code_point": "U+2F8F",
+      "text": "⾏"
+    },
+    {
+      "code_point": "U+2F90",
+      "text": "⾐"
+    },
+    {
+      "code_point": "U+2F91",
+      "text": "⾑"
+    },
+    {
+      "code_point": "U+2F92",
+      "text": "⾒"
+    },
+    {
+      "code_point": "U+2F93",
+      "text": "⾓"
+    },
+    {
+      "code_point": "U+2F94",
+      "text": "⾔"
+    },
+    {
+      "code_point": "U+2F95",
+      "text": "⾕"
+    },
+    {
+      "code_point": "U+2F96",
+      "text": "⾖"
+    },
+    {
+      "code_point": "U+2F97",
+      "text": "⾗"
+    },
+    {
+      "code_point": "U+2F98",
+      "text": "⾘"
+    },
+    {
+      "code_point": "U+2F99",
+      "text": "⾙"
+    },
+    {
+      "code_point": "U+2F9A",
+      "text": "⾚"
+    },
+    {
+      "code_point": "U+2F9B",
+      "text": "⾛"
+    },
+    {
+      "code_point": "U+2F9C",
+      "text": "⾜"
+    },
+    {
+      "code_point": "U+2F9D",
+      "text": "⾝"
+    },
+    {
+      "code_point": "U+2F9E",
+      "text": "⾞"
+    },
+    {
+      "code_point": "U+2F9F",
+      "text": "⾟"
+    },
+    {
+      "code_point": "U+2FA0",
+      "text": "⾠"
+    },
+    {
+      "code_point": "U+2FA1",
+      "text": "⾡"
+    },
+    {
+      "code_point": "U+2FA2",
+      "text": "⾢"
+    },
+    {
+      "code_point": "U+2FA3",
+      "text": "⾣"
+    },
+    {
+      "code_point": "U+2FA4",
+      "text": "⾤"
+    },
+    {
+      "code_point": "U+2FA5",
+      "text": "⾥"
+    },
+    {
+      "code_point": "U+2FA6",
+      "text": "⾦"
+    },
+    {
+      "code_point": "U+2FA7",
+      "text": "⾧"
+    },
+    {
+      "code_point": "U+2FA8",
+      "text": "⾨"
+    },
+    {
+      "code_point": "U+2FA9",
+      "text": "⾩"
+    },
+    {
+      "code_point": "U+2FAA",
+      "text": "⾪"
+    },
+    {
+      "code_point": "U+2FAB",
+      "text": "⾫"
+    },
+    {
+      "code_point": "U+2FAC",
+      "text": "⾬"
+    },
+    {
+      "code_point": "U+2FAD",
+      "text": "⾭"
+    },
+    {
+      "code_point": "U+2FAE",
+      "text": "⾮"
+    },
+    {
+      "code_point": "U+2FAF",
+      "text": "⾯"
+    },
+    {
+      "code_point": "U+2FB0",
+      "text": "⾰"
+    },
+    {
+      "code_point": "U+2FB1",
+      "text": "⾱"
+    },
+    {
+      "code_point": "U+2FB2",
+      "text": "⾲"
+    },
+    {
+      "code_point": "U+2FB3",
+      "text": "⾳"
+    },
+    {
+      "code_point": "U+2FB4",
+      "text": "⾴"
+    },
+    {
+      "code_point": "U+2FB5",
+      "text": "⾵"
+    },
+    {
+      "code_point": "U+2FB6",
+      "text": "⾶"
+    },
+    {
+      "code_point": "U+2FB7",
+      "text": "⾷"
+    },
+    {
+      "code_point": "U+2FB8",
+      "text": "⾸"
+    },
+    {
+      "code_point": "U+2FB9",
+      "text": "⾹"
+    },
+    {
+      "code_point": "U+2FBA",
+      "text": "⾺"
+    },
+    {
+      "code_point": "U+2FBB",
+      "text": "⾻"
+    },
+    {
+      "code_point": "U+2FBC",
+      "text": "⾼"
+    },
+    {
+      "code_point": "U+2FBD",
+      "text": "⾽"
+    },
+    {
+      "code_point": "U+2FBE",
+      "text": "⾾"
+    },
+    {
+      "code_point": "U+2FBF",
+      "text": "⾿"
+    },
+    {
+      "code_point": "U+2FC0",
+      "text": "⿀"
+    },
+    {
+      "code_point": "U+2FC1",
+      "text": "⿁"
+    },
+    {
+      "code_point": "U+2FC2",
+      "text": "⿂"
+    },
+    {
+      "code_point": "U+2FC3",
+      "text": "⿃"
+    },
+    {
+      "code_point": "U+2FC4",
+      "text": "⿄"
+    },
+    {
+      "code_point": "U+2FC5",
+      "text": "⿅"
+    },
+    {
+      "code_point": "U+2FC6",
+      "text": "⿆"
+    },
+    {
+      "code_point": "U+2FC7",
+      "text": "⿇"
+    },
+    {
+      "code_point": "U+2FC8",
+      "text": "⿈"
+    },
+    {
+      "code_point": "U+2FC9",
+      "text": "⿉"
+    },
+    {
+      "code_point": "U+2FCA",
+      "text": "⿊"
+    },
+    {
+      "code_point": "U+2FCB",
+      "text": "⿋"
+    },
+    {
+      "code_point": "U+2FCC",
+      "text": "⿌"
+    },
+    {
+      "code_point": "U+2FCD",
+      "text": "⿍"
+    },
+    {
+      "code_point": "U+2FCE",
+      "text": "⿎"
+    },
+    {
+      "code_point": "U+2FCF",
+      "text": "⿏"
+    },
+    {
+      "code_point": "U+2FD0",
+      "text": "⿐"
+    },
+    {
+      "code_point": "U+2FD1",
+      "text": "⿑"
+    },
+    {
+      "code_point": "U+2FD2",
+      "text": "⿒"
+    },
+    {
+      "code_point": "U+2FD3",
+      "text": "⿓"
+    },
+    {
+      "code_point": "U+2FD4",
+      "text": "⿔"
+    },
+    {
+      "code_point": "U+2FD5",
+      "text": "⿕"
+    }
+  ]
+}

@@ -192,7 +192,7 @@ pub(crate) fn trim_ecmascript(value: &str) -> &str {
     value.trim_matches(is_ecmascript_whitespace)
 }
 
-fn is_ecmascript_whitespace(character: char) -> bool {
+pub(crate) fn is_ecmascript_whitespace(character: char) -> bool {
     matches!(
         character,
         '\u{0009}'..='\u{000d}'

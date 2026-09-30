@@ -1,0 +1,157 @@
+{
+  "oracle_commit": "bb71f7fb0bf51dd456d27505a8c04772df182144",
+  "package_version": "4.16.3",
+  "node_version": "v22.22.0",
+  "v8_version": "12.4.254.21-node.33",
+  "unicode_version": "17.0",
+  "text_line_sha256": "034b6a882eb913b723e21a1729e032bc45147e60acdf88aab655dfd415253072",
+  "capture_method": "actual normalizeItems; unrelated line-detector imports stubbed by temporary research loader; non-split captures retain text fields only",
+  "cases": [
+    {
+      "name": "numeric_ascii_space_rewrite",
+      "output_text": [
+        "450-7340)"
+      ]
+    },
+    {
+      "name": "numeric_full_permitted_punctuation_class",
+      "output_text": [
+        "☎(45.0,-7·3)"
+      ]
+    },
+    {
+      "name": "numeric_non_ascii_whitespace_survives_ascii_space_removal",
+      "output_text": [
+        "1\t2 3　45"
+      ]
+    },
+    {
+      "name": "numeric_newline_survives_ascii_space_removal",
+      "output_text": [
+        "1\n23"
+      ]
+    },
+    {
+      "name": "nel_is_not_ecmascript_regex_whitespace",
+      "output_text": [
+        "12 3"
+      ]
+    },
+    {
+      "name": "phone_symbol_is_permitted",
+      "output_text": [
+        "☎12"
+      ]
+    },
+    {
+      "name": "plus_sign_prevents_numeric_rewrite",
+      "output_text": [
+        "+ 1 2"
+      ]
+    },
+    {
+      "name": "unicode_digit_prevents_numeric_rewrite",
+      "output_text": [
+        "١ 2 3"
+      ]
+    },
+    {
+      "name": "astral_neighbor_prevents_numeric_rewrite",
+      "output_text": [
+        "😀1 2"
+      ]
+    },
+    {
+      "name": "ecmascript_edge_trim_includes_bom_nbsp_em_space_and_line_separator",
+      "output_text": [
+        "A"
+      ]
+    },
+    {
+      "name": "ecmascript_trim_retains_nel",
+      "output_text": [
+        "N"
+      ]
+    },
+    {
+      "name": "radical_nfkc_preserves_astral_neighbors",
+      "output_text": [
+        "x😀一😀y"
+      ]
+    },
+    {
+      "name": "nfkc_is_limited_to_radical_block",
+      "output_text": [
+        "Ａ一①龠⿖"
+      ]
+    },
+    {
+      "name": "uppercase_label_at_rounded_font_gate",
+      "output_text": [
+        "HOW"
+      ]
+    },
+    {
+      "name": "uppercase_label_below_font_gate",
+      "output_text": [
+        "H O W"
+      ]
+    },
+    {
+      "name": "uppercase_label_accepts_curly_apostrophe",
+      "output_text": [
+        "L’ET"
+      ]
+    },
+    {
+      "name": "uppercase_label_allows_numeric_and_ascii_punctuation",
+      "output_text": [
+        "A1?!&'’"
+      ]
+    },
+    {
+      "name": "uppercase_label_rejects_non_ascii_letter",
+      "output_text": [
+        "Å B C"
+      ]
+    },
+    {
+      "name": "uppercase_label_rejects_two_groups",
+      "output_text": [
+        "A B"
+      ]
+    },
+    {
+      "name": "uppercase_label_rejects_double_space",
+      "output_text": [
+        "A  B C"
+      ]
+    }
+  ],
+  "split_order_evidence": [
+    {
+      "text": "가",
+      "x": 10,
+      "y": 30,
+      "seq": 2
+    },
+    {
+      "text": "나",
+      "x": 20,
+      "y": 30,
+      "seq": 2.001
+    },
+    {
+      "text": "다",
+      "x": 30,
+      "y": 30,
+      "seq": 2.002
+    },
+    {
+      "text": "123",
+      "x": 100,
+      "y": 20,
+      "seq": 1
+    }
+  ]
+}

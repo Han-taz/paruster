@@ -1,0 +1,1723 @@
+{
+  "oracle_commit": "bb71f7fb0bf51dd456d27505a8c04772df182144",
+  "package_version": "4.16.3",
+  "node_version": "v22.22.0",
+  "v8_version": "12.4.254.21-node.33",
+  "unicode_version": "17.0",
+  "text_line_sha256": "034b6a882eb913b723e21a1729e032bc45147e60acdf88aab655dfd415253072",
+  "source_expression": "c.normalize(\"NFKC\") in text-line.ts:193, evaluated independently for each U+2F00..U+2FD5 scalar",
+  "mappings": [
+    {
+      "code_point": "U+2F00",
+      "input": "⼀",
+      "output": "一",
+      "output_code_points": [
+        "U+4E00"
+      ]
+    },
+    {
+      "code_point": "U+2F01",
+      "input": "⼁",
+      "output": "丨",
+      "output_code_points": [
+        "U+4E28"
+      ]
+    },
+    {
+      "code_point": "U+2F02",
+      "input": "⼂",
+      "output": "丶",
+      "output_code_points": [
+        "U+4E36"
+      ]
+    },
+    {
+      "code_point": "U+2F03",
+      "input": "⼃",
+      "output": "丿",
+      "output_code_points": [
+        "U+4E3F"
+      ]
+    },
+    {
+      "code_point": "U+2F04",
+      "input": "⼄",
+      "output": "乙",
+      "output_code_points": [
+        "U+4E59"
+      ]
+    },
+    {
+      "code_point": "U+2F05",
+      "input": "⼅",
+      "output": "亅",
+      "output_code_points": [
+        "U+4E85"
+      ]
+    },
+    {
+      "code_point": "U+2F06",
+      "input": "⼆",
+      "output": "二",
+      "output_code_points": [
+        "U+4E8C"
+      ]
+    },
+    {
+      "code_point": "U+2F07",
+      "input": "⼇",
+      "output": "亠",
+      "output_code_points": [
+        "U+4EA0"
+      ]
+    },
+    {
+      "code_point": "U+2F08",
+      "input": "⼈",
+      "output": "人",
+      "output_code_points": [
+        "U+4EBA"
+      ]
+    },
+    {
+      "code_point": "U+2F09",
+      "input": "⼉",
+      "output": "儿",
+      "output_code_points": [
+        "U+513F"
+      ]
+    },
+    {
+      "code_point": "U+2F0A",
+      "input": "⼊",
+      "output": "入",
+      "output_code_points": [
+        "U+5165"
+      ]
+    },
+    {
+      "code_point": "U+2F0B",
+      "input": "⼋",
+      "output": "八",
+      "output_code_points": [
+        "U+516B"
+      ]
+    },
+    {
+      "code_point": "U+2F0C",
+      "input": "⼌",
+      "output": "冂",
+      "output_code_points": [
+        "U+5182"
+      ]
+    },
+    {
+      "code_point": "U+2F0D",
+      "input": "⼍",
+      "output": "冖",
+      "output_code_points": [
+        "U+5196"
+      ]
+    },
+    {
+      "code_point": "U+2F0E",
+      "input": "⼎",
+      "output": "冫",
+      "output_code_points": [
+        "U+51AB"
+      ]
+    },
+    {
+      "code_point": "U+2F0F",
+      "input": "⼏",
+      "output": "几",
+      "output_code_points": [
+        "U+51E0"
+      ]
+    },
+    {
+      "code_point": "U+2F10",
+      "input": "⼐",
+      "output": "凵",
+      "output_code_points": [
+        "U+51F5"
+      ]
+    },
+    {
+      "code_point": "U+2F11",
+      "input": "⼑",
+      "output": "刀",
+      "output_code_points": [
+        "U+5200"
+      ]
+    },
+    {
+      "code_point": "U+2F12",
+      "input": "⼒",
+      "output": "力",
+      "output_code_points": [
+        "U+529B"
+      ]
+    },
+    {
+      "code_point": "U+2F13",
+      "input": "⼓",
+      "output": "勹",
+      "output_code_points": [
+        "U+52F9"
+      ]
+    },
+    {
+      "code_point": "U+2F14",
+      "input": "⼔",
+      "output": "匕",
+      "output_code_points": [
+        "U+5315"
+      ]
+    },
+    {
+      "code_point": "U+2F15",
+      "input": "⼕",
+      "output": "匚",
+      "output_code_points": [
+        "U+531A"
+      ]
+    },
+    {
+      "code_point": "U+2F16",
+      "input": "⼖",
+      "output": "匸",
+      "output_code_points": [
+        "U+5338"
+      ]
+    },
+    {
+      "code_point": "U+2F17",
+      "input": "⼗",
+      "output": "十",
+      "output_code_points": [
+        "U+5341"
+      ]
+    },
+    {
+      "code_point": "U+2F18",
+      "input": "⼘",
+      "output": "卜",
+      "output_code_points": [
+        "U+535C"
+      ]
+    },
+    {
+      "code_point": "U+2F19",
+      "input": "⼙",
+      "output": "卩",
+      "output_code_points": [
+        "U+5369"
+      ]
+    },
+    {
+      "code_point": "U+2F1A",
+      "input": "⼚",
+      "output": "厂",
+      "output_code_points": [
+        "U+5382"
+      ]
+    },
+    {
+      "code_point": "U+2F1B",
+      "input": "⼛",
+      "output": "厶",
+      "output_code_points": [
+        "U+53B6"
+      ]
+    },
+    {
+      "code_point": "U+2F1C",
+      "input": "⼜",
+      "output": "又",
+      "output_code_points": [
+        "U+53C8"
+      ]
+    },
+    {
+      "code_point": "U+2F1D",
+      "input": "⼝",
+      "output": "口",
+      "output_code_points": [
+        "U+53E3"
+      ]
+    },
+    {
+      "code_point": "U+2F1E",
+      "input": "⼞",
+      "output": "囗",
+      "output_code_points": [
+        "U+56D7"
+      ]
+    },
+    {
+      "code_point": "U+2F1F",
+      "input": "⼟",
+      "output": "土",
+      "output_code_points": [
+        "U+571F"
+      ]
+    },
+    {
+      "code_point": "U+2F20",
+      "input": "⼠",
+      "output": "士",
+      "output_code_points": [
+        "U+58EB"
+      ]
+    },
+    {
+      "code_point": "U+2F21",
+      "input": "⼡",
+      "output": "夂",
+      "output_code_points": [
+        "U+5902"
+      ]
+    },
+    {
+      "code_point": "U+2F22",
+      "input": "⼢",
+      "output": "夊",
+      "output_code_points": [
+        "U+590A"
+      ]
+    },
+    {
+      "code_point": "U+2F23",
+      "input": "⼣",
+      "output": "夕",
+      "output_code_points": [
+        "U+5915"
+      ]
+    },
+    {
+      "code_point": "U+2F24",
+      "input": "⼤",
+      "output": "大",
+      "output_code_points": [
+        "U+5927"
+      ]
+    },
+    {
+      "code_point": "U+2F25",
+      "input": "⼥",
+      "output": "女",
+      "output_code_points": [
+        "U+5973"
+      ]
+    },
+    {
+      "code_point": "U+2F26",
+      "input": "⼦",
+      "output": "子",
+      "output_code_points": [
+        "U+5B50"
+      ]
+    },
+    {
+      "code_point": "U+2F27",
+      "input": "⼧",
+      "output": "宀",
+      "output_code_points": [
+        "U+5B80"
+      ]
+    },
+    {
+      "code_point": "U+2F28",
+      "input": "⼨",
+      "output": "寸",
+      "output_code_points": [
+        "U+5BF8"
+      ]
+    },
+    {
+      "code_point": "U+2F29",
+      "input": "⼩",
+      "output": "小",
+      "output_code_points": [
+        "U+5C0F"
+      ]
+    },
+    {
+      "code_point": "U+2F2A",
+      "input": "⼪",
+      "output": "尢",
+      "output_code_points": [
+        "U+5C22"
+      ]
+    },
+    {
+      "code_point": "U+2F2B",
+      "input": "⼫",
+      "output": "尸",
+      "output_code_points": [
+        "U+5C38"
+      ]
+    },
+    {
+      "code_point": "U+2F2C",
+      "input": "⼬",
+      "output": "屮",
+      "output_code_points": [
+        "U+5C6E"
+      ]
+    },
+    {
+      "code_point": "U+2F2D",
+      "input": "⼭",
+      "output": "山",
+      "output_code_points": [
+        "U+5C71"
+      ]
+    },
+    {
+      "code_point": "U+2F2E",
+      "input": "⼮",
+      "output": "巛",
+      "output_code_points": [
+        "U+5DDB"
+      ]
+    },
+    {
+      "code_point": "U+2F2F",
+      "input": "⼯",
+      "output": "工",
+      "output_code_points": [
+        "U+5DE5"
+      ]
+    },
+    {
+      "code_point": "U+2F30",
+      "input": "⼰",
+      "output": "己",
+      "output_code_points": [
+        "U+5DF1"
+      ]
+    },
+    {
+      "code_point": "U+2F31",
+      "input": "⼱",
+      "output": "巾",
+      "output_code_points": [
+        "U+5DFE"
+      ]
+    },
+    {
+      "code_point": "U+2F32",
+      "input": "⼲",
+      "output": "干",
+      "output_code_points": [
+        "U+5E72"
+      ]
+    },
+    {
+      "code_point": "U+2F33",
+      "input": "⼳",
+      "output": "幺",
+      "output_code_points": [
+        "U+5E7A"
+      ]
+    },
+    {
+      "code_point": "U+2F34",
+      "input": "⼴",
+      "output": "广",
+      "output_code_points": [
+        "U+5E7F"
+      ]
+    },
+    {
+      "code_point": "U+2F35",
+      "input": "⼵",
+      "output": "廴",
+      "output_code_points": [
+        "U+5EF4"
+      ]
+    },
+    {
+      "code_point": "U+2F36",
+      "input": "⼶",
+      "output": "廾",
+      "output_code_points": [
+        "U+5EFE"
+      ]
+    },
+    {
+      "code_point": "U+2F37",
+      "input": "⼷",
+      "output": "弋",
+      "output_code_points": [
+        "U+5F0B"
+      ]
+    },
+    {
+      "code_point": "U+2F38",
+      "input": "⼸",
+      "output": "弓",
+      "output_code_points": [
+        "U+5F13"
+      ]
+    },
+    {
+      "code_point": "U+2F39",
+      "input": "⼹",
+      "output": "彐",
+      "output_code_points": [
+        "U+5F50"
+      ]
+    },
+    {
+      "code_point": "U+2F3A",
+      "input": "⼺",
+      "output": "彡",
+      "output_code_points": [
+        "U+5F61"
+      ]
+    },
+    {
+      "code_point": "U+2F3B",
+      "input": "⼻",
+      "output": "彳",
+      "output_code_points": [
+        "U+5F73"
+      ]
+    },
+    {
+      "code_point": "U+2F3C",
+      "input": "⼼",
+      "output": "心",
+      "output_code_points": [
+        "U+5FC3"
+      ]
+    },
+    {
+      "code_point": "U+2F3D",
+      "input": "⼽",
+      "output": "戈",
+      "output_code_points": [
+        "U+6208"
+      ]
+    },
+    {
+      "code_point": "U+2F3E",
+      "input": "⼾",
+      "output": "戶",
+      "output_code_points": [
+        "U+6236"
+      ]
+    },
+    {
+      "code_point": "U+2F3F",
+      "input": "⼿",
+      "output": "手",
+      "output_code_points": [
+        "U+624B"
+      ]
+    },
+    {
+      "code_point": "U+2F40",
+      "input": "⽀",
+      "output": "支",
+      "output_code_points": [
+        "U+652F"
+      ]
+    },
+    {
+      "code_point": "U+2F41",
+      "input": "⽁",
+      "output": "攴",
+      "output_code_points": [
+        "U+6534"
+      ]
+    },
+    {
+      "code_point": "U+2F42",
+      "input": "⽂",
+      "output": "文",
+      "output_code_points": [
+        "U+6587"
+      ]
+    },
+    {
+      "code_point": "U+2F43",
+      "input": "⽃",
+      "output": "斗",
+      "output_code_points": [
+        "U+6597"
+      ]
+    },
+    {
+      "code_point": "U+2F44",
+      "input": "⽄",
+      "output": "斤",
+      "output_code_points": [
+        "U+65A4"
+      ]
+    },
+    {
+      "code_point": "U+2F45",
+      "input": "⽅",
+      "output": "方",
+      "output_code_points": [
+        "U+65B9"
+      ]
+    },
+    {
+      "code_point": "U+2F46",
+      "input": "⽆",
+      "output": "无",
+      "output_code_points": [
+        "U+65E0"
+      ]
+    },
+    {
+      "code_point": "U+2F47",
+      "input": "⽇",
+      "output": "日",
+      "output_code_points": [
+        "U+65E5"
+      ]
+    },
+    {
+      "code_point": "U+2F48",
+      "input": "⽈",
+      "output": "曰",
+      "output_code_points": [
+        "U+66F0"
+      ]
+    },
+    {
+      "code_point": "U+2F49",
+      "input": "⽉",
+      "output": "月",
+      "output_code_points": [
+        "U+6708"
+      ]
+    },
+    {
+      "code_point": "U+2F4A",
+      "input": "⽊",
+      "output": "木",
+      "output_code_points": [
+        "U+6728"
+      ]
+    },
+    {
+      "code_point": "U+2F4B",
+      "input": "⽋",
+      "output": "欠",
+      "output_code_points": [
+        "U+6B20"
+      ]
+    },
+    {
+      "code_point": "U+2F4C",
+      "input": "⽌",
+      "output": "止",
+      "output_code_points": [
+        "U+6B62"
+      ]
+    },
+    {
+      "code_point": "U+2F4D",
+      "input": "⽍",
+      "output": "歹",
+      "output_code_points": [
+        "U+6B79"
+      ]
+    },
+    {
+      "code_point": "U+2F4E",
+      "input": "⽎",
+      "output": "殳",
+      "output_code_points": [
+        "U+6BB3"
+      ]
+    },
+    {
+      "code_point": "U+2F4F",
+      "input": "⽏",
+      "output": "毋",
+      "output_code_points": [
+        "U+6BCB"
+      ]
+    },
+    {
+      "code_point": "U+2F50",
+      "input": "⽐",
+      "output": "比",
+      "output_code_points": [
+        "U+6BD4"
+      ]
+    },
+    {
+      "code_point": "U+2F51",
+      "input": "⽑",
+      "output": "毛",
+      "output_code_points": [
+        "U+6BDB"
+      ]
+    },
+    {
+      "code_point": "U+2F52",
+      "input": "⽒",
+      "output": "氏",
+      "output_code_points": [
+        "U+6C0F"
+      ]
+    },
+    {
+      "code_point": "U+2F53",
+      "input": "⽓",
+      "output": "气",
+      "output_code_points": [
+        "U+6C14"
+      ]
+    },
+    {
+      "code_point": "U+2F54",
+      "input": "⽔",
+      "output": "水",
+      "output_code_points": [
+        "U+6C34"
+      ]
+    },
+    {
+      "code_point": "U+2F55",
+      "input": "⽕",
+      "output": "火",
+      "output_code_points": [
+        "U+706B"
+      ]
+    },
+    {
+      "code_point": "U+2F56",
+      "input": "⽖",
+      "output": "爪",
+      "output_code_points": [
+        "U+722A"
+      ]
+    },
+    {
+      "code_point": "U+2F57",
+      "input": "⽗",
+      "output": "父",
+      "output_code_points": [
+        "U+7236"
+      ]
+    },
+    {
+      "code_point": "U+2F58",
+      "input": "⽘",
+      "output": "爻",
+      "output_code_points": [
+        "U+723B"
+      ]
+    },
+    {
+      "code_point": "U+2F59",
+      "input": "⽙",
+      "output": "爿",
+      "output_code_points": [
+        "U+723F"
+      ]
+    },
+    {
+      "code_point": "U+2F5A",
+      "input": "⽚",
+      "output": "片",
+      "output_code_points": [
+        "U+7247"
+      ]
+    },
+    {
+      "code_point": "U+2F5B",
+      "input": "⽛",
+      "output": "牙",
+      "output_code_points": [
+        "U+7259"
+      ]
+    },
+    {
+      "code_point": "U+2F5C",
+      "input": "⽜",
+      "output": "牛",
+      "output_code_points": [
+        "U+725B"
+      ]
+    },
+    {
+      "code_point": "U+2F5D",
+      "input": "⽝",
+      "output": "犬",
+      "output_code_points": [
+        "U+72AC"
+      ]
+    },
+    {
+      "code_point": "U+2F5E",
+      "input": "⽞",
+      "output": "玄",
+      "output_code_points": [
+        "U+7384"
+      ]
+    },
+    {
+      "code_point": "U+2F5F",
+      "input": "⽟",
+      "output": "玉",
+      "output_code_points": [
+        "U+7389"
+      ]
+    },
+    {
+      "code_point": "U+2F60",
+      "input": "⽠",
+      "output": "瓜",
+      "output_code_points": [
+        "U+74DC"
+      ]
+    },
+    {
+      "code_point": "U+2F61",
+      "input": "⽡",
+      "output": "瓦",
+      "output_code_points": [
+        "U+74E6"
+      ]
+    },
+    {
+      "code_point": "U+2F62",
+      "input": "⽢",
+      "output": "甘",
+      "output_code_points": [
+        "U+7518"
+      ]
+    },
+    {
+      "code_point": "U+2F63",
+      "input": "⽣",
+      "output": "生",
+      "output_code_points": [
+        "U+751F"
+      ]
+    },
+    {
+      "code_point": "U+2F64",
+      "input": "⽤",
+      "output": "用",
+      "output_code_points": [
+        "U+7528"
+      ]
+    },
+    {
+      "code_point": "U+2F65",
+      "input": "⽥",
+      "output": "田",
+      "output_code_points": [
+        "U+7530"
+      ]
+    },
+    {
+      "code_point": "U+2F66",
+      "input": "⽦",
+      "output": "疋",
+      "output_code_points": [
+        "U+758B"
+      ]
+    },
+    {
+      "code_point": "U+2F67",
+      "input": "⽧",
+      "output": "疒",
+      "output_code_points": [
+        "U+7592"
+      ]
+    },
+    {
+      "code_point": "U+2F68",
+      "input": "⽨",
+      "output": "癶",
+      "output_code_points": [
+        "U+7676"
+      ]
+    },
+    {
+      "code_point": "U+2F69",
+      "input": "⽩",
+      "output": "白",
+      "output_code_points": [
+        "U+767D"
+      ]
+    },
+    {
+      "code_point": "U+2F6A",
+      "input": "⽪",
+      "output": "皮",
+      "output_code_points": [
+        "U+76AE"
+      ]
+    },
+    {
+      "code_point": "U+2F6B",
+      "input": "⽫",
+      "output": "皿",
+      "output_code_points": [
+        "U+76BF"
+      ]
+    },
+    {
+      "code_point": "U+2F6C",
+      "input": "⽬",
+      "output": "目",
+      "output_code_points": [
+        "U+76EE"
+      ]
+    },
+    {
+      "code_point": "U+2F6D",
+      "input": "⽭",
+      "output": "矛",
+      "output_code_points": [
+        "U+77DB"
+      ]
+    },
+    {
+      "code_point": "U+2F6E",
+      "input": "⽮",
+      "output": "矢",
+      "output_code_points": [
+        "U+77E2"
+      ]
+    },
+    {
+      "code_point": "U+2F6F",
+      "input": "⽯",
+      "output": "石",
+      "output_code_points": [
+        "U+77F3"
+      ]
+    },
+    {
+      "code_point": "U+2F70",
+      "input": "⽰",
+      "output": "示",
+      "output_code_points": [
+        "U+793A"
+      ]
+    },
+    {
+      "code_point": "U+2F71",
+      "input": "⽱",
+      "output": "禸",
+      "output_code_points": [
+        "U+79B8"
+      ]
+    },
+    {
+      "code_point": "U+2F72",
+      "input": "⽲",
+      "output": "禾",
+      "output_code_points": [
+        "U+79BE"
+      ]
+    },
+    {
+      "code_point": "U+2F73",
+      "input": "⽳",
+      "output": "穴",
+      "output_code_points": [
+        "U+7A74"
+      ]
+    },
+    {
+      "code_point": "U+2F74",
+      "input": "⽴",
+      "output": "立",
+      "output_code_points": [
+        "U+7ACB"
+      ]
+    },
+    {
+      "code_point": "U+2F75",
+      "input": "⽵",
+      "output": "竹",
+      "output_code_points": [
+        "U+7AF9"
+      ]
+    },
+    {
+      "code_point": "U+2F76",
+      "input": "⽶",
+      "output": "米",
+      "output_code_points": [
+        "U+7C73"
+      ]
+    },
+    {
+      "code_point": "U+2F77",
+      "input": "⽷",
+      "output": "糸",
+      "output_code_points": [
+        "U+7CF8"
+      ]
+    },
+    {
+      "code_point": "U+2F78",
+      "input": "⽸",
+      "output": "缶",
+      "output_code_points": [
+        "U+7F36"
+      ]
+    },
+    {
+      "code_point": "U+2F79",
+      "input": "⽹",
+      "output": "网",
+      "output_code_points": [
+        "U+7F51"
+      ]
+    },
+    {
+      "code_point": "U+2F7A",
+      "input": "⽺",
+      "output": "羊",
+      "output_code_points": [
+        "U+7F8A"
+      ]
+    },
+    {
+      "code_point": "U+2F7B",
+      "input": "⽻",
+      "output": "羽",
+      "output_code_points": [
+        "U+7FBD"
+      ]
+    },
+    {
+      "code_point": "U+2F7C",
+      "input": "⽼",
+      "output": "老",
+      "output_code_points": [
+        "U+8001"
+      ]
+    },
+    {
+      "code_point": "U+2F7D",
+      "input": "⽽",
+      "output": "而",
+      "output_code_points": [
+        "U+800C"
+      ]
+    },
+    {
+      "code_point": "U+2F7E",
+      "input": "⽾",
+      "output": "耒",
+      "output_code_points": [
+        "U+8012"
+      ]
+    },
+    {
+      "code_point": "U+2F7F",
+      "input": "⽿",
+      "output": "耳",
+      "output_code_points": [
+        "U+8033"
+      ]
+    },
+    {
+      "code_point": "U+2F80",
+      "input": "⾀",
+      "output": "聿",
+      "output_code_points": [
+        "U+807F"
+      ]
+    },
+    {
+      "code_point": "U+2F81",
+      "input": "⾁",
+      "output": "肉",
+      "output_code_points": [
+        "U+8089"
+      ]
+    },
+    {
+      "code_point": "U+2F82",
+      "input": "⾂",
+      "output": "臣",
+      "output_code_points": [
+        "U+81E3"
+      ]
+    },
+    {
+      "code_point": "U+2F83",
+      "input": "⾃",
+      "output": "自",
+      "output_code_points": [
+        "U+81EA"
+      ]
+    },
+    {
+      "code_point": "U+2F84",
+      "input": "⾄",
+      "output": "至",
+      "output_code_points": [
+        "U+81F3"
+      ]
+    },
+    {
+      "code_point": "U+2F85",
+      "input": "⾅",
+      "output": "臼",
+      "output_code_points": [
+        "U+81FC"
+      ]
+    },
+    {
+      "code_point": "U+2F86",
+      "input": "⾆",
+      "output": "舌",
+      "output_code_points": [
+        "U+820C"
+      ]
+    },
+    {
+      "code_point": "U+2F87",
+      "input": "⾇",
+      "output": "舛",
+      "output_code_points": [
+        "U+821B"
+      ]
+    },
+    {
+      "code_point": "U+2F88",
+      "input": "⾈",
+      "output": "舟",
+      "output_code_points": [
+        "U+821F"
+      ]
+    },
+    {
+      "code_point": "U+2F89",
+      "input": "⾉",
+      "output": "艮",
+      "output_code_points": [
+        "U+826E"
+      ]
+    },
+    {
+      "code_point": "U+2F8A",
+      "input": "⾊",
+      "output": "色",
+      "output_code_points": [
+        "U+8272"
+      ]
+    },
+    {
+      "code_point": "U+2F8B",
+      "input": "⾋",
+      "output": "艸",
+      "output_code_points": [
+        "U+8278"
+      ]
+    },
+    {
+      "code_point": "U+2F8C",
+      "input": "⾌",
+      "output": "虍",
+      "output_code_points": [
+        "U+864D"
+      ]
+    },
+    {
+      "code_point": "U+2F8D",
+      "input": "⾍",
+      "output": "虫",
+      "output_code_points": [
+        "U+866B"
+      ]
+    },
+    {
+      "code_point": "U+2F8E",
+      "input": "⾎",
+      "output": "血",
+      "output_code_points": [
+        "U+8840"
+      ]
+    },
+    {
+      "code_point": "U+2F8F",
+      "input": "⾏",
+      "output": "行",
+      "output_code_points": [
+        "U+884C"
+      ]
+    },
+    {
+      "code_point": "U+2F90",
+      "input": "⾐",
+      "output": "衣",
+      "output_code_points": [
+        "U+8863"
+      ]
+    },
+    {
+      "code_point": "U+2F91",
+      "input": "⾑",
+      "output": "襾",
+      "output_code_points": [
+        "U+897E"
+      ]
+    },
+    {
+      "code_point": "U+2F92",
+      "input": "⾒",
+      "output": "見",
+      "output_code_points": [
+        "U+898B"
+      ]
+    },
+    {
+      "code_point": "U+2F93",
+      "input": "⾓",
+      "output": "角",
+      "output_code_points": [
+        "U+89D2"
+      ]
+    },
+    {
+      "code_point": "U+2F94",
+      "input": "⾔",
+      "output": "言",
+      "output_code_points": [
+        "U+8A00"
+      ]
+    },
+    {
+      "code_point": "U+2F95",
+      "input": "⾕",
+      "output": "谷",
+      "output_code_points": [
+        "U+8C37"
+      ]
+    },
+    {
+      "code_point": "U+2F96",
+      "input": "⾖",
+      "output": "豆",
+      "output_code_points": [
+        "U+8C46"
+      ]
+    },
+    {
+      "code_point": "U+2F97",
+      "input": "⾗",
+      "output": "豕",
+      "output_code_points": [
+        "U+8C55"
+      ]
+    },
+    {
+      "code_point": "U+2F98",
+      "input": "⾘",
+      "output": "豸",
+      "output_code_points": [
+        "U+8C78"
+      ]
+    },
+    {
+      "code_point": "U+2F99",
+      "input": "⾙",
+      "output": "貝",
+      "output_code_points": [
+        "U+8C9D"
+      ]
+    },
+    {
+      "code_point": "U+2F9A",
+      "input": "⾚",
+      "output": "赤",
+      "output_code_points": [
+        "U+8D64"
+      ]
+    },
+    {
+      "code_point": "U+2F9B",
+      "input": "⾛",
+      "output": "走",
+      "output_code_points": [
+        "U+8D70"
+      ]
+    },
+    {
+      "code_point": "U+2F9C",
+      "input": "⾜",
+      "output": "足",
+      "output_code_points": [
+        "U+8DB3"
+      ]
+    },
+    {
+      "code_point": "U+2F9D",
+      "input": "⾝",
+      "output": "身",
+      "output_code_points": [
+        "U+8EAB"
+      ]
+    },
+    {
+      "code_point": "U+2F9E",
+      "input": "⾞",
+      "output": "車",
+      "output_code_points": [
+        "U+8ECA"
+      ]
+    },
+    {
+      "code_point": "U+2F9F",
+      "input": "⾟",
+      "output": "辛",
+      "output_code_points": [
+        "U+8F9B"
+      ]
+    },
+    {
+      "code_point": "U+2FA0",
+      "input": "⾠",
+      "output": "辰",
+      "output_code_points": [
+        "U+8FB0"
+      ]
+    },
+    {
+      "code_point": "U+2FA1",
+      "input": "⾡",
+      "output": "辵",
+      "output_code_points": [
+        "U+8FB5"
+      ]
+    },
+    {
+      "code_point": "U+2FA2",
+      "input": "⾢",
+      "output": "邑",
+      "output_code_points": [
+        "U+9091"
+      ]
+    },
+    {
+      "code_point": "U+2FA3",
+      "input": "⾣",
+      "output": "酉",
+      "output_code_points": [
+        "U+9149"
+      ]
+    },
+    {
+      "code_point": "U+2FA4",
+      "input": "⾤",
+      "output": "釆",
+      "output_code_points": [
+        "U+91C6"
+      ]
+    },
+    {
+      "code_point": "U+2FA5",
+      "input": "⾥",
+      "output": "里",
+      "output_code_points": [
+        "U+91CC"
+      ]
+    },
+    {
+      "code_point": "U+2FA6",
+      "input": "⾦",
+      "output": "金",
+      "output_code_points": [
+        "U+91D1"
+      ]
+    },
+    {
+      "code_point": "U+2FA7",
+      "input": "⾧",
+      "output": "長",
+      "output_code_points": [
+        "U+9577"
+      ]
+    },
+    {
+      "code_point": "U+2FA8",
+      "input": "⾨",
+      "output": "門",
+      "output_code_points": [
+        "U+9580"
+      ]
+    },
+    {
+      "code_point": "U+2FA9",
+      "input": "⾩",
+      "output": "阜",
+      "output_code_points": [
+        "U+961C"
+      ]
+    },
+    {
+      "code_point": "U+2FAA",
+      "input": "⾪",
+      "output": "隶",
+      "output_code_points": [
+        "U+96B6"
+      ]
+    },
+    {
+      "code_point": "U+2FAB",
+      "input": "⾫",
+      "output": "隹",
+      "output_code_points": [
+        "U+96B9"
+      ]
+    },
+    {
+      "code_point": "U+2FAC",
+      "input": "⾬",
+      "output": "雨",
+      "output_code_points": [
+        "U+96E8"
+      ]
+    },
+    {
+      "code_point": "U+2FAD",
+      "input": "⾭",
+      "output": "靑",
+      "output_code_points": [
+        "U+9751"
+      ]
+    },
+    {
+      "code_point": "U+2FAE",
+      "input": "⾮",
+      "output": "非",
+      "output_code_points": [
+        "U+975E"
+      ]
+    },
+    {
+      "code_point": "U+2FAF",
+      "input": "⾯",
+      "output": "面",
+      "output_code_points": [
+        "U+9762"
+      ]
+    },
+    {
+      "code_point": "U+2FB0",
+      "input": "⾰",
+      "output": "革",
+      "output_code_points": [
+        "U+9769"
+      ]
+    },
+    {
+      "code_point": "U+2FB1",
+      "input": "⾱",
+      "output": "韋",
+      "output_code_points": [
+        "U+97CB"
+      ]
+    },
+    {
+      "code_point": "U+2FB2",
+      "input": "⾲",
+      "output": "韭",
+      "output_code_points": [
+        "U+97ED"
+      ]
+    },
+    {
+      "code_point": "U+2FB3",
+      "input": "⾳",
+      "output": "音",
+      "output_code_points": [
+        "U+97F3"
+      ]
+    },
+    {
+      "code_point": "U+2FB4",
+      "input": "⾴",
+      "output": "頁",
+      "output_code_points": [
+        "U+9801"
+      ]
+    },
+    {
+      "code_point": "U+2FB5",
+      "input": "⾵",
+      "output": "風",
+      "output_code_points": [
+        "U+98A8"
+      ]
+    },
+    {
+      "code_point": "U+2FB6",
+      "input": "⾶",
+      "output": "飛",
+      "output_code_points": [
+        "U+98DB"
+      ]
+    },
+    {
+      "code_point": "U+2FB7",
+      "input": "⾷",
+      "output": "食",
+      "output_code_points": [
+        "U+98DF"
+      ]
+    },
+    {
+      "code_point": "U+2FB8",
+      "input": "⾸",
+      "output": "首",
+      "output_code_points": [
+        "U+9996"
+      ]
+    },
+    {
+      "code_point": "U+2FB9",
+      "input": "⾹",
+      "output": "香",
+      "output_code_points": [
+        "U+9999"
+      ]
+    },
+    {
+      "code_point": "U+2FBA",
+      "input": "⾺",
+      "output": "馬",
+      "output_code_points": [
+        "U+99AC"
+      ]
+    },
+    {
+      "code_point": "U+2FBB",
+      "input": "⾻",
+      "output": "骨",
+      "output_code_points": [
+        "U+9AA8"
+      ]
+    },
+    {
+      "code_point": "U+2FBC",
+      "input": "⾼",
+      "output": "高",
+      "output_code_points": [
+        "U+9AD8"
+      ]
+    },
+    {
+      "code_point": "U+2FBD",
+      "input": "⾽",
+      "output": "髟",
+      "output_code_points": [
+        "U+9ADF"
+      ]
+    },
+    {
+      "code_point": "U+2FBE",
+      "input": "⾾",
+      "output": "鬥",
+      "output_code_points": [
+        "U+9B25"
+      ]
+    },
+    {
+      "code_point": "U+2FBF",
+      "input": "⾿",
+      "output": "鬯",
+      "output_code_points": [
+        "U+9B2F"
+      ]
+    },
+    {
+      "code_point": "U+2FC0",
+      "input": "⿀",
+      "output": "鬲",
+      "output_code_points": [
+        "U+9B32"
+      ]
+    },
+    {
+      "code_point": "U+2FC1",
+      "input": "⿁",
+      "output": "鬼",
+      "output_code_points": [
+        "U+9B3C"
+      ]
+    },
+    {
+      "code_point": "U+2FC2",
+      "input": "⿂",
+      "output": "魚",
+      "output_code_points": [
+        "U+9B5A"
+      ]
+    },
+    {
+      "code_point": "U+2FC3",
+      "input": "⿃",
+      "output": "鳥",
+      "output_code_points": [
+        "U+9CE5"
+      ]
+    },
+    {
+      "code_point": "U+2FC4",
+      "input": "⿄",
+      "output": "鹵",
+      "output_code_points": [
+        "U+9E75"
+      ]
+    },
+    {
+      "code_point": "U+2FC5",
+      "input": "⿅",
+      "output": "鹿",
+      "output_code_points": [
+        "U+9E7F"
+      ]
+    },
+    {
+      "code_point": "U+2FC6",
+      "input": "⿆",
+      "output": "麥",
+      "output_code_points": [
+        "U+9EA5"
+      ]
+    },
+    {
+      "code_point": "U+2FC7",
+      "input": "⿇",
+      "output": "麻",
+      "output_code_points": [
+        "U+9EBB"
+      ]
+    },
+    {
+      "code_point": "U+2FC8",
+      "input": "⿈",
+      "output": "黃",
+      "output_code_points": [
+        "U+9EC3"
+      ]
+    },
+    {
+      "code_point": "U+2FC9",
+      "input": "⿉",
+      "output": "黍",
+      "output_code_points": [
+        "U+9ECD"
+      ]
+    },
+    {
+      "code_point": "U+2FCA",
+      "input": "⿊",
+      "output": "黑",
+      "output_code_points": [
+        "U+9ED1"
+      ]
+    },
+    {
+      "code_point": "U+2FCB",
+      "input": "⿋",
+      "output": "黹",
+      "output_code_points": [
+        "U+9EF9"
+      ]
+    },
+    {
+      "code_point": "U+2FCC",
+      "input": "⿌",
+      "output": "黽",
+      "output_code_points": [
+        "U+9EFD"
+      ]
+    },
+    {
+      "code_point": "U+2FCD",
+      "input": "⿍",
+      "output": "鼎",
+      "output_code_points": [
+        "U+9F0E"
+      ]
+    },
+    {
+      "code_point": "U+2FCE",
+      "input": "⿎",
+      "output": "鼓",
+      "output_code_points": [
+        "U+9F13"
+      ]
+    },
+    {
+      "code_point": "U+2FCF",
+      "input": "⿏",
+      "output": "鼠",
+      "output_code_points": [
+        "U+9F20"
+      ]
+    },
+    {
+      "code_point": "U+2FD0",
+      "input": "⿐",
+      "output": "鼻",
+      "output_code_points": [
+        "U+9F3B"
+      ]
+    },
+    {
+      "code_point": "U+2FD1",
+      "input": "⿑",
+      "output": "齊",
+      "output_code_points": [
+        "U+9F4A"
+      ]
+    },
+    {
+      "code_point": "U+2FD2",
+      "input": "⿒",
+      "output": "齒",
+      "output_code_points": [
+        "U+9F52"
+      ]
+    },
+    {
+      "code_point": "U+2FD3",
+      "input": "⿓",
+      "output": "龍",
+      "output_code_points": [
+        "U+9F8D"
+      ]
+    },
+    {
+      "code_point": "U+2FD4",
+      "input": "⿔",
+      "output": "龜",
+      "output_code_points": [
+        "U+9F9C"
+      ]
+    },
+    {
+      "code_point": "U+2FD5",
+      "input": "⿕",
+      "output": "龠",
+      "output_code_points": [
+        "U+9FA0"
+      ]
+    }
+  ]
+}
