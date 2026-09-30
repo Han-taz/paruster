@@ -1,4 +1,6 @@
-use crate::hwpx::sections::{SectionInput, lower_sections, order_section_paths};
+use crate::hwpx::sections::{
+    SectionInput, lower_sections, lower_sections_with_package, order_section_paths,
+};
 use crate::hwpx::styles::StyleCatalog;
 use kordoc_ir::{
     ErrorCode, IrBlock, IrBlockType, IrCell, IrTable, PageMode, PageNumber, PageSelection,
@@ -94,6 +96,99 @@ fn falls_back_to_numeric_section_order() {
         ]
     );
     assert_eq!(order_section_paths(&available, Some(&[])).unwrap(), ordered);
+}
+
+#[test]
+fn preserves_header_and_trailing_empty_cells() {
+    let output = lower_sections(
+        &[section("Contents/section0.xml", "<hp:tbl><hp:tr><hp:tc header=\"1\"><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:run><hp:t>Head</hp:t></hp:run></hp:p></hp:subList></hp:tc><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"2\"/><hp:subList/></hp:tc></hp:tr></hp:tbl>")],
+        &StyleCatalog::default(), None, &ParseOptions::default()).unwrap();
+    let table = output.blocks[0].table.as_ref().unwrap();
+    assert_eq!(table.cols, 3);
+    assert_eq!(table.cells[0][0].is_header, Some(true));
+    assert_eq!(table.cells[0][2].text, "");
+}
+
+#[test]
+fn keeps_nested_table_and_caption_blocks_in_order() {
+    let output = lower_sections(
+        &[section("Contents/section0.xml", "<hp:tbl><hp:caption><hp:subList><hp:p><hp:run><hp:t>cap</hp:t></hp:run></hp:p><hp:tbl><hp:tr><hp:tc><hp:subList><hp:p><hp:run><hp:t>caption child</hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl></hp:subList></hp:caption><hp:tr><hp:tc><hp:subList><hp:p><hp:run><hp:t>before</hp:t></hp:run></hp:p><hp:tbl><hp:tr><hp:tc><hp:subList><hp:p><hp:run><hp:t>nested</hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl><hp:p><hp:run><hp:t>after</hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl>")],
+        &StyleCatalog::default(), None, &ParseOptions::default()).unwrap();
+    let table = output.blocks[0].table.as_ref().unwrap();
+    let cell_blocks = table.cells[0][0].blocks.as_ref().unwrap();
+    assert_eq!(cell_blocks.len(), 3);
+    assert_eq!(cell_blocks[0].text.as_deref(), Some("before"));
+    assert!(cell_blocks[1].table.is_some());
+    assert_eq!(cell_blocks[2].text.as_deref(), Some("after"));
+    let caption_blocks = table.caption_blocks.as_ref().unwrap();
+    assert_eq!(caption_blocks[0].text.as_deref(), Some("cap"));
+    assert!(caption_blocks[1].table.is_some());
+}
+
+#[test]
+fn table_and_image_inside_paragraph_keep_source_order() {
+    use crate::hwpx::package::Package;
+    use std::io::{Cursor, Write};
+    use zip::{ZipWriter, write::SimpleFileOptions};
+    let xml = "<hp:p><hp:run><hp:t>before</hp:t><hp:tbl><hp:tr><hp:tc><hp:subList><hp:p><hp:run><hp:t>inside</hp:t><hp:pic><hp:imgRect binaryItemIDRef=\"pic\"/></hp:pic></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl><hp:t>middle</hp:t><hp:pic><hp:imgRect binaryItemIDRef=\"pic\"/></hp:pic><hp:t>after</hp:t></hp:run></hp:p>";
+    let input = section("Contents/section0.xml", xml);
+    let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+    writer
+        .start_file("BinData/pic.png", SimpleFileOptions::default())
+        .unwrap();
+    writer.write_all(b"data").unwrap();
+    let package_bytes = writer.finish().unwrap().into_inner();
+    let mut package = Package::open(Box::leak(package_bytes.into_boxed_slice())).unwrap();
+    let output = lower_sections_with_package(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+        &mut package,
+    )
+    .unwrap();
+    assert_eq!(output.blocks.len(), 5);
+    assert_eq!(output.blocks[0].text.as_deref(), Some("before"));
+    assert!(output.blocks[1].table.is_some());
+    assert_eq!(output.blocks[2].text.as_deref(), Some("middle"));
+    assert_eq!(output.blocks[3].kind, IrBlockType::Image);
+    assert_eq!(output.blocks[4].text.as_deref(), Some("after"));
+    assert_eq!(output.images.len(), 1);
+    let nested = output.blocks[1].table.as_ref().unwrap().cells[0][0]
+        .blocks
+        .as_ref()
+        .unwrap();
+    assert_eq!(nested[0].text.as_deref(), Some("inside"));
+    assert_eq!(nested[1].kind, IrBlockType::Image);
+}
+
+#[test]
+fn table_internal_page_split_counts_once_before_midpage_following_prose() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"5000\"/></hp:linesegarray><hp:run><hp:t>host</hp:t><hp:tbl><hp:tr><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:linesegarray><hp:lineseg vertpos=\"5000\"/></hp:linesegarray></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl></hp:run></hp:p><hp:p><hp:linesegarray><hp:lineseg vertpos=\"2500\"/></hp:linesegarray><hp:run><hp:t>continued below table</hp:t></hp:run></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    let prose: Vec<_> = output
+        .blocks
+        .iter()
+        .filter(|block| block.text.as_deref().is_some_and(|text| !text.is_empty()))
+        .collect();
+    assert_eq!(prose[0].page_number, Some(1));
+    assert_eq!(prose[1].page_number, Some(2));
+    let table = output
+        .blocks
+        .iter()
+        .find(|block| block.table.is_some())
+        .unwrap();
+    assert_eq!(table.page_number, Some(1));
+    assert_eq!(output.page_evidence.len(), 2);
 }
 
 #[test]
