@@ -232,3 +232,7 @@ Git autocrlf byte preservation are verified. All six installed worker targets
 retain the three old probes and add exact full kind-4 result comparison.
 This remains a private unregistered substrate; Rust layout/IR lowering and
 production containment/packaging remain pending.
+
+PR [#32](https://github.com/Han-taz/paruster/pull/32) merged this private text
+transfer as `762ddde4050660abaaa815889ed76da21a589612` after final-head
+required checks and all six four-probe installed-worker targets passed.
