@@ -59,3 +59,15 @@ helper tests plus three subtests pass using the existing merged worker wheel;
 a fresh native candidate artifact and latest-main join remain before PR.
 Autocrlf=true index checkout preserves the 949-byte table-copy pin. No shared
 contract/fixture/scoring limit is weakened.
+
+
+## Latest-main fresh artifact verification
+
+The candidate merges protected PDF text-document PR #32; only additive
+attribute/WIKI index conflicts need resolution. Native HWPML source remains
+frozen. Merged locked workspace tests, all-target/all-feature Clippy, rustdoc,
+fmt, Ruff (55 files), eight-source mypy, docs, actionlint and zizmor pass.
+A fresh macOS ARM abi3 wheel installed into isolated CPython 3.10 passes 358
+Python/contracts/parity/helper tests and ten subtests. Wheel/sdist audits pass;
+five HWPML source/manifest/fixture members retain exact bytes in the sdist.
+Hosted final-head gates and all six worker targets remain before merge.

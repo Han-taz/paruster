@@ -247,7 +247,8 @@ core Markdown projections match exactly. Fresh Hancom 147 unit plus 144
 integration executions and independent review pass. Captions, ambiguous
 attachments, empty tables, skipped-wrapper tables and depth 9 deliberately
 reject; general source coercion/recovery and public registration remain pending.
-Latest-main artifacts and hosted gates still precede publication.
+A fresh latest-main macOS ARM wheel passes 358 isolated Python/helper tests
+and both artifact audits; hosted gates still precede publication.
 
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
