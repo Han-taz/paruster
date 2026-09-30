@@ -674,6 +674,7 @@ dependencies = [
  "lopdf",
  "serde",
  "serde_json",
+ "sha2",
  "v8",
 ]
 
