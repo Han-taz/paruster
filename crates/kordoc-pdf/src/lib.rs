@@ -32,3 +32,9 @@ mod regions;
 mod stream;
 mod table;
 mod text;
+#[cfg(feature = "pdfjs-v8")]
+#[allow(
+    dead_code,
+    reason = "private Task B runtime probe is not registered as a parser"
+)]
+mod v8_runtime;

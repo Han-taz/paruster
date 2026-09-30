@@ -61,7 +61,7 @@ PR #9 merged the parser seam as `770ab8c` after [CI](https://github.com/Han-taz/
 
 Full real-document oracle parity is pending. All document parsers, OCR pipelines, transformations, comparisons, redaction, form operations, patching/generation flows, renderers, and MCP handlers remain pending. P7's six synthetic pure-projection captures do not advance parser parity. None is complete merely because its contract has been frozen; each stays pending until representative and adversarial oracle/golden fixtures pass in Rust/Python.
 
-The first parser wave is specified by focused [HWPX](plans/2026-09-30-hwpx-implementation-plan.md) and [PDF](plans/2026-09-30-pdf-implementation-plan.md) execution plans. These plans authorize parallel implementation only after their planning PR and the protected parser-wave scaffold PR merge; they do not advance either parser's capability or parity status. HWPX keeps the generic strict ZIP security gate and allows only bounded part-local recovery after a structurally valid archive is opened. PDF semantic extraction is pure Rust; PDFium may later be introduced only behind an optional raster/OCR feature and separate license, wheel, and failure-isolation gate.
+The first parser wave is specified by focused [HWPX](plans/2026-09-30-hwpx-implementation-plan.md) and [PDF](plans/2026-09-30-pdf-implementation-plan.md) execution plans. These plans authorize parallel implementation only after their planning PR and the protected parser-wave scaffold PR merge; they do not advance either parser's capability or parity status. HWPX keeps the generic strict ZIP security gate and allows only bounded part-local recovery after a structurally valid archive is opened. The September 30 user decision supersedes pure-Rust PDF semantic extraction: the active [V8/PDF.js plan](plans/2026-09-30-pdf-v8-runtime-plan.md) embeds the pinned upstream modules without Node.js. The private runtime probe precedes IR integration, supervised native-process containment, and six-target wheel gates. PDF capability and parity remain pending. PDFium remains behind the optional raster/OCR gate.
 
 The merged parser-wave scaffold registers `kordoc-hancom` and `kordoc-pdf` as
 root workspace members with dependency-direction tests and no public parser
@@ -151,6 +151,8 @@ gate, so runtime object access uses the in-crate borrowed-source substrate
 described in the [PDF component page](../components/pdf.md). This checkpoint
 does not parse pages or glyphs, expose a public function, or advance PDF parity;
 those remain pending until the rest of P2a and its protected merge complete.
+
+The active private V8/PDF.js spike is published in draft PR [#23](https://github.com/Han-taz/paruster/pull/23). Fresh local feature tests execute V8 `15.2.124.1-rusty` with PDF.js `4.10.38` and extract the authored one-page text exactly. Eight scoped executions, offline asset integrity, strict all-feature Clippy, normal locked workspace tests and docs checks pass. This demonstrates embedded runtime feasibility only. Source-neutral IR/layout/table integration, supervised native-process containment, full result/option parity and feature-enabled six-target installed-wheel gates remain pending; no PDF production capability or manifest success numerator is promoted.
 
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 

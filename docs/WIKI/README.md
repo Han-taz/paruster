@@ -42,7 +42,9 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 - [`2026/09/2026-09-30-port-resumed.md`](2026/09/2026-09-30-port-resumed.md)
 
 - [`2026/09/2026-09-30-pdf-substrate.md`](2026/09/2026-09-30-pdf-substrate.md)
+- [`2026/09/2026-09-30-pdf-v8-decision.md`](2026/09/2026-09-30-pdf-v8-decision.md)
 - [`2026/09/2026-09-30-hwpx-codeql-start-key.md`](2026/09/2026-09-30-hwpx-codeql-start-key.md)
 - [`2026/09/2026-09-30-hwpx-hosted-candidate.md`](2026/09/2026-09-30-hwpx-hosted-candidate.md)
 
 - [`2026/09/2026-09-30-hwpx-option-restoration.md`](2026/09/2026-09-30-hwpx-option-restoration.md)
+- [`2026/09/2026-09-30-pdf-v8-runtime.md`](2026/09/2026-09-30-pdf-v8-runtime.md)
