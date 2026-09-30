@@ -80,3 +80,12 @@ SHA remains `3361ff9ee40bed25990429bb6fbe12e3b1ca34bde2f85648c923a9a9a3c4b837`;
 normalization is private Rust logic exercised by native tests, not a new wire
 operation. Stage inputs are preserved in ignored build storage. Final-head
 hosted gates remain required before merge.
+
+## Main33 combined verification
+
+Merged private nested-table main `e0fde7d` into this candidate. Fresh locked
+workspace tests, strict all-feature Clippy/rustdoc and format checks pass.
+Fresh base wheel and sdist audits pass. A new optional macOS ARM worker wheel
+passes architecture/notices inventory, exact installed kind-4 probe and 360
+isolated Python/helper cases plus ten subtests. Staged files are preserved
+under ignored build storage. Native metadata code and frozen captures are unchanged.

@@ -245,8 +245,8 @@ invalid calendar components. The private normalizer must preserve ECMAScript
 trim behavior and omit empty text fields while revalidating 4 KiB per field
 and 16 KiB total before fallible allocation. Full mode retains layout page mode;
 metadata-only leaves it absent. Ten focused native cases and six captured
-metadata projections pass; independent review is clean. Latest-main artifacts
-and hosted gates remain before publication. No geometry, DTO, wire or public parser contract changes are approved.
+metadata projections pass; independent review is clean. Fresh main33 integration passes all four installed-worker probes and 360
+Python/helper cases plus ten subtests; hosted gates remain before publication. No geometry, DTO, wire or public parser contract changes are approved.
 
 PR [#32](https://github.com/Han-taz/paruster/pull/32) merged the private text
 transfer as `762ddde4050660abaaa815889ed76da21a589612` after final-head
