@@ -57,3 +57,10 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 - [`2026/09/2026-09-30-pdf-v8-worker-gates.md`](2026/09/2026-09-30-pdf-v8-worker-gates.md)
 - [`2026/09/2026-09-30-pdf-v8-worker-merge.md`](2026/09/2026-09-30-pdf-v8-worker-merge.md)
 - [`2026/09/2026-09-30-hwpx-warning-parity.md`](2026/09/2026-09-30-hwpx-warning-parity.md)
+- [`2026/09/2026-09-30-hwpx-warning-merge.md`](2026/09/2026-09-30-hwpx-warning-merge.md)
+- [`2026/09/2026-09-30-pdf-worker-wheel-feasibility.md`](2026/09/2026-09-30-pdf-worker-wheel-feasibility.md)
+- [`2026/09/2026-09-30-pdf-worker-windows-checkout.md`](2026/09/2026-09-30-pdf-worker-windows-checkout.md)
+
+- [`2026/09/2026-09-30-pdf-worker-windows-utf8.md`](2026/09/2026-09-30-pdf-worker-windows-utf8.md)
+
+- [`2026/09/2026-09-30-pdf-worker-platform-newline.md`](2026/09/2026-09-30-pdf-worker-platform-newline.md)

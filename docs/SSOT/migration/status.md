@@ -140,8 +140,10 @@ six native wheels, six bounded fuzz targets and independent review passed. It im
 helper observations and authored native/Python cases cover default/false/true,
 Unicode, nested cells/fields and ordering. Independent review identified and
 fixed transient character/column allocations and repeated suffix rescans.
-The focused [unfinished-XML warning candidate](plans/2026-09-30-hwpx-warning-parity-plan.md)
-adds the unchanged eighth full-result capture, including complete warning text,
+The focused [unfinished-XML warning restoration](plans/2026-09-30-hwpx-warning-parity-plan.md)
+merged in PR [#26](https://github.com/Han-taz/paruster/pull/26) as
+`cb17578e6ee2112762b4abdb2d64f0114f3eea6b` after all protected gates passed.
+It adds the unchanged eighth full-result capture, including complete warning text,
 code/page and retained neighboring sections. The original extension first fails
 on all three public parse paths at `/warnings/0/message`. Qualified source-name
 ranges are collected only after the primary parser reports unfinished-tag EOF;
@@ -171,6 +173,14 @@ checkpoint merged in PR [#25](https://github.com/Han-taz/paruster/pull/25) as
 `43c30fd2239fb762eba4530e61bb46802176a663` after all protected gates passed.
 It does not register PDF or package a worker in base wheels; OS-specific resource containment, six-target worker wheels, factories and
 full-result IR/layout/option parity remain pending.
+
+The separate [PDF worker-wheel gate](plans/2026-09-30-pdf-worker-wheel-plan.md)
+now has a locally reviewed CI-only candidate for six targets. Actual macOS
+arm64 installed execution and 339 Python/tooling cases pass with pinned
+upstream notices included. The six hosted worker targets are still pending;
+default wheels, ordinary PEP 517/sdist worker builds and public PDF registration
+are unchanged. Windows ARM64 uses CPython 3.12 for this feasibility gate and
+minimum-version native execution remains unproven there.
 
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
