@@ -1,6 +1,6 @@
 # Private PDF.js native worker supervision
 
-Status: Private worker implementation is independently reviewed locally; protected hosted gates are pending under the approved embedded-V8 runtime plan; no production registration.
+Status: Private worker checkpoint merged in PR [#25](https://github.com/Han-taz/paruster/pull/25) as `43c30fd2239fb762eba4530e61bb46802176a663` after independent review and all protected hosted gates passed; no production registration.
 
 The next checkpoint moves the existing bounded V8 probe into a one-document
 Rust executable and supervises it from Rust. No public parser, API/IR/error/MCP

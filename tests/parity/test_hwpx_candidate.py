@@ -15,7 +15,7 @@ from tests.parity.compare import compare_json
 ROOT = Path(__file__).resolve().parents[2]
 CAPTURE = ROOT / "crates/kordoc-hancom/tests/support/hwpx-oracle-results.jsonl"
 FIXTURES = ROOT / "tests/golden/document/hwpx/fixtures"
-CASES = [json.loads(line) for line in CAPTURE.read_text().splitlines()][:7]
+CASES = [json.loads(line) for line in CAPTURE.read_text().splitlines()][:8]
 PROVENANCE = ROOT / "crates/kordoc-hancom/tests/support/README.md"
 
 
@@ -46,5 +46,18 @@ def test_hwpx_candidate_matches_complete_captured_semantic_result(case: dict) ->
     difference = compare_json(case["result"], actual)
     assert difference is None, (
         f"{case['id']}: {difference.pointer}: expected {difference.expected!r}, "
+        f"actual {difference.actual!r}"
+    )
+
+
+@pytest.mark.parametrize("entrypoint", [kordoc.parse, kordoc.parse_hwpx])
+def test_public_hwpx_parsers_preserve_complete_malformed_section_result(
+    entrypoint,
+) -> None:
+    case = next(case for case in CASES if case["id"] == "malformed_section")
+    actual = entrypoint(FIXTURES / "malformed_section.hwpx").to_dict()
+    difference = compare_json(case["result"], actual)
+    assert difference is None, (
+        f"{difference.pointer}: expected {difference.expected!r}, "
         f"actual {difference.actual!r}"
     )

@@ -152,6 +152,11 @@ fn private_hwpx_keeps_spine_order_and_isolates_malformed_middle_section() {
         recovered.warnings.as_ref().unwrap()[0].code,
         kordoc_ir::WarningCode::PartialParse
     );
+    assert_eq!(recovered.warnings.as_ref().unwrap()[0].page, Some(2));
+    assert_eq!(
+        recovered.warnings.as_ref().unwrap()[0].message,
+        "섹션 2 파싱 실패: Reporting fatalError \"unclosed xml tag(s): hs:sec, hp:p\" caused KordocError: XML 파싱 실패: unclosed xml tag(s): hs:sec, hp:p"
+    );
 }
 
 #[test]

@@ -15,7 +15,7 @@ use crate::hwpx::images::{ImageCache, image_placeholder, image_reference, resolv
 use crate::hwpx::package::Package;
 use crate::hwpx::styles::StyleCatalog;
 use crate::hwpx::tables::{CellBudget, lower_table_with_assets};
-use crate::hwpx::xml::{XmlContent, XmlNode, parse};
+use crate::hwpx::xml::{XmlContent, XmlNode, parse, unclosed_tag_name_ranges};
 
 const MAX_PAGE_EVIDENCE_ENTRIES: u32 = 100_000;
 
@@ -273,10 +273,17 @@ fn lower_sections_impl(
                     error.message,
                 ));
             }
-            Err(_) => {
+            Err(error) => {
                 let warning = ParseWarning {
                     page: u32::try_from(index + 1).ok(),
-                    message: section_warning_message(&input.path, "parsed", lowering_budget)?,
+                    message: if error.fault == crate::hwpx::xml::XmlFault::UnclosedTags
+                        && let Some(bytes) = input.bytes.as_deref()
+                        && let Some(names) = unclosed_tag_name_ranges(bytes)
+                    {
+                        section_unclosed_eof_message(index + 1, bytes, &names, lowering_budget)?
+                    } else {
+                        section_warning_message(&input.path, "parsed", lowering_budget)?
+                    },
                     code: WarningCode::PartialParse,
                 };
                 lowering_budget.push(&mut output.warnings, warning)?;
@@ -454,6 +461,59 @@ fn section_warning_message(
     budget.append_str(&mut message, path)?;
     budget.append_str(&mut message, " could not be ")?;
     budget.append_str(&mut message, action)?;
+    Ok(message)
+}
+
+fn section_unclosed_eof_message(
+    section_number: usize,
+    source: &[u8],
+    names: &[std::ops::Range<usize>],
+    budget: &mut LoweringBudget,
+) -> Result<String, KordocError> {
+    let mut message = String::new();
+    budget.append_str(&mut message, "섹션 ")?;
+    let mut digits = [0_u8; 20];
+    let mut value = section_number;
+    let mut start = digits.len();
+    loop {
+        start -= 1;
+        digits[start] = b'0' + (value % 10) as u8;
+        value /= 10;
+        if value == 0 {
+            break;
+        }
+    }
+    let section_number =
+        std::str::from_utf8(&digits[start..]).expect("decimal digits are valid UTF-8");
+    budget.append_str(&mut message, section_number)?;
+    budget.append_str(
+        &mut message,
+        " 파싱 실패: Reporting fatalError \"unclosed xml tag(s): ",
+    )?;
+    for (index, range) in names.iter().enumerate() {
+        if index > 0 {
+            budget.append_str(&mut message, ", ")?;
+        }
+        let name = source
+            .get(range.clone())
+            .and_then(|name| std::str::from_utf8(name).ok())
+            .ok_or_else(crate::hwpx::budget::output_limit)?;
+        budget.append_str(&mut message, name)?;
+    }
+    budget.append_str(
+        &mut message,
+        "\" caused KordocError: XML 파싱 실패: unclosed xml tag(s): ",
+    )?;
+    for (index, range) in names.iter().enumerate() {
+        if index > 0 {
+            budget.append_str(&mut message, ", ")?;
+        }
+        let name = source
+            .get(range.clone())
+            .and_then(|name| std::str::from_utf8(name).ok())
+            .ok_or_else(crate::hwpx::budget::output_limit)?;
+        budget.append_str(&mut message, name)?;
+    }
     Ok(message)
 }
 

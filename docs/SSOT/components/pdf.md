@@ -2,6 +2,11 @@
 
 ## Current runtime direction
 
+The user reconfirmed that PDF.js itself remains JavaScript running inside V8;
+Rust owns its execution management and the rest of the port. This is the
+explicit PDF exception to a pure Rust semantic implementation, not a Node.js
+runtime dependency.
+
 The September 30 user decision requires PDF.js embedded in V8 for semantic extraction. The active [runtime plan](../migration/plans/2026-09-30-pdf-v8-runtime-plan.md) pins `v8 = 152.2.0` and upstream `pdfjs-dist = 4.10.38`, matching the oracle version without copying oracle assets. The private `pdfjs-v8` feature is a feasibility probe; default builds expose no PDF parser. Rust owns binary input, execution/output limits, typed results, and downstream IR/layout policy. Production PDF registration requires OS-calibrated worker containment, full-result parity, resource factories, and six-target installed-wheel evidence. The [private worker checkpoint](../migration/plans/2026-09-30-pdf-v8-worker-plan.md) now adds process supervision without claiming those remaining gates. The existing borrowed-source reader remains private historical research and is not developed as a competing semantic backend.
 
 ## Private runtime evidence
