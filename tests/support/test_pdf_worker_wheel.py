@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import struct
 import subprocess
 import sys
@@ -76,7 +77,10 @@ class ProtocolSmokeTests(unittest.TestCase):
         )
         self.assertEqual(
             completed.stdout,
-            "installed aarch64-pc-windows-msvc worker extracted '한글🧪'\n".encode(),
+            (
+                "installed aarch64-pc-windows-msvc worker extracted '한글🧪'"
+                + os.linesep
+            ).encode("utf-8"),
         )
 
     def test_success_frame_uses_rust_snake_case_probe_fields(self) -> None:
