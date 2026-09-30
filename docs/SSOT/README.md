@@ -21,6 +21,7 @@ This directory contains the current, normative description of paruster. A code c
 - [`contracts/compatibility-manifest.md`](contracts/compatibility-manifest.md): classified TypeScript-to-Python export and removal inventory
 - [`components/detection.md`](components/detection.md): bounded format detection, container preflight, and foundation dispatch rules
 - [`components/normalization.md`](components/normalization.md): bounded Markdown, page, chunk, and table-policy projection semantics
+- [`components/hwpx.md`](components/hwpx.md): bounded HWPX package, crypto, semantic lowering, and local parser candidate
 - [`components/pdf.md`](components/pdf.md): private bounded PDF object-reader decision, supported surface, and security evidence
 - [`quality/parity.md`](quality/parity.md): allowed normalization and parity evaluation policy
 - [Operations guide](operations/README.md): index for the current [development](operations/development.md) and [release](operations/release.md) procedures

@@ -43,5 +43,19 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "hwpx_package"
+path = "fuzz_targets/hwpx_package.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "hwpx_xml"
+path = "fuzz_targets/hwpx_xml.rs"
+test = false
+doc = false
+bench = false
+
 [workspace]
 members = ["."]

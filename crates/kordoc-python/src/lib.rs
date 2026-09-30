@@ -1,7 +1,8 @@
 use kordoc_core::{
     MAX_INPUT_BYTES, OcrOption, PageNumber, PageSelection, ParseOptions, blocks_to_chunks,
     blocks_to_markdown, blocks_to_pages, detect_format, detect_ole2_format, detect_zip_format,
-    is_hwpx_file, is_old_hwp_file, is_pdf_file, is_zip_file, try_parse_with_options,
+    is_hwpx_file, is_old_hwp_file, is_pdf_file, is_zip_file, parse_hwpx_with_options,
+    try_parse_with_options, validate_hwpx,
 };
 use kordoc_ir::{
     BoundingBox, ChunkOptions, ErrorCode, FileType, ImageData, InlineStyle, IrBlock, IrBlockType,
@@ -76,8 +77,28 @@ fn try_parse_bytes(
 ) -> PyResult<Py<PyAny>> {
     let options = parse_options(py, options)?;
     let result = py.detach(|| try_parse_with_options(data, &options));
-    let value = match result {
-        Ok(success) => serde_json::to_value(success).map_err(to_py_error)?,
+    parse_result_to_python(py, result)
+}
+
+#[pyfunction(signature = (data, options=None))]
+fn try_parse_hwpx_bytes(
+    py: Python<'_>,
+    data: &[u8],
+    options: Option<&Bound<'_, PyAny>>,
+) -> PyResult<Py<PyAny>> {
+    let options = parse_options(py, options)?;
+    let result = py.detach(|| parse_hwpx_with_options(data, &options));
+    parse_result_to_python(py, result)
+}
+
+fn parse_result_to_python(
+    py: Python<'_>,
+    result: Result<kordoc_ir::ParseSuccess, kordoc_core::ParseDispatchError>,
+) -> PyResult<Py<PyAny>> {
+    let serialized = match result {
+        Ok(success) => capped_json_serialization(MAX_PROJECTION_JSON_BYTES, |writer| {
+            serde_json::to_writer(writer, &success)
+        })?,
         Err(error) => {
             let failure = ParseFailure {
                 file_type: error.file_type,
@@ -86,10 +107,28 @@ fn try_parse_bytes(
                 code: Some(error.code),
                 ..ParseFailure::default()
             };
-            serde_json::to_value(failure).map_err(to_py_error)?
+            capped_json_serialization(MAX_PROJECTION_JSON_BYTES, |writer| {
+                serde_json::to_writer(writer, &failure)
+            })?
         }
     };
-    json_to_python(py, value)
+    json_text_to_python(py, serialized)
+}
+
+#[pyfunction(signature = (data, password=None))]
+fn validate_hwpx_bytes(py: Python<'_>, data: &[u8], password: Option<&str>) -> PyResult<Py<PyAny>> {
+    if password.is_some_and(|value| value.chars().count() > MAX_OPTION_STRING_LENGTH) {
+        return Err(PyValueError::new_err(
+            "password exceeds the option string limit",
+        ));
+    }
+    let result = py
+        .detach(|| validate_hwpx(data, password))
+        .map_err(|error| py_error(error.code, &error.message))?;
+    let serialized = capped_json_serialization(MAX_PROJECTION_JSON_BYTES, |writer| {
+        serde_json::to_writer(writer, &result)
+    })?;
+    json_text_to_python(py, serialized)
 }
 
 #[pyfunction]
@@ -903,13 +942,6 @@ fn file_type_name(file_type: FileType) -> &'static str {
     }
 }
 
-fn json_to_python(py: Python<'_>, value: Value) -> PyResult<Py<PyAny>> {
-    let serialized = capped_json_serialization(MAX_PROJECTION_JSON_BYTES, |writer| {
-        serde_json::to_writer(writer, &value)
-    })?;
-    json_text_to_python(py, serialized)
-}
-
 fn json_text_to_python(py: Python<'_>, serialized: String) -> PyResult<Py<PyAny>> {
     if serialized.len() > MAX_PROJECTION_JSON_BYTES {
         return Err(projection_too_large());
@@ -992,6 +1024,8 @@ fn _native(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(is_old_hwp_file_bytes, module)?)?;
     module.add_function(wrap_pyfunction!(is_pdf_file_bytes, module)?)?;
     module.add_function(wrap_pyfunction!(try_parse_bytes, module)?)?;
+    module.add_function(wrap_pyfunction!(try_parse_hwpx_bytes, module)?)?;
+    module.add_function(wrap_pyfunction!(validate_hwpx_bytes, module)?)?;
     module.add_function(wrap_pyfunction!(max_input_bytes, module)?)?;
     Ok(())
 }

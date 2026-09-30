@@ -10,7 +10,9 @@ from ._api import (
     is_pdf_file,
     is_zip_file,
     parse,
+    parse_hwpx,
     try_parse,
+    validate_hwpx,
 )
 from ._errors import (
     CorruptedError,
@@ -28,7 +30,15 @@ from ._errors import (
     UnsupportedFormatError,
     ZipBombError,
 )
-from ._models import ChunkOptions, DocChunk, Document, PageMarkdown, TryParseResult
+from ._models import (
+    ChunkOptions,
+    DocChunk,
+    Document,
+    PageMarkdown,
+    TryParseResult,
+    ValidateIssue,
+    ValidateResult,
+)
 from ._native import native_version
 
 __version__ = "0.1.0"
@@ -51,6 +61,8 @@ __all__ = [
     "ParseError",
     "TryParseResult",
     "UnsupportedFormatError",
+    "ValidateIssue",
+    "ValidateResult",
     "ZipBombError",
     "__version__",
     "blocks_to_chunks",
@@ -65,5 +77,7 @@ __all__ = [
     "is_zip_file",
     "native_version",
     "parse",
+    "parse_hwpx",
     "try_parse",
+    "validate_hwpx",
 ]

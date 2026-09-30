@@ -86,3 +86,14 @@ def test_fuzz_workflow_is_bounded_and_reports_a_stable_gate() -> None:
     assert "-max_total_time=900" in text
     assert "fuzz-gate:" in text
     _assert_gate_rejects_non_success(text, "fuzz-gate", "fuzz")
+
+
+def test_hwpx_package_and_xml_have_required_fuzz_campaigns() -> None:
+    text = _workflow("fuzz.yml")
+    assert "hwpx_package" in text
+    assert "hwpx_xml" in text
+    manifest = (ROOT / "fuzz/Cargo.toml").read_text(encoding="utf-8")
+    for target in ("hwpx_package", "hwpx_xml"):
+        assert f'name = "{target}"' in manifest
+        assert (ROOT / "fuzz/fuzz_targets" / f"{target}.rs").is_file()
+        assert any((ROOT / "fuzz/corpus" / target).iterdir())

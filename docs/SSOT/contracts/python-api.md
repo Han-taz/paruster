@@ -10,7 +10,13 @@ try_parse(input, options=None) -> TryParseResult # serializable success/failure
 input := path-like | bytes | bytearray | memoryview | BinaryIO
 ```
 
-`parse` is the foundation API shell and returns an unsupported-format failure until parsers land. The successful boundary exposes `result.document`, a frozen/slotted `Document` projection, while `TryParseResult.to_dict()` preserves the flat frozen wire envelope. Typed failures use `KordocError` subclasses and stable codes. CPU-bound native work releases the GIL.
+`parse` dispatches the executable local HWPX candidate; unwired formats return
+an unsupported-format failure. The successful boundary exposes
+`result.document`, a frozen/slotted `Document` projection, while
+`TryParseResult.to_dict()` preserves the flat frozen wire envelope. Typed
+failures use `KordocError` subclasses and stable codes. CPU-bound native work
+releases the GIL. Candidate implementation is separate from protected capability
+and parity verification in the [migration ledger](../migration/status.md).
 
 Serializable parse options are accepted as a snake_case mapping, strictly validated, converted to frozen camelCase names, and passed as an owned Rust DTO before native work releases the GIL. Omission stays distinct from explicit `false`, finite fractional page values are preserved until page projection, and `file_path` and unknown keys are rejected. To keep conversion bounded before JSON ownership transfer, page lists accept at most 100,000 entries and page-range/password strings at most 65,536 characters; the native boundary independently enforces the same limits. Callable OCR/progress adapters raise `NotImplementedError` until their owning task lands. `try_parse` converts stable document and input-normalization failures, including `FILE_NOT_FOUND` and `OUTPUT_TOO_LARGE`, into its flat result model.
 
@@ -28,6 +34,30 @@ Memory lengths are checked before copying. Paths are `stat`-checked and then rea
 
 `TryParseResult` and `Document` are frozen and slotted. Image byte arrays become Python `bytes` while ordinary integer arrays remain sequences. `to_dict()` converts image bytes back to JSON arrays, emits camelCase protocol keys, omits unavailable values instead of emitting `null`, and preserves the result discriminator. The base `KordocError` and one explicit subclass per stable code expose safe messages.
 
+## HWPX candidate API
+
+`parse_hwpx(input, options=None) -> TryParseResult` accepts the same normalized
+inputs/options as `parse`, but strictly rejects another detected format rather
+than parsing it. It raises typed errors and exposes `.document` on success.
+Core owns Markdown/page projections and keeps full source `page_count` and
+metadata page count when selecting pages. Images become immutable Python
+`bytes`, serialized back to integer arrays only by `to_dict()`.
+
+`validate_hwpx(input, password=None) -> ValidateResult` returns frozen/slotted
+`ValidateResult(ok, issues, entry_count)` and ordered
+`ValidateIssue(message, path=None)` objects. Its exact wire fields are `ok`,
+`issues`, and `entryCount`; issue `path` is omitted when unavailable. Actual
+file counts are nonnegative integers excluding directory records. This does
+not alter the existing JSON-number schema. Passwords are strings of at most
+65,536 characters. Missing/wrong passwords remain typed `ENCRYPTED`; no
+progress callback or selective metadata-only decryption is introduced.
+
+Native parse results serialize directly through the capped writer without an
+unbounded intermediate `serde_json::Value` copy. Native output-limit failures
+become serializable typed `try_parse` failures; `parse` raises the corresponding
+exception. Local installed-wheel tests cover these boundaries independently
+of source import. The lowering-allocation and local/hosted candidate gates have passed; full option and representative full-result parity remain open, so whole-parser capability is unpromoted.
+
 ## Source-neutral projections
 
 The implemented public values are `kordoc.blocks_to_markdown(blocks) -> str`, `kordoc.blocks_to_pages(blocks, render=None) -> tuple[PageMarkdown, ...] | None`, `kordoc.blocks_to_chunks(blocks, options=None) -> tuple[DocChunk, ...]`, and `kordoc.tables.classify_table_tree(blocks) -> tuple[immutable IR mappings, ...]`. `ChunkOptions`, `DocChunk`, and `PageMarkdown` are frozen, slotted Python models with exact camelCase `from_dict`/`to_dict` roundtrips; present-null optional fields are rejected. `DocChunk`'s existing schema uses JSON `number` for page, range, and table dimensions, while values emitted by the Rust source are non-negative `u32` integers. The schema is unchanged. `classify_table`, `collect_table_blocks`, `choose_table_representation`, and other table helper mappings remain planned Python exports.
@@ -39,3 +69,12 @@ Projection input is a sequence of recursive IR mappings. Common concrete Python 
 ## Compatibility changes
 
 The compatibility manifest describes what is frozen, what is only planned, and the narrow removed Node surfaces. Shared API names, error codes, and wire schemas require coordinator approval before change. No API classification asserts that a future parser, generator, renderer, or transformation has been implemented.
+## HWPX candidate option checkpoint
+
+For generic `parse`, `try_parse`, and format-specific `parse_hwpx`, explicit
+`images=False` removes the result image collection and recursive block
+`imageData`, retaining placeholders and the existing Markdown/page projections.
+Omission and explicit `True` preserve the default output. HWPX ignores the
+PDF-only `tables` switch. Full option parity remains pending for `plain`,
+`htmlTables`, `scriptTags`, `keepTrailingEmptyCols`, and `includeFieldPlaceholders`;
+candidate registration does not mark those behaviors implemented.

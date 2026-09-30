@@ -46,6 +46,8 @@ cargo +nightly-2026-09-20 fuzz run detect_format -- -max_total_time=30
 cargo +nightly-2026-09-20 fuzz run zip_preflight -- -max_total_time=30
 cargo +nightly-2026-09-20 fuzz run markdown_units -- -max_total_time=30
 cargo +nightly-2026-09-20 fuzz run projections -- -max_total_time=30
+cargo +nightly-2026-09-20 fuzz run hwpx_package corpus/hwpx_package -- -max_total_time=30 -max_len=131072
+cargo +nightly-2026-09-20 fuzz run hwpx_xml corpus/hwpx_xml -- -max_total_time=30 -max_len=131072
 
 # Python behavior, lint, formatting, and types
 uv run pytest tests/contracts tests/parity tests/python -q
@@ -68,3 +70,13 @@ cargo audit --file Cargo.lock
 ```
 
 The PR CI additionally exercises the installed wheel and Python 3.10–3.14 matrix. Fuzz campaigns run for 30 seconds per target in CI and weekly campaigns run longer; a local 30-second pass is a safety smoke check, not a substitute for reviewing any discovered crash or regression.
+
+Run `cargo fuzz` commands from `fuzz/`. The feature-only HWPX package hook
+exercises the independent Hancom ZIP/member/crypto guards using the public
+synthetic fixture password. The XML hook places mutated section XML between
+two known-good neighbors in a generated package, testing transactional
+recovery and deterministic results without an oracle runtime. Its 128 KiB
+input guard is a harness bound, not a reduced product XML/security limit.
+Named ZIP seeds are the same twelve pinned CC0 H0 recipes; XML seeds contain
+only synthetic text, table and rejected DTD/entity cases. Generated mutation
+files are investigation artifacts, not new authoritative fixture answers.

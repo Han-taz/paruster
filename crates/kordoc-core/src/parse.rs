@@ -18,7 +18,7 @@ static INSTALL_PARSER_PANIC_HOOK: Once = Once::new();
 /// Keep parser panic payloads out of host stderr while preserving the host's panic hook for
 /// every other thread. The wrapper is installed once because panic hooks are process-global;
 /// suppression itself is thread-local and scoped to the guarded parser call.
-fn catch_parser_unwind<F, T>(callback: F) -> std::thread::Result<T>
+pub(crate) fn catch_parser_unwind<F, T>(callback: F) -> std::thread::Result<T>
 where
     F: FnOnce() -> T,
 {
@@ -72,6 +72,11 @@ pub(crate) struct ParserRegistry {
 }
 
 impl ParserRegistry {
+    pub(crate) fn built_in() -> Self {
+        Self {
+            parsers: vec![(FileType::Hwpx, Box::new(crate::hwpx::HwpxParser))],
+        }
+    }
     pub(crate) fn register<P>(&mut self, file_type: FileType, parser: P) -> Result<(), FileType>
     where
         P: Parser + 'static,
@@ -139,7 +144,7 @@ impl ParserRegistry {
     }
 }
 
-fn parser_panic_error(file_type: FileType) -> ParseDispatchError {
+pub(crate) fn parser_panic_error(file_type: FileType) -> ParseDispatchError {
     ParseDispatchError {
         file_type,
         code: kordoc_ir::ErrorCode::ParseError,
@@ -200,6 +205,10 @@ pub(crate) fn assemble_success(
             .as_ref()
             .and_then(|metadata| metadata.page_count)
     });
+    if options.images == Some(false) {
+        parsed.images = None;
+        drop_image_data(&mut parsed.blocks, 0);
+    }
     Ok(kordoc_ir::ParseSuccess {
         file_type,
         page_count,
@@ -217,7 +226,29 @@ pub(crate) fn assemble_success(
     })
 }
 
-fn dispatch_error(
+fn drop_image_data(blocks: &mut [kordoc_ir::IrBlock], depth: usize) {
+    if depth > 64 {
+        return;
+    }
+    for block in blocks {
+        block.image_data = None;
+        if let Some(children) = &mut block.children {
+            drop_image_data(children, depth + 1);
+        }
+        if let Some(table) = &mut block.table {
+            for cell in table.cells.iter_mut().flatten() {
+                if let Some(cell_blocks) = &mut cell.blocks {
+                    drop_image_data(cell_blocks, depth + 1);
+                }
+            }
+            if let Some(caption_blocks) = &mut table.caption_blocks {
+                drop_image_data(caption_blocks, depth + 1);
+            }
+        }
+    }
+}
+
+pub(crate) fn dispatch_error(
     file_type: FileType,
     error: KordocError,
     options: &ParseOptions,
@@ -625,5 +656,80 @@ mod tests {
         );
         let roundtrip: ParseResult = serde_json::from_value(wire).unwrap();
         assert_eq!(roundtrip, result);
+    }
+
+    #[test]
+    fn images_false_drops_payloads_recursively_after_projections() {
+        use kordoc_ir::{ExtractedImage, ImageData, IrBlock, IrBlockType, IrCell, IrTable};
+
+        fn image_block() -> IrBlock {
+            IrBlock {
+                kind: IrBlockType::Image,
+                image_data: Some(ImageData {
+                    data: vec![1, 2, 3],
+                    mime_type: "image/png".into(),
+                    filename: Some("pixel.png".into()),
+                }),
+                ..IrBlock::default()
+            }
+        }
+
+        let image = ExtractedImage {
+            filename: "pixel.png".into(),
+            data: vec![1, 2, 3],
+            mime_type: "image/png".into(),
+            source: Some("BinData/pixel.png".into()),
+        };
+        let mut root = IrBlock::paragraph("visible text");
+        root.image_data = Some(ImageData {
+            data: vec![1, 2, 3],
+            mime_type: "image/png".into(),
+            filename: Some("pixel.png".into()),
+        });
+        root.children = Some(vec![image_block()]);
+        root.table = Some(IrTable {
+            rows: 1,
+            cols: 1,
+            cells: vec![vec![IrCell {
+                blocks: Some(vec![image_block()]),
+                ..IrCell::default()
+            }]],
+            caption_blocks: Some(vec![image_block()]),
+            ..IrTable::default()
+        });
+        let parsed = ParsedDocument {
+            blocks: vec![root],
+            images: Some(vec![image]),
+            ..ParsedDocument::default()
+        };
+        let projected =
+            assemble_success(FileType::Hwpx, parsed.clone(), &ParseOptions::default()).unwrap();
+        let without_images = assemble_success(
+            FileType::Hwpx,
+            parsed,
+            &ParseOptions {
+                images: Some(false),
+                ..ParseOptions::default()
+            },
+        )
+        .unwrap();
+
+        assert_eq!(without_images.markdown, projected.markdown);
+        assert_eq!(without_images.pages, projected.pages);
+        assert!(without_images.images.is_none());
+        let root = &without_images.blocks[0];
+        assert!(root.image_data.is_none());
+        assert!(root.children.as_ref().unwrap()[0].image_data.is_none());
+        let table = root.table.as_ref().unwrap();
+        assert!(
+            table.cells[0][0].blocks.as_ref().unwrap()[0]
+                .image_data
+                .is_none()
+        );
+        assert!(
+            table.caption_blocks.as_ref().unwrap()[0]
+                .image_data
+                .is_none()
+        );
     }
 }
