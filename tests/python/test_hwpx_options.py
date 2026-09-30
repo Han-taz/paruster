@@ -4,8 +4,7 @@ from pathlib import Path
 
 import kordoc
 import pytest
-
-from tests.python.test_hwpx_api import _hwpx_bytes, _section
+from test_hwpx_api import _hwpx_bytes, _section
 
 
 def _body_section(body: str) -> bytes:
