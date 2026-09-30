@@ -50,6 +50,7 @@ struct SectionDelta {
     layout_positions: Vec<ParagraphLayout>,
     layout_usable: bool,
     multi_column: bool,
+    warnings: Vec<ParseWarning>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -200,7 +201,7 @@ fn lower_sections_impl(
                     Ok(()) => {
                         cell_budget = section_cell_budget;
                         output.images.extend(section_images);
-                        output.warnings.extend(section_warnings);
+                        delta.warnings = section_warnings;
                         deltas.push(Some(delta));
                     }
                     Err(error) if error.code == ErrorCode::Corrupted => {
@@ -293,6 +294,18 @@ fn lower_sections_impl(
                 .get(*block_index)
                 .and_then(|block| block.page_number);
         }
+        for warning in &mut delta.warnings {
+            if warning.code == WarningCode::SkippedImage
+                && warning.page.is_none()
+                && let Some(reference) = warning
+                    .message
+                    .strip_prefix("Optional HWPX image is missing or unsupported: ")
+            {
+                let marker = format!("[Image: {reference}]");
+                warning.page = find_block_page(&delta.blocks, &marker);
+            }
+        }
+        output.warnings.extend(delta.warnings);
         output.blocks.extend(delta.blocks);
         output
             .outline
@@ -310,6 +323,38 @@ fn lower_sections_impl(
         .collect();
     apply_page_selection(&mut output, options.pages.as_ref());
     Ok(output)
+}
+
+fn find_block_page(blocks: &[IrBlock], text: &str) -> Option<u32> {
+    for block in blocks {
+        if block.text.as_deref() == Some(text) && block.page_number.is_some() {
+            return block.page_number;
+        }
+        if let Some(children) = &block.children
+            && let Some(page) = find_block_page(children, text)
+        {
+            return Some(page);
+        }
+        if let Some(table) = &block.table {
+            for cell in table.cells.iter().flatten() {
+                if let Some(page) = cell
+                    .blocks
+                    .as_deref()
+                    .and_then(|nested| find_block_page(nested, text))
+                {
+                    return Some(page);
+                }
+            }
+            if let Some(page) = table
+                .caption_blocks
+                .as_deref()
+                .and_then(|nested| find_block_page(nested, text))
+            {
+                return Some(page);
+            }
+        }
+    }
+    None
 }
 
 fn apply_page_selection(output: &mut SectionOutput, selection: Option<&PageSelection>) {

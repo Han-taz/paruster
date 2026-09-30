@@ -284,6 +284,83 @@ fn malformed_section_rolls_back_staged_image_assets_and_cache() {
 }
 
 #[test]
+fn distinct_image_refs_keep_unique_filenames_across_sections() {
+    use crate::hwpx::package::Package;
+    use std::io::{Cursor, Write};
+    use zip::{ZipWriter, write::SimpleFileOptions};
+    let inputs = [
+        section(
+            "Contents/section0.xml",
+            "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:pic><hp:imgRect binaryItemIDRef=\"one\"/></hp:pic></hp:run></hp:p>",
+        ),
+        section(
+            "Contents/section1.xml",
+            "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:pic><hp:imgRect binaryItemIDRef=\"two\"/></hp:pic></hp:run></hp:p>",
+        ),
+    ];
+    let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+    for path in ["BinData/one.png", "BinData/two.png"] {
+        writer
+            .start_file(path, SimpleFileOptions::default())
+            .unwrap();
+        writer.write_all(b"asset").unwrap();
+    }
+    let mut package = Package::open(Box::leak(
+        writer.finish().unwrap().into_inner().into_boxed_slice(),
+    ))
+    .unwrap();
+    let output = lower_sections_with_package(
+        &inputs,
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+        &mut package,
+    )
+    .unwrap();
+    assert_eq!(
+        output
+            .images
+            .iter()
+            .map(|image| image.filename.as_str())
+            .collect::<Vec<_>>(),
+        ["image_001.png", "image_002.png"]
+    );
+}
+
+#[test]
+fn skipped_image_warning_uses_resolved_page() {
+    use crate::hwpx::package::Package;
+    use std::io::Cursor;
+    use zip::{ZipWriter, write::SimpleFileOptions};
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:linesegarray><hp:lineseg vertpos=\"0\"/></hp:linesegarray><hp:run><hp:pic><hp:imgRect binaryItemIDRef=\"missing\"/></hp:pic></hp:run></hp:p>",
+    );
+    let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+    writer
+        .start_file("unused", SimpleFileOptions::default())
+        .unwrap();
+    let mut package = Package::open(Box::leak(
+        writer.finish().unwrap().into_inner().into_boxed_slice(),
+    ))
+    .unwrap();
+    let output = lower_sections_with_package(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+        &mut package,
+    )
+    .unwrap();
+    let warning = output
+        .warnings
+        .iter()
+        .find(|warning| warning.code == WarningCode::SkippedImage)
+        .unwrap();
+    assert_eq!(warning.page, Some(1));
+}
+
+#[test]
 fn keeps_paragraph_run_spans_and_heading_outline() {
     let header = br#"<hh:head xmlns:hh="urn:hh"><hh:paraPr id="4" outlineLvl="2"/><hh:charPr id="7" bold="true"/></hh:head>"#;
     let styles = StyleCatalog::parse(header).unwrap();

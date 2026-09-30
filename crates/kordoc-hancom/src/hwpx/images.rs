@@ -18,6 +18,7 @@ pub(crate) struct ImageCache {
     image_output_bytes: usize,
     image_output_limit: usize,
     generation: u64,
+    next_image_index: usize,
 }
 
 impl Default for ImageCache {
@@ -28,6 +29,7 @@ impl Default for ImageCache {
             image_output_bytes: 0,
             image_output_limit: MAX_IMAGE_OUTPUT_BYTES,
             generation: 0,
+            next_image_index: 0,
         }
     }
 }
@@ -58,17 +60,22 @@ impl ImageCache {
         Ok(())
     }
 
-    pub(crate) fn checkpoint(&self) -> (u64, usize) {
-        (self.generation, self.image_output_bytes)
+    pub(crate) fn checkpoint(&self) -> (u64, usize, usize) {
+        (
+            self.generation,
+            self.image_output_bytes,
+            self.next_image_index,
+        )
     }
 
-    pub(crate) fn rollback(&mut self, checkpoint: (u64, usize)) {
+    pub(crate) fn rollback(&mut self, checkpoint: (u64, usize, usize)) {
         self.by_ref
             .retain(|_, (generation, _)| *generation <= checkpoint.0);
         self.warned
             .retain(|_, generation| *generation <= checkpoint.0);
         self.generation = checkpoint.0;
         self.image_output_bytes = checkpoint.1;
+        self.next_image_index = checkpoint.2;
     }
 
     fn record_generation(&mut self) -> u64 {
@@ -116,8 +123,12 @@ pub(crate) fn resolve_image(
                         let Some(mime) = mime_from_path(&path).or_else(|| sniff_mime(&data)) else {
                             continue;
                         };
-                        let filename =
-                            format!("image_{:03}.{}", images.len() + 1, ext_from_mime(&mime));
+                        let filename = format!(
+                            "image_{:03}.{}",
+                            cache.next_image_index + 1,
+                            ext_from_mime(&mime)
+                        );
+                        cache.charge(filename.len() + mime.len() + path.len())?;
                         cache.charge(data.len())?;
                         let image = ExtractedImage {
                             filename,
@@ -125,10 +136,10 @@ pub(crate) fn resolve_image(
                             mime_type: mime,
                             source: Some(path),
                         };
-                        cache.charge(image.data.len())?;
                         let metadata_bytes = image.filename.len()
                             + image.mime_type.len()
                             + image.source.as_ref().map_or(0, String::len);
+                        cache.charge(image.data.len())?;
                         cache.charge(metadata_bytes)?;
                         images.push(ExtractedImage {
                             filename: image.filename.clone(),
@@ -136,6 +147,7 @@ pub(crate) fn resolve_image(
                             mime_type: image.mime_type.clone(),
                             source: image.source.clone(),
                         });
+                        cache.next_image_index += 1;
                         found = Some(image);
                         break;
                     }
@@ -167,7 +179,9 @@ pub(crate) fn resolve_image(
             .by_ref
             .get(reference)
             .and_then(|(_, image)| image.as_ref())
-            .map_or(0, |image| image.filename.len() + reference.len());
+            .map_or(0, |image| {
+                image.filename.len() + image.mime_type.len() + reference.len()
+            });
         cache.charge(metadata_bytes)?;
         let Some(image) = cache
             .by_ref
@@ -202,13 +216,13 @@ fn skipped_image(
         cache.charge(reference.len().saturating_mul(3).saturating_add(64))?;
         let generation = cache.record_generation();
         cache.warned.insert(reference.to_owned(), generation);
-    } else {
-        cache.charge(reference.len().saturating_add(16))?;
         warnings.push(ParseWarning {
             page,
             message: format!("Optional HWPX image is missing or unsupported: {reference}"),
             code: WarningCode::SkippedImage,
         });
+    } else {
+        cache.charge(reference.len().saturating_add(16))?;
     }
     Ok(IrBlock::paragraph(format!("[Image: {reference}]")))
 }
@@ -365,6 +379,8 @@ mod tests {
             &mut warnings,
         )
         .unwrap();
+        assert_eq!(warnings.len(), 1);
+        assert_eq!(warnings[0].code, WarningCode::SkippedImage);
         let _ = resolve_image(
             "absent",
             None,
