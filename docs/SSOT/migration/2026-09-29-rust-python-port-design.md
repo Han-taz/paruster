@@ -30,13 +30,14 @@ Removed product surfaces are the Node library API and general Node CLI. `kordoc-
 
 ## 3. External-engine boundary
 
-All product-specific parsing, IR, transformation, generation, security, and orchestration logic is Rust. Proven native engines may be called through Rust where reimplementing them would reduce correctness or delay the port materially:
+Rust owns product policy, IR, transformation, generation, security, and orchestration. Proven engines may be embedded through Rust where reimplementing them would reduce correctness or delay the port materially. The September 30 user decision authorizes embedded V8 with PDF.js for PDF semantic extraction; it supersedes the earlier pure-Rust PDF backend requirement:
 
+- V8 with pinned, bundled PDF.js main/worker modules for PDF parsing and text/metadata extraction; no Node.js runtime, filesystem, network, or document-script host APIs
 - PDFium for PDF rendering
 - ONNX Runtime for OCR and model inference
 - platform codecs or similarly bounded native libraries when required
 
-Required runtime libraries are bundled in platform wheels. Large versioned model weights are distributed as a verified model bundle rather than duplicated across every base wheel. Offline installation accepts a pre-fetched verified bundle and never requires Node.js.
+Required runtime libraries and licensed PDF.js assets are bundled in platform wheels. PDF.js runs behind Rust-owned input, execution, allocation, and output limits. A supervised native worker process and six-target installed-wheel evidence are required before production PDF registration; a private in-process feasibility probe does not satisfy those gates. Large versioned model weights are distributed as a verified model bundle rather than duplicated across every base wheel. Offline installation accepts a pre-fetched verified bundle and never requires Node.js.
 
 ## 4. Architecture
 

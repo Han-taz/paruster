@@ -5,6 +5,13 @@ edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 
+[features]
+default = []
+pdfjs-v8 = ["dep:v8", "dep:serde", "dep:serde_json"]
+
 [dependencies]
 kordoc-ir = { path = "../kordoc-ir", version = "=0.1.0" }
 lopdf.workspace = true
+v8 = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }

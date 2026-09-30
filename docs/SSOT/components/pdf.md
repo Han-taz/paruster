@@ -1,4 +1,10 @@
-# PDF substrate
+# PDF runtime and historical substrate
+
+## Current runtime direction
+
+The September 30 user decision requires PDF.js embedded in V8 for semantic extraction. The active [runtime plan](../migration/plans/2026-09-30-pdf-v8-runtime-plan.md) pins `v8 = 152.2.0` and upstream `pdfjs-dist = 4.10.38`, matching the oracle version without copying oracle assets. The private `pdfjs-v8` feature is a feasibility probe; default builds expose no PDF parser. Rust owns binary input, execution/output limits, typed results, and downstream IR/layout policy. Production PDF registration requires supervised native-worker failure containment, full-result parity, resource factories, and six-target installed-wheel evidence. The existing borrowed-source reader remains private historical research and is not developed as a competing semantic backend.
+
+## Historical private reader
 
 This page defines the private PDF object-access substrate established by P2a
 Task 0. It is not a public parser contract and does not claim PDF, Python, or
@@ -41,7 +47,7 @@ an encryption marker.
 
 Flate/predictor decoding, indirect stream lengths, fonts/CMaps, page trees,
 content operators, and all semantic IR lowering are deliberately deferred to
-the remaining P2a tasks. Filtered xref streams therefore fail closed today.
+the superseded P2a design. They are not active implementation tasks under the V8 decision. Filtered xref streams therefore fail closed today.
 
 ## Security evidence
 

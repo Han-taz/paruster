@@ -2,6 +2,8 @@
 
 > **For agentic workers:** Use `superpowers:subagent-driven-development` for the bounded Luna tasks, `superpowers:test-driven-development` for each behavior, and `superpowers:verification-before-completion` before review. This is the P2 child plan of the [product port DAG](2026-09-30-product-port-implementation-plan.md). Checkboxes track work, not parity claims.
 
+**Status:** Superseded for semantic-backend execution by the September 30 user decision and the [embedded V8/PDF.js plan](2026-09-30-pdf-v8-runtime-plan.md). The remaining text records the earlier design and private object-reader checkpoint. Do not execute its pure-Rust glyph/content-reader tasks. Layout, table, IR, security, parity, and packaging requirements carry forward behind PDF.js evidence.
+
 **Goal:** Deliver a bounded, pure-Rust PDF semantic parser with layout, tables, images, links, metadata, and quality evidence through the existing Rust core and Python API, with exact full-result oracle parity on representative documents.
 
 **Architecture:** `kordoc-pdf` owns PDF object and content-stream reading, glyph/CMap interpretation, geometric reconstruction, and source-to-IR lowering. It depends on `kordoc-ir` only and returns `ParsedDocument`; coordinator-owned `kordoc-core` performs Markdown/page/chunk projections and public result assembly. PDFium may later supply bounded raster pages to P6 OCR/formula recognition, but it is never needed for the base parse or metadata path. Neither Node nor pdfjs is a product dependency.
