@@ -96,7 +96,10 @@ H2a hosted gates remain pending; the current session cannot publish GitHub write
 [HWPX component page](../components/hwpx.md) and append-only
 [H2a candidate record](../../WIKI/2026/09/2026-09-30-hwpx-h2a.md).
 
-The current HWPX crate has 53 unit tests and 8 integration tests, including
+The reviewed H1b candidate adds crypto/metadata/validation and passes 72 unit
+plus 8 integration tests; [evidence and process/standards caveats](../../WIKI/2026/09/2026-09-30-hwpx-h1b-local.md)
+are recorded. H2b, H3/H4 integration and hosted gates remain pending.
+The preceding H2a candidate had 53 unit tests and 8 integration tests, including
 deterministic synthetic fixture checks. These do not establish public parser
 registration, Python behavior, or real-document parity. HWPX capability stays
 pending; the parser-oracle success numerator remains zero.
