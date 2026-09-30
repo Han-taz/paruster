@@ -13,7 +13,13 @@ This page is the live capability ledger. A capability is complete only after its
 - immutable Python `Document` projection, bounded serializable option validation, and six legacy detection/refinement compatibility helpers with pinned runtime-oracle evidence
 - provenance-checked full-result harness with source-smoke versus oracle-capture accounting
 
-The parser seam has only injected/synthetic success evidence; the production registry remains empty and the document harness reports zero successful oracle captures. The earlier 88.63% line coverage and two 30-second fuzz campaigns without crashes describe the initial merged foundation baseline. PR #9 added fresh hosted coverage and fuzz evidence for the parser seam. None of these foundation checks demonstrate document-output parity.
+The merged parser-seam baseline has only injected/synthetic success evidence and
+an empty production registry. The local HWPX candidate below now registers one
+real adapter, but does not change the protected document harness's zero
+successful-capture count. The earlier 88.63% line coverage and
+two 30-second fuzz campaigns without crashes describe the initial merged foundation baseline.
+PR #9 added fresh hosted coverage and fuzz evidence for the parser seam. None
+of these foundation checks demonstrates document-output parity.
 
 ## Merged P7 shared projections (PR #11)
 
@@ -57,10 +63,11 @@ Full real-document oracle parity is pending. All document parsers, OCR pipelines
 
 The first parser wave is specified by focused [HWPX](plans/2026-09-30-hwpx-implementation-plan.md) and [PDF](plans/2026-09-30-pdf-implementation-plan.md) execution plans. These plans authorize parallel implementation only after their planning PR and the protected parser-wave scaffold PR merge; they do not advance either parser's capability or parity status. HWPX keeps the generic strict ZIP security gate and allows only bounded part-local recovery after a structurally valid archive is opened. PDF semantic extraction is pure Rust; PDFium may later be introduced only behind an optional raster/OCR feature and separate license, wheel, and failure-isolation gate.
 
-The parser-wave scaffold registers `kordoc-hancom` and `kordoc-pdf` as root
-workspace members with dependency-direction tests and no public parser entry
-points. Neither crate is connected to the production registry or Python API;
-`parse_hwpx`, `validate_hwpx`, and `parse_pdf` remain planned, and the
+The merged parser-wave scaffold registers `kordoc-hancom` and `kordoc-pdf` as
+root workspace members with dependency-direction tests and no public parser
+entry points. The local HWPX integration candidate now extends that baseline
+with a core adapter and Python bindings. `parse_hwpx`, `validate_hwpx`, and
+`parse_pdf` remain planned in the protected capability inventory, and the
 real-document oracle-success numerator remains zero.
 
 PR [#14](https://github.com/Han-taz/paruster/pull/14) merged the protected
@@ -92,13 +99,43 @@ H2a XML and section lowering is present as a crate-local candidate on
 bounded XML parsing, transactional section lowering, styles/notes/page
 evidence, and focused unit coverage. Review regressions now cover mixed layout
 fallback, note suffix inheritance, and omitted-empty-paragraph page transitions.
-H2a hosted gates remain pending; the current session cannot publish GitHub writes. See the
+H2a hosted gates remain pending. GitHub publication is available through the
+authenticated CLI; the private candidate includes H3's allocation guard. See the
 [HWPX component page](../components/hwpx.md) and append-only
 [H2a candidate record](../../WIKI/2026/09/2026-09-30-hwpx-h2a.md).
 
 The reviewed H1b candidate adds crypto/metadata/validation and passes 72 unit
 plus 8 integration tests; [evidence and process/standards caveats](../../WIKI/2026/09/2026-09-30-hwpx-h1b-local.md)
-are recorded. H2b, H3/H4 integration and hosted gates remain pending.
+are recorded. H2b and H3 have since joined locally: table/image lowering,
+transactional sections, selected-page image resolution, and private
+source-neutral parser/metadata/validator entry points. The frozen H3 candidate
+`5dc75440d6f1a94947e9431d3880850250f69bf5` passed 88 unit tests and 107
+integration-binary executions (88 repeated unit cases plus 19 distinct
+integration cases) in the manager's scoped review. This is local evidence, not hosted CI or
+a claim that the lowering-allocation review is complete.
+
+H4 currently adds a real HWPX core dispatch adapter, strict format-specific
+preflight, Python `parse_hwpx`/`validate_hwpx`, immutable validator models, and
+direct capped native result serialization. An installed macOS arm64 abi3 wheel
+passed 153 Python tests before the subsequent lowering-budget follow-up. The
+follow-up is under parallel review and requires a new full-workspace and
+installed-wheel run. The seven ordinary/encrypted complete-result captures are
+compared separately without normalization; their initial failures exposed
+unstyled-span emission and nested-cell newline differences. The malformed
+section warning diagnostic remains an explicit discrepancy, and no frozen
+oracle result, scoring, or security boundary is changed to hide it. Generated
+fixture input hashes are checked against all twelve unchanged H0 pins.
+
+GitHub publication, required hosted gates, protected review and squash merge
+remain pending. Local development does not bypass them. H4 candidate evidence
+must not be interpreted as support for the other parsers or any MCP handler.
+Fresh H4 review found no remaining dispatch, serialization, or Python-model
+blocker for candidate publication after the `images=false` regression fix.
+That option omits image collections and recursive image payloads while retaining
+Markdown, page projections, and image placeholders. HWPX intentionally ignores
+the PDF-only `tables` option. Option parity remains pending for `plain`,
+`htmlTables`, `scriptTags`, `keepTrailingEmptyCols`, and `includeFieldPlaceholders`.
+These gaps prevent a full HWPX capability or option-parity claim.
 The preceding H2a candidate had 53 unit tests and 8 integration tests, including
 deterministic synthetic fixture checks. These do not establish public parser
 registration, Python behavior, or real-document parity. HWPX capability stays

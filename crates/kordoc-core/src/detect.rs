@@ -570,9 +570,7 @@ pub fn try_parse_with_options(
     bytes: &[u8],
     options: &ParseOptions,
 ) -> Result<ParseSuccess, ParseDispatchError> {
-    // Real parsers are registered by the coordinator as their format crates land. Keeping this
-    // registry empty preserves the foundation's existing unsupported-format behavior.
-    let registry = ParserRegistry::default();
+    let registry = ParserRegistry::built_in();
     try_parse_with_registry(bytes, &registry, options)
         .and_then(|(file_type, parsed)| assemble_success(file_type, parsed, options))
 }

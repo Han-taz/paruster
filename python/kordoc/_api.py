@@ -14,6 +14,7 @@ from ._models import (
     DocChunk,
     PageMarkdown,
     TryParseResult,
+    ValidateResult,
     _freeze_wire,
 )
 
@@ -466,10 +467,27 @@ def try_parse(value: Any, options: object | None = None) -> TryParseResult:
                 "code": error.code,
             }
         )
-    if native_options is None:
-        native_result = _native.try_parse_bytes(data)
-    else:
-        native_result = _native.try_parse_bytes(data, cast(Any, native_options))
+    try:
+        if native_options is None:
+            native_result = _native.try_parse_bytes(data)
+        else:
+            native_result = _native.try_parse_bytes(data, cast(Any, native_options))
+    except ValueError as error:
+        translated = typed_error_from_native(error)
+        if translated is None:
+            raise
+        try:
+            file_type = _native.detect_format_bytes(data)
+        except ValueError:
+            file_type = "unknown"
+        return TryParseResult.from_dict(
+            {
+                "success": False,
+                "fileType": file_type,
+                "error": translated.message,
+                "code": translated.code,
+            }
+        )
     return TryParseResult.from_dict(native_result)
 
 
@@ -480,6 +498,10 @@ def parse(value: Any, options: object | None = None) -> TryParseResult:
     exposes its immutable :class:`Document` projection through ``.document``.
     """
     result = try_parse(value, options=options)
+    return _raise_on_failure(result)
+
+
+def _raise_on_failure(result: TryParseResult) -> TryParseResult:
     if result.success:
         return result
     error = (
@@ -492,3 +514,29 @@ def parse(value: Any, options: object | None = None) -> TryParseResult:
 
         error = ParseError(result.error or EMPTY_INPUT_MESSAGE)
     raise error
+
+
+def parse_hwpx(value: Any, options: object | None = None) -> TryParseResult:
+    """Parse strictly detected HWPX input and expose its immutable document."""
+    native_options = _normalize_options(options)
+    data = _normalize_input(value)
+    try:
+        wire = _native.try_parse_hwpx_bytes(data, cast(Any, native_options))
+    except ValueError as error:
+        _translate_projection_error(error)
+    return _raise_on_failure(TryParseResult.from_dict(wire))
+
+
+def validate_hwpx(value: Any, password: str | None = None) -> ValidateResult:
+    """Validate HWPX structure, counting files rather than directory records."""
+    if password is not None:
+        if not isinstance(password, str):
+            raise TypeError("password must be a string or None")
+        if len(password) > _MAX_OPTION_STRING_LENGTH:
+            raise ValueError("password exceeds the option string limit")
+    data = _normalize_input(value)
+    try:
+        wire = _native.validate_hwpx_bytes(data, password)
+    except ValueError as error:
+        _translate_projection_error(error)
+    return ValidateResult.from_dict(wire)

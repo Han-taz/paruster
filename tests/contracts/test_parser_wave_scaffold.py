@@ -62,7 +62,9 @@ def test_parser_dependencies_are_exact_reviewed_candidates() -> None:
     assert 'quick-xml = { version = "=0.42.0", default-features = false }' in workspace
 
 
-def test_scaffold_does_not_claim_or_register_parser_capability() -> None:
+def test_hwpx_candidate_registration_does_not_promote_unverified_parser_capability() -> (
+    None
+):
     public_api = json.loads(
         (ROOT / "contracts/public-api.json").read_text(encoding="utf-8")
     )
@@ -71,7 +73,10 @@ def test_scaffold_does_not_claim_or_register_parser_capability() -> None:
         assert by_source[source_name]["disposition"] == "planned"
 
     core_manifest = (ROOT / "crates/kordoc-core/Cargo.toml").read_text(encoding="utf-8")
-    assert "kordoc-hancom" not in core_manifest
+    assert (
+        'kordoc-hancom = { path = "../kordoc-hancom", version = "=0.1.0" }'
+        in core_manifest
+    )
     assert "kordoc-pdf" not in core_manifest
 
     hancom_source = (ROOT / "crates/kordoc-hancom/src/lib.rs").read_text(
@@ -79,8 +84,10 @@ def test_scaffold_does_not_claim_or_register_parser_capability() -> None:
     )
     pdf_lib = (ROOT / "crates/kordoc-pdf/src/lib.rs").read_text(encoding="utf-8")
     pdf_parser = (ROOT / "crates/kordoc-pdf/src/parser.rs").read_text(encoding="utf-8")
-    assert "pub fn parse_hwpx" not in hancom_source
-    assert "pub fn validate_hwpx" not in hancom_source
+    assert "pub fn parse_hwpx" in hancom_source
+    assert "pub fn validate_hwpx" in hancom_source
+    assert "hwpx::parse_hwpx(bytes, options)" in hancom_source
+    assert "hwpx::validate_hwpx(bytes, password)?" in hancom_source
     assert "pub fn parse_pdf" not in pdf_lib
     assert "pub use parser" not in pdf_lib
     assert "pub fn parse_pdf" not in pdf_parser

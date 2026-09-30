@@ -1,0 +1,1 @@
+<!DOCTYPE sec [<!ENTITY e SYSTEM "file:///secret">]><sec><p><t>&e;</t></p></sec>

@@ -14,6 +14,23 @@ from kordoc._models import TryParseResult
 PDF = b"%PDF-1.7\n"
 
 
+def test_try_parse_converts_native_output_limit_into_typed_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def capped_result(*args: object) -> object:
+        raise ValueError(
+            "OUTPUT_TOO_LARGE", "Serialized parse output exceeds its limit"
+        )
+
+    monkeypatch.setattr(_native, "try_parse_bytes", capped_result)
+    result = kordoc.try_parse(PDF)
+    assert result.success is False
+    assert result.code == "OUTPUT_TOO_LARGE"
+    assert result.error == "Serialized parse output exceeds its limit"
+    with pytest.raises(kordoc.OutputTooLargeError):
+        kordoc.parse(PDF)
+
+
 def test_native_byte_functions_keep_a_camel_case_failure_dict() -> None:
     assert _native.detect_format_bytes(PDF) == "pdf"
     assert _native.try_parse_bytes(b"") == {
