@@ -172,6 +172,14 @@ checkpoint merged in PR [#25](https://github.com/Han-taz/paruster/pull/25) as
 It does not register PDF or package a worker in base wheels; OS-specific resource containment, six-target worker wheels, factories and
 full-result IR/layout/option parity remain pending.
 
+The [HWPML H0 checkpoint](plans/2026-09-30-hwpml-fixture-plan.md) now has eight
+CC0 inputs and 13 pinned complete oracle observations with four offline
+provenance/inventory tests. This is reviewed fixture evidence only: HWPML
+native parsing, bounded recovery, dedicated table lowering, public Python
+integration and corpus parity remain pending. The local capture JS stays
+ignored and the oracle is never an ordinary CI/runtime/packaging dependency.
+Protected document success accounting is unchanged.
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy

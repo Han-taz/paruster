@@ -1,1 +1,4 @@
 tests/golden/fixtures/*.pdf binary
+
+# Preserve authored XML provenance bytes on every checkout.
+tests/golden/document/hwpml/fixtures/*.xml -text
