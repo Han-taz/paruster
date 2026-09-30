@@ -138,8 +138,7 @@ follow-up passed a fresh independent private Hancom review with no Critical or
 Important issue. Fresh focused checks pass 103 library unit tests and 122
 integration-binary executions (103 repeated units and 19 distinct integration
 cases). Publication through the authenticated GitHub CLI is available; protected
-hosted gates remain pending. The recovered private checkpoint includes the
+the private checkpoint merged in PR [#21](https://github.com/Han-taz/paruster/pull/21) as `c5cded899b6dd80c99aaad8de6f1145060c77717` after all protected hosted gates passed. The recovered private checkpoint includes the
 lowering meter, so unbounded note-prefix repetition from the earlier standalone
-H2a candidate is not published separately. H4 coordinator dispatch/Python/golden
-wiring and H5 fuzz/hosted gates remain separate gates. Capability and parity
+H2a candidate is not published separately. H4 now provides the reviewed core/Python candidate in PR [#22](https://github.com/Han-taz/paruster/pull/22). Its CI, security, six native wheels and six fuzz targets passed on head `adaa106`; later heads must pass again before squash merge. Full option and representative-corpus parity remain pending. Capability and parity
 stay pending in the [migration ledger](../migration/status.md).

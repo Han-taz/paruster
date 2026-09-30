@@ -56,8 +56,7 @@ Native parse results serialize directly through the capped writer without an
 unbounded intermediate `serde_json::Value` copy. Native output-limit failures
 become serializable typed `try_parse` failures; `parse` raises the corresponding
 exception. Local installed-wheel tests cover these boundaries independently
-of source import. Parser capability remains unpromoted while the lowering
-allocation/full-result/hosted gates remain open.
+of source import. The lowering-allocation and local/hosted candidate gates have passed; full option and representative full-result parity remain open, so whole-parser capability is unpromoted.
 
 ## Source-neutral projections
 

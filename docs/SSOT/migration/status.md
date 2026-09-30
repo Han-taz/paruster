@@ -112,8 +112,7 @@ recovered `feature/hwpx-private` candidate. Fresh independent SOL review found
 no Critical or Important private Hancom issue. The reviewed aggregate allocation
 guards cover nested note text and repeated inherited note prefixes before copying.
 Fresh Hancom verification passes 103 library tests and 122 integration-binary
-executions: 103 repeated unit cases and 19 distinct integration cases. H4 public
-dispatch/Python wiring and hosted gates remain separate pending checkpoints.
+executions: 103 repeated unit cases and 19 distinct integration cases. The private join merged in PR [#21](https://github.com/Han-taz/paruster/pull/21) as `c5cded899b6dd80c99aaad8de6f1145060c77717` after all required hosted gates and independent review passed. H4 candidate wiring is published separately below.
 
 H4 currently adds a real HWPX core dispatch adapter, strict format-specific
 preflight, Python `parse_hwpx`/`validate_hwpx`, immutable validator models, and
@@ -127,8 +126,7 @@ section warning diagnostic remains an explicit discrepancy, and no frozen
 oracle result, scoring, or security boundary is changed to hide it. Generated
 fixture input hashes are checked against all twelve unchanged H0 pins.
 
-GitHub publication, required hosted gates, protected review and squash merge
-remain pending. Local development does not bypass them. H4 candidate evidence
+PR [#22](https://github.com/Han-taz/paruster/pull/22) publishes this executable candidate. Head `adaa106` passed hosted [CI](https://github.com/Han-taz/paruster/actions/runs/36701020628), [Security/CodeQL](https://github.com/Han-taz/paruster/actions/runs/36701020709), [six native wheels](https://github.com/Han-taz/paruster/actions/runs/36701020659), and [six bounded fuzz targets](https://github.com/Han-taz/paruster/actions/runs/36701020615). Independent SOL review passed for candidate publication. Later heads must pass again before protected squash merge. H4 candidate evidence
 must not be interpreted as support for the other parsers or any MCP handler.
 Fresh H4 review found no remaining dispatch, serialization, or Python-model
 blocker for candidate publication after the `images=false` regression fix.

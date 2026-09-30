@@ -43,3 +43,4 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 
 - [`2026/09/2026-09-30-pdf-substrate.md`](2026/09/2026-09-30-pdf-substrate.md)
 - [`2026/09/2026-09-30-hwpx-codeql-start-key.md`](2026/09/2026-09-30-hwpx-codeql-start-key.md)
+- [`2026/09/2026-09-30-hwpx-hosted-candidate.md`](2026/09/2026-09-30-hwpx-hosted-candidate.md)
