@@ -177,3 +177,13 @@ def test_private_rust_text_inputs_copy_only_the_exact_authored_h0_bytes() -> Non
     assert {p.name for p in copies.iterdir() if p.suffix == ".xml"} == expected
     for name in expected:
         assert (copies / name).read_bytes() == (FIXTURES / name).read_bytes()
+
+
+def test_private_rust_table_input_is_the_exact_authored_h0_copy() -> None:
+    copies = SUPPORT / "table_fixture_inputs"
+    assert {p.name for p in copies.iterdir()} == {"nested_table.xml"}
+    data = (copies / "nested_table.xml").read_bytes()
+    assert data == (FIXTURES / "nested_table.xml").read_bytes()
+    size, digest = PINS["nested_table.xml"]
+    assert len(data) == size
+    assert hashlib.sha256(data).hexdigest() == digest
