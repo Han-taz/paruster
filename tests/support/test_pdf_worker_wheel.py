@@ -4,6 +4,7 @@ import hashlib
 import json
 import struct
 import subprocess
+import sys
 import tempfile
 import unittest
 import zipfile
@@ -51,6 +52,33 @@ class ArchitectureTests(unittest.TestCase):
 
 
 class ProtocolSmokeTests(unittest.TestCase):
+    def test_unicode_smoke_output_is_utf8_under_isolated_mode(self) -> None:
+        helper = pdf_worker_wheel.ROOT / "tests/support/pdf_worker_wheel.py"
+        script = (
+            "import runpy,sys; "
+            "helper=runpy.run_path(sys.argv[1]); "
+            "print(helper['_smoke_success_message'](sys.argv[2],sys.argv[3]))"
+        )
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-I",
+                "-X",
+                "utf8",
+                "-c",
+                script,
+                str(helper),
+                "aarch64-pc-windows-msvc",
+                "한글🧪",
+            ],
+            capture_output=True,
+            check=True,
+        )
+        self.assertEqual(
+            completed.stdout,
+            "installed aarch64-pc-windows-msvc worker extracted '한글🧪'\n".encode(),
+        )
+
     def test_success_frame_uses_rust_snake_case_probe_fields(self) -> None:
         payload = json.dumps(
             {"status": "success", "result": {"page_count": 1, "page_text": ["한글🧪"]}},
@@ -137,8 +165,7 @@ class NoticeBundleTests(unittest.TestCase):
             ["git", "check-attr", "--stdin", "text"],
             cwd=pdf_worker_wheel.ROOT,
             input=("\n".join(paths) + "\n").encode(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=True,
         )
         lines = result.stdout.decode("utf-8").splitlines()

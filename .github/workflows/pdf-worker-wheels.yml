@@ -144,11 +144,11 @@ jobs:
           else
             worker_python=.venv/bin/python
           fi
-          "$worker_python" -I tests/support/pdf_worker_wheel.py smoke \
+          "$worker_python" -I -X utf8 tests/support/pdf_worker_wheel.py smoke \
             --target "${{ matrix.target }}" \
             --fixture crates/kordoc-pdf/tests/fixtures/pdfjs_probe/one_page_helvetica.pdf \
             --expected-text 'V8 PDF.js probe'
-          "$worker_python" -I tests/support/pdf_worker_wheel.py smoke \
+          "$worker_python" -I -X utf8 tests/support/pdf_worker_wheel.py smoke \
             --target "${{ matrix.target }}" \
             --fixture crates/kordoc-pdf/tests/fixtures/unicode_probe/unicode_probe.pdf \
             --expected-text '한글🧪'
@@ -166,11 +166,11 @@ jobs:
               venv="$(mktemp -d)/venv"
               /opt/python/cp310-cp310/bin/python -m venv "$venv"
               "$venv/bin/python" -m pip install /work/dist/*.whl
-              "$venv/bin/python" -I /work/tests/support/pdf_worker_wheel.py smoke \
+              "$venv/bin/python" -I -X utf8 /work/tests/support/pdf_worker_wheel.py smoke \
                 --target "${{ matrix.target }}" \
                 --fixture /work/crates/kordoc-pdf/tests/fixtures/pdfjs_probe/one_page_helvetica.pdf \
                 --expected-text "V8 PDF.js probe"
-              "$venv/bin/python" -I /work/tests/support/pdf_worker_wheel.py smoke \
+              "$venv/bin/python" -I -X utf8 /work/tests/support/pdf_worker_wheel.py smoke \
                 --target "${{ matrix.target }}" \
                 --fixture /work/crates/kordoc-pdf/tests/fixtures/unicode_probe/unicode_probe.pdf \
                 --expected-text "한글🧪"

@@ -95,7 +95,7 @@ PDF.js npm tarball SHA-512 and `package/LICENSE`. This is a notice bundle for
 identified embedded assets, not a blanket audit of every Rust dependency.
 
 A macOS arm64 wheel built after the HWPX warning merge passes archive/artifact
-audits and **338** tests in isolated CPython 3.10.19 (320 existing API/contract/
+audits and **339** tests in isolated CPython 3.10.19 (320 existing API/contract/
 parity cases plus 18 tooling regressions), then extracts exact ASCII and
 `한글🧪` through the installed worker. Its worker is 61,976,928 bytes with mode
 0755 and declares macOS 11.0, matching this local wheel tag. Other targets
@@ -158,3 +158,7 @@ allocation-free oversized token/filter/index/reference inputs, encryption
 trailer lexical evasions, stream-payload false references, and the 500 MiB
 sparse probe. These are substrate checks only; they do not advance the
 real-document parity numerator.
+
+Installed worker probes explicitly use `python -I -X utf8`: isolated mode
+ignores environment-based `PYTHONUTF8`, and the explicit flag preserves exact
+Hangul/astral status output on Windows. All six targets remain mandatory.

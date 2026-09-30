@@ -365,6 +365,10 @@ def _expect_probe(response: dict[str, object], expected_text: str) -> None:
         raise ValueError(f"worker extracted unexpected PDF text: {result!r}")
 
 
+def _smoke_success_message(target: str, expected_text: str) -> str:
+    return f"installed {target} worker extracted {expected_text!r}"
+
+
 def smoke(target: str, fixture: Path, expected_text: str) -> None:
     import kordoc
 
@@ -402,7 +406,7 @@ def smoke(target: str, fixture: Path, expected_text: str) -> None:
         raise ValueError(f"worker exited with status {completed.returncode}")
     response = _decode_response(completed.stdout)
     _expect_probe(response, expected_text)
-    print(f"installed {target} worker extracted {expected_text!r}")
+    print(_smoke_success_message(target, expected_text))
 
 
 def main(argv: list[str] | None = None) -> int:

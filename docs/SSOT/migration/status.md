@@ -176,7 +176,7 @@ full-result IR/layout/option parity remain pending.
 
 The separate [PDF worker-wheel gate](plans/2026-09-30-pdf-worker-wheel-plan.md)
 now has a locally reviewed CI-only candidate for six targets. Actual macOS
-arm64 installed execution and 335 Python/tooling cases pass with pinned
+arm64 installed execution and 339 Python/tooling cases pass with pinned
 upstream notices included. The six hosted worker targets are still pending;
 default wheels, ordinary PEP 517/sdist worker builds and public PDF registration
 are unchanged. Windows ARM64 uses CPython 3.12 for this feasibility gate and
