@@ -251,3 +251,7 @@ Python/helper cases plus ten subtests; hosted gates remain before publication. N
 PR [#32](https://github.com/Han-taz/paruster/pull/32) merged the private text
 transfer as `762ddde4050660abaaa815889ed76da21a589612` after final-head
 required checks and all six four-probe installed-worker targets passed.
+
+PR [#34](https://github.com/Han-taz/paruster/pull/34) merged private Rust
+metadata as `bc61d32a8fbf2fdea2e2ace3e36104d3eb1e56c6` after all
+required checks and six installed worker targets passed.

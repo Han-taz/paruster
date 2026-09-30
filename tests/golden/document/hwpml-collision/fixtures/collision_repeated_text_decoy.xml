@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HWPML Version="2.9"><BODY><SECTION Id="0"><TABLE RowCount="1" ColCount="3"><ROW>
+  <CELL RowAddr="0" ColAddr="0"><PARALIST><P><TEXT><CHAR>owner</CHAR><TABLE RowCount="1" ColCount="1"><ROW><CELL RowAddr="0" ColAddr="0"><PARALIST><P><TEXT><CHAR>inner</CHAR></TEXT></P></PARALIST></CELL></ROW></TABLE></TEXT></P></PARALIST></CELL>
+  <CELL RowAddr="0" ColAddr="0"><PARALIST><P><TEXT><CHAR>collision</CHAR></TEXT></P></PARALIST></CELL>
+  <CELL RowAddr="0" ColAddr="1"><PARALIST><P><TEXT><CHAR>owner</CHAR></TEXT></P><P><TEXT><CHAR>inner</CHAR></TEXT></P></PARALIST></CELL>
+  <CELL RowAddr="0" ColAddr="2"><PARALIST><P><TEXT><CHAR> </CHAR></TEXT></P></PARALIST></CELL>
+</ROW></TABLE></SECTION></BODY></HWPML>
