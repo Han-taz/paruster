@@ -108,3 +108,15 @@ Moved table construction remains included in the required 80% coverage gate: add
 its code from the measured set. The matching contract first fails against the
 old workflow, then passes after the extension. Keep both workspace lockfiles
 consistent with the new source dependency.
+
+## Local candidate verification
+
+Six sibling and 110 core unit cases, 22 other core executions, root locked
+workspace tests, all-target/all-feature strict workspace Clippy and rustdoc pass.
+Independent re-review is clean after blank-collision and renderer-depth fixes.
+A root differential check over 10,000 deterministic grids preserves full old IR
+or exact typed errors. The expanded selected coverage gate passes 91.75%
+(sibling 91.56%), retaining its 80% threshold. Latest-main merge preserves
+HWPML and PDF resource changes. A fresh macOS ARM abi3 wheel passes 348
+isolated Python tests plus three subtests. Wheel/sdist audits and exact new
+crate source inclusion pass; hosted checks follow.

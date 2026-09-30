@@ -64,3 +64,18 @@ warning-free rustdoc, fmt, Ruff (52 files), actionlint and documentation checks
 also pass. The previously built resource-worker wheel passes all 345 current
 Python API/contracts/parity/tooling cases on this base; a fresh candidate wheel
 and latest-main integration remain before PR publication.
+
+## Latest-main installed candidate verification
+
+The candidate incorporates merged HWPML text and PDF resources without native
+conflicts. Fresh macOS ARM abi3 wheel installation into isolated CPython 3.10
+passes 348 Python API, contract, parity and tooling tests plus three subtests.
+The first collection attempt lacks the declared jsonschema dev dependency;
+installing its pinned version resolves the environment issue without code or
+test changes. Locked merged workspace tests, strict all-target/all-feature
+Clippy, warning-free rustdoc, fmt, Ruff (53 files), mypy (eight sources),
+actionlint, zizmor and documentation validation pass. An initial docs command
+uses Apple Python under a CPython 3.10 PYTHONHOME; using the matching isolated
+interpreter resolves that environment mismatch. Fresh wheel/sdist audits pass;
+new sibling source and copied HWPML fixtures are verified byte-for-byte in the
+sdist. Hosted final-head gates remain required before merge.

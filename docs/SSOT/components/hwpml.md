@@ -1,7 +1,7 @@
 # HWPML component
 
 Status: H0 authored fixture capture merged in PR #28. A private bounded Rust
-text/metadata lowerer is locally reviewed; public parsing and table/recovery
+text/metadata lowerer merged in PR #30; public parsing and table/recovery
 qualification remain pending.
 
 The H0 checkpoint contains eight deterministic CC0 XML fixtures and 13 complete
@@ -52,3 +52,9 @@ parity accounting remain unchanged. This strict private slice does not claim
 oracle parity for recoverable malformed XML or DTD cases, whose legacy behavior
 differs from the security policy. No public registry, Python API, HWP3/HWP5
 completion or MCP capability is added.
+
+PR [#30](https://github.com/Han-taz/paruster/pull/30) merged the private text
+slice as `5a8e27c4d67a3cfcff9f31bb5e9dcc304fda6f34` after required checks
+and all six additional installed-worker targets passed on final head `fa8c461`.
+See the [merge record](../../WIKI/2026/09/2026-09-30-hwpml-private-text-merge.md);
+public HWPML registration and full parity remain pending.
