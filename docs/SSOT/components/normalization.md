@@ -101,3 +101,29 @@ retains its separately contracted 200,000-character cap. The frozen wire
 shapes and error inventory are in the [IR contract](../contracts/ir.md),
 [Python API contract](../contracts/python-api.md), and
 [error contract](../contracts/errors.md).
+
+
+## Parse-result option finalization
+
+A private core postprocessor applies the existing options after assembling
+source-neutral IR and document/page Markdown. Ordering is `scriptTags=false`,
+then `plain=true`, then `htmlTables=true`. Sup/sub stripping compacts owned UTF-8
+in place and recursively handles block text, notes, spans, children, table
+captions and cell blocks. Plain/HTML conversion changes only Markdown strings;
+IR, images and page-count evidence remain unchanged.
+
+Unicode script values, image/link markers, underline/bold and whitespace rules,
+escaped pipe cells, allowed inline HTML, nested HTML and option ordering are
+checked against five exact captured source-helper observations. Trusted,
+compile-time regex patterns and single-pass scanners avoid repeated suffix
+searches. Stages replace their owned input promptly; pretty-printing streams
+borrowed characters and pipe cells instead of building input-sized character
+or column vectors. Each output append checks the existing 256 MiB UTF-8 ceiling
+before allocation; logical recursion remains bounded to 64 levels. Failures
+return `OUTPUT_TOO_LARGE`, never clipped success. No input-controlled regex,
+HTML execution, filesystem access or network fetch is introduced.
+
+Table placeholder policy keeps flat cell IR text. Multi-column GFM and HTML
+rendering use non-placeholder spans when present. The source's special
+one-column path uses flat cell text, including guides; this quirk is preserved
+rather than folded into the multi-column rule.

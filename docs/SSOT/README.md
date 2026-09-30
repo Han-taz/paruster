@@ -10,7 +10,7 @@ This directory contains the current, normative description of paruster. A code c
 - [`migration/plans/2026-09-30-parser-seam-implementation-plan.md`](migration/plans/2026-09-30-parser-seam-implementation-plan.md): focused P0 internal DTO, dispatch, Python success model, detector-helper, and parity-harness plan
 - [`migration/plans/2026-09-30-ir-projections-implementation-plan.md`](migration/plans/2026-09-30-ir-projections-implementation-plan.md): focused P7 Markdown, page/chunk, table policy, and shared table-unit execution plan
 - [`migration/plans/2026-09-30-hwpx-implementation-plan.md`](migration/plans/2026-09-30-hwpx-implementation-plan.md): focused P1 bounded HWPX package, XML, semantic lowering, validation, crypto, and Python integration plan
-- [`components/hwpx.md`](components/hwpx.md): private HWPX package, XML, and section implementation candidate and current review boundaries
+- [`migration/plans/2026-09-30-hwpx-option-parity-plan.md`](migration/plans/2026-09-30-hwpx-option-parity-plan.md): focused restoration of the five frozen HWPX options and bounded finalization
 - [`migration/plans/2026-09-30-pdf-implementation-plan.md`](migration/plans/2026-09-30-pdf-implementation-plan.md): focused P2 pure-Rust PDF semantic, layout, table, quality, and optional raster-boundary plan
 - [`migration/status.md`](migration/status.md): live implementation and parity status
 - [Workspace architecture](architecture/workspace.md): current crate boundaries, data flow, and security boundaries
