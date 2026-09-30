@@ -8,6 +8,19 @@ rust-version.workspace = true
 [features]
 default = []
 pdfjs-v8 = ["dep:v8", "dep:serde", "dep:serde_json"]
+pdfjs-worker-tests = ["pdfjs-v8"]
+
+[[bin]]
+name = "pdfjs-worker"
+path = "src/bin/pdfjs_worker.rs"
+required-features = ["pdfjs-v8"]
+test = false
+
+[[bin]]
+name = "pdfjs-test-worker"
+path = "tests/support/worker_child.rs"
+required-features = ["pdfjs-worker-tests"]
+test = false
 
 [dependencies]
 kordoc-ir = { path = "../kordoc-ir", version = "=0.1.0" }

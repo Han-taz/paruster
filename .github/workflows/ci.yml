@@ -54,8 +54,8 @@ jobs:
         run: cargo +1.97.0 clippy --workspace --all-targets --all-features --locked -- -D warnings
       - name: Run Rust tests
         run: cargo +1.97.0 test --workspace --locked
-      - name: Test embedded PDF.js runtime
-        run: cargo +1.97.0 test -p kordoc-pdf --features pdfjs-v8 --locked
+      - name: Test embedded PDF.js runtime and native worker supervision
+        run: cargo +1.97.0 test -p kordoc-pdf --features pdfjs-worker-tests --locked
       - name: Build warning-free documentation
         env:
           RUSTDOCFLAGS: -Dwarnings

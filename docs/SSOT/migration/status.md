@@ -133,7 +133,9 @@ blocker for candidate publication after the `images=false` regression fix.
 That option omits image collections and recursive image payloads while retaining
 Markdown, page projections, and image placeholders. HWPX intentionally ignores
 the PDF-only `tables` option. The focused [option follow-up](plans/2026-09-30-hwpx-option-parity-plan.md)
-implements `plain`, `htmlTables`, `scriptTags`, `keepTrailingEmptyCols`, and
+merged in PR [#24](https://github.com/Han-taz/paruster/pull/24) as
+`0cd5b261371aaf697c11db825bb22500db369782` after final-head CI, security,
+six native wheels, six bounded fuzz targets and independent review passed. It implements `plain`, `htmlTables`, `scriptTags`, `keepTrailingEmptyCols`, and
 `includeFieldPlaceholders` through existing Rust/Python options. Five pinned
 helper observations and authored native/Python cases cover default/false/true,
 Unicode, nested cells/fields and ordering. Independent review identified and
@@ -153,6 +155,14 @@ does not parse pages or glyphs, expose a public function, or advance PDF parity;
 those remain pending until the rest of P2a and its protected merge complete.
 
 The active private V8/PDF.js spike is published in draft PR [#23](https://github.com/Han-taz/paruster/pull/23). Fresh local feature tests execute V8 `15.2.124.1-rusty` with PDF.js `4.10.38` and extract the authored one-page text exactly. Eight scoped executions, offline asset integrity, strict all-feature Clippy, normal locked workspace tests and docs checks pass. This demonstrates embedded runtime feasibility only. Source-neutral IR/layout/table integration, supervised native-process containment, full result/option parity and feature-enabled six-target installed-wheel gates remain pending; no PDF production capability or manifest success numerator is promoted.
+
+The private [native PDF.js worker](plans/2026-09-30-pdf-v8-worker-plan.md)
+adds bounded one-document framing, two-slot supervision and kill/wait/I/O
+cleanup around the existing V8 probe. Actual supervised Helvetica and
+ToUnicode Hangul/astral probes compare exactly to in-process extraction. This
+checkpoint does not register PDF or package a worker in base wheels;
+OS-specific resource containment, six-target worker wheels, factories and
+full-result IR/layout/option parity remain pending.
 
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
