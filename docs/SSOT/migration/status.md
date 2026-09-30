@@ -225,6 +225,15 @@ artifact audits pass. Hosted publication remains pending; legacy core semantics
 stay intact. This scaffold does not implement HWPML tables, promote
 any parser capability, or change frozen IR/errors or protected scoring.
 
+A private [HWPML nested-table candidate](plans/2026-09-30-hwpml-nested-table-plan.md)
+lowers the authored unique-anchor H0 table through the shared metered builder.
+Default/false and true reproduce all three complete captured block trees, and
+core Markdown projections match exactly. Fresh Hancom 147 unit plus 144
+integration executions and independent review pass. Captions, ambiguous
+attachments, empty tables, skipped-wrapper tables and depth 9 deliberately
+reject; general source coercion/recovery and public registration remain pending.
+Latest-main artifacts and hosted gates still precede publication.
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy

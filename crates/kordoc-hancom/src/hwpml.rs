@@ -7,6 +7,8 @@ use kordoc_ir::{
     ParseOptions, ParsedDocument,
 };
 
+mod tables;
+
 use crate::hwpx::{XmlContent, XmlNode, budget::LoweringBudget, parse_xml_critical};
 
 const MAX_HWPML_BYTES: usize = 50 * 1024 * 1024;
@@ -67,6 +69,7 @@ fn parse_inner(
     let page_filter = build_page_filter(options.pages.as_ref(), section_count, budget)?;
     let headings = build_heading_map(&root, budget)?;
 
+    let mut table_cells = kordoc_tables::TableCellBudget::default();
     let mut section_number = 0usize;
     for section in body.children.iter().filter(|child| child.name == "SECTION") {
         section_number += 1;
@@ -82,7 +85,15 @@ fn parse_inner(
                 "HWPML section count exceeds the page number bound",
             )
         })?;
-        walk_section(section, page_number, &headings, &mut parsed, budget)?;
+        walk_section(
+            section,
+            page_number,
+            &headings,
+            &mut parsed,
+            budget,
+            &mut table_cells,
+            options,
+        )?;
     }
 
     Ok(parsed)
@@ -332,6 +343,8 @@ fn walk_section(
     headings: &HashMap<String, Option<u32>>,
     parsed: &mut ParsedDocument,
     budget: &mut LoweringBudget,
+    table_cells: &mut kordoc_tables::TableCellBudget,
+    options: &ParseOptions,
 ) -> Result<(), KordocError> {
     for content in &node.content {
         let XmlContent::Child(index) = content else {
@@ -340,9 +353,32 @@ fn walk_section(
         let child = &node.children[*index];
         match child.name.as_str() {
             "HEADER" | "FOOTER" => continue,
-            "P" => add_paragraph(child, page_number, headings, parsed, budget)?,
-            "TABLE" => return Err(unsupported_tables()),
-            _ => walk_section(child, page_number, headings, parsed, budget)?,
+            "P" => add_paragraph(
+                child,
+                page_number,
+                headings,
+                parsed,
+                budget,
+                table_cells,
+                options,
+            )?,
+            "TABLE" => tables::append_table_block(
+                child,
+                page_number,
+                parsed,
+                budget,
+                table_cells,
+                options,
+            )?,
+            _ => walk_section(
+                child,
+                page_number,
+                headings,
+                parsed,
+                budget,
+                table_cells,
+                options,
+            )?,
         }
     }
     Ok(())
@@ -354,50 +390,53 @@ fn add_paragraph(
     headings: &HashMap<String, Option<u32>>,
     parsed: &mut ParsedDocument,
     budget: &mut LoweringBudget,
+    table_cells: &mut kordoc_tables::TableCellBudget,
+    options: &ParseOptions,
 ) -> Result<(), KordocError> {
     reject_paragraph_tables(node)?;
     let mut text = String::new();
     append_paragraph_chars(node, &mut text, budget)?;
     let trimmed = text.trim();
-    if trimmed.is_empty() {
-        return Ok(());
-    }
 
     let shape_id = node.attr("ParaShape").unwrap_or_default();
     let level = headings.get(shape_id).copied().flatten();
-    let block_text = budget.copy_str(trimmed)?;
-    let outline_text = level.map(|_| budget.copy_str(trimmed)).transpose()?;
-    budget.push(
-        &mut parsed.blocks,
-        IrBlock {
-            kind: if level.is_some() {
-                IrBlockType::Heading
-            } else {
-                IrBlockType::Paragraph
-            },
-            text: Some(block_text),
-            level,
-            page_number: Some(page_number),
-            ..IrBlock::default()
-        },
-    )?;
-    if let (Some(level), Some(text)) = (level, outline_text) {
+    if !trimmed.is_empty() {
+        let block_text = budget.copy_str(trimmed)?;
+        let outline_text = level.map(|_| budget.copy_str(trimmed)).transpose()?;
         budget.push(
-            parsed.outline.get_or_insert_with(Vec::new),
-            OutlineItem {
+            &mut parsed.blocks,
+            IrBlock {
+                kind: if level.is_some() {
+                    IrBlockType::Heading
+                } else {
+                    IrBlockType::Paragraph
+                },
+                text: Some(block_text),
                 level,
-                text,
                 page_number: Some(page_number),
+                ..IrBlock::default()
             },
         )?;
+        if let (Some(level), Some(text)) = (level, outline_text) {
+            budget.push(
+                parsed.outline.get_or_insert_with(Vec::new),
+                OutlineItem {
+                    level,
+                    text,
+                    page_number: Some(page_number),
+                },
+            )?;
+        }
     }
+    tables::append_tables_in_paragraph(node, page_number, parsed, budget, table_cells, options)?;
     Ok(())
 }
 
 fn reject_paragraph_tables(node: &XmlNode) -> Result<(), KordocError> {
     for child in &node.children {
         match child.name.as_str() {
-            "TABLE" => return Err(unsupported_tables()),
+            // The selected paragraph walk lowers TABLE nodes after collecting CHAR text.
+            "TABLE" => continue,
             // Match the selected CHAR traversal: inline headers/footers are visited, while
             // these wrappers suppress all content in the paragraph collector.
             "PICTURE" | "SHAPEOBJECT" | "AUTONUM" => continue,
@@ -424,13 +463,6 @@ fn append_paragraph_chars(
         }
     }
     Ok(())
-}
-
-fn unsupported_tables() -> KordocError {
-    KordocError::new(
-        ErrorCode::UnsupportedFormat,
-        "HWPML tables are not supported by the text-only parser",
-    )
 }
 
 fn allocation_error() -> KordocError {

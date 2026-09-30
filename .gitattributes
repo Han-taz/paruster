@@ -10,3 +10,6 @@ crates/kordoc-hancom/tests/support/hwpml/text_fixture_inputs/*.xml -text
 crates/kordoc-pdf/assets/** -text
 crates/kordoc-pdf/tests/fixtures/**/*.pdf -text
 tests/golden/document/pdf/**/*.pdf -text
+
+# Keep the crate-local nested-table fixture identical to its authored H0 input.
+crates/kordoc-hancom/tests/support/hwpml/table_fixture_inputs/*.xml -text
