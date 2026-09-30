@@ -14,3 +14,7 @@ tests/golden/document/pdf/**/*.pdf -text
 # Preserve the pinned text-document recipe and complete expected DTO bytes.
 crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/expected.json -text
 crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/generate.py -text
+
+# Preserve independently authored metadata recipe and captured observation pins.
+crates/kordoc-pdf/tests/fixtures/pdfjs_metadata/generate.py -text
+crates/kordoc-pdf/tests/fixtures/pdfjs_metadata/oracle-captures.jsonl -text

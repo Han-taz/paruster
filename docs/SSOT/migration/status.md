@@ -223,6 +223,14 @@ ARM worker wheel passes all four probes and 351 isolated Python/helper tests;
 hosted publication evidence follows. No public PDF capability,
 layout/IR parity or protected score is promoted.
 
+A private [Rust PDF metadata candidate](plans/2026-09-30-pdf-rust-metadata-plan.md)
+normalizes seven bounded raw fields into the existing metadata type. Three
+authored PDFs reproduce six frozen full-parse/metadata-only observations,
+including duplicate keywords, delimiter-only empty arrays and permissive dates.
+Ten focused cases and 243 scoped feature executions pass with independent
+review. No public metadata entry point, geometry or DTO/wire change is made;
+latest-main artifact/hosted qualification remains before publication.
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy
