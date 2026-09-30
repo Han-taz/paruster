@@ -21,3 +21,7 @@ crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/generate.py -text
 # Preserve independently authored metadata recipe and captured observation pins.
 crates/kordoc-pdf/tests/fixtures/pdfjs_metadata/generate.py -text
 crates/kordoc-pdf/tests/fixtures/pdfjs_metadata/oracle-captures.jsonl -text
+
+# Preserve independent geometry recipe and pinned engine/source observations.
+crates/kordoc-pdf/tests/fixtures/pdfjs_geometry/generate.py -text
+crates/kordoc-pdf/tests/fixtures/pdfjs_geometry/*.json -text

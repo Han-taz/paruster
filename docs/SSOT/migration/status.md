@@ -266,3 +266,11 @@ All 17 MCP tools remain pending and must preserve their frozen names, schemas, d
 ## Evidence policy
 
 Detector-only and generated-IR projection goldens prove deterministic foundation behavior, not document-output parity. The parity policy in [`../quality/parity.md`](../quality/parity.md) governs allowed normalization; first-difference evidence and fixture provenance are required before any capability moves from pending to verified.
+
+A private [Rust geometry candidate](plans/2026-09-30-pdf-rust-geometry-plan.md)
+retains unrotated page dimensions/rotation and reproduces V8 rounding before
+fractional CropBox translation. Authored raw/source captures and edge-vector
+bits, nine focused cases and 252 scoped feature executions pass independent
+review. Invalid/overflowing geometry rejects without clamping. Full PDF item
+normalization/layout and public registration remain pending; final-head
+artifact and hosted qualification precede publication.

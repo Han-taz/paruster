@@ -1,8 +1,8 @@
 # Private PDF fractional CropBox geometry
 
-Status: Preparation only; no Rust geometry helper or integration test has been
-implemented. Root review of this plan and the authored captures is required
-before the RED/GREEN implementation begins.
+Status: Coordinator-approved private geometry checkpoint implemented and
+independently reviewed. Nine focused tests and 252 scoped feature executions
+pass. Final-head integration, artifacts and hosted qualification remain pending.
 
 ## Goal and boundary
 

@@ -47,3 +47,5 @@ and data flow; `contracts/` for shared interfaces; `components/` for
 implementation truth; `quality/` for validation policy; `operations/` —
 development and release procedures; and `migration/` for plans and status. New
 sections are added only when they have canonical content.
+
+- [`migration/plans/2026-09-30-pdf-rust-geometry-plan.md`](migration/plans/2026-09-30-pdf-rust-geometry-plan.md): private fractional CropBox and V8 rounding geometry checkpoint

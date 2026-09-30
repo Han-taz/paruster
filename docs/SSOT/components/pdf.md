@@ -251,3 +251,18 @@ Python/helper cases plus ten subtests; hosted gates remain before publication. N
 PR [#32](https://github.com/Han-taz/paruster/pull/32) merged the private text
 transfer as `762ddde4050660abaaa815889ed76da21a589612` after final-head
 required checks and all six four-probe installed-worker targets passed.
+
+## Private Rust base geometry
+
+The [geometry checkpoint](../migration/plans/2026-09-30-pdf-rust-geometry-plan.md)
+projects finite page frames and text positions in Rust. Frames retain unrotated
+CropBox dimensions and separate page rotation. Text translations reproduce
+V8 Math.round before subtracting the fractional CropBox origin, including
+negative zero and the float immediately below 0.5. Positive ordered views,
+page numbers, rotation multiples, all transform values and derived arithmetic
+are validated; invalid geometry yields the existing ParseError. No input-sized
+allocation or new magnitude clamp is introduced. One authored PDF, actual
+worker DTO, focused source projection and pinned V8 IEEE vectors establish this
+micro-contract. Nine focused cases and 252 scoped feature executions pass with
+independent review. Full text normalization, filtering, annotation/operator
+handling, IR/layout and public PDF registration remain pending.
