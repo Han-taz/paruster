@@ -304,3 +304,26 @@ Fresh optional macOS ARM worker and base wheels pass 366 isolated Python/helper
 cases plus ten subtests; artifact audits, all four installed probes and eleven
 checkout bytepins pass. All six hosted worker targets now execute the native
 release tests; final-head hosted qualification remains before publication.
+
+The private geometry/scalar checkpoint merged in PR [#36](https://github.com/Han-taz/paruster/pull/36)
+as `c5be99bd3cd4c0508a6e9237fb64c2e30a12d30a` at 2026-09-30 14:58:13 UTC.
+All 42 final-head checks passed, including the five aggregate gates, actual
+CodeQL analyses and all six native worker-wheel targets.
+
+The private [text-rewrite checkpoint](plans/2026-09-30-pdf-text-rewrites-plan.md)
+implements one bounded Rust text helper: ECMAScript trim, selective per-character
+NFKC only for U+2F00–U+2FD5, literal-space removal for the exact numeric class,
+and the rounded-font uppercase-label rule. Twenty text-only source observations
+and all 214 independently captured radical mappings pass. The pinned optional
+Unicode dependency reuses the existing 0.1.25 lock entry without external version
+changes. Nine focused tests and independent review pass; the helper remains
+unwired. Splitting/orientation/sorting must be assembled in source order in a
+later slice. Full PDF parsing, layout, public registration and containment
+qualification remain pending.
+
+Fresh rewrite base and optional-worker wheels each pass 368 Python/helper cases
+plus ten subtests; both base artifacts and the worker architecture/notices audit
+pass, as do all four installed probes. The existing unchanged 100ms supervisor
+startup-marker race reproduced in one coordinator feature run and is under
+separate investigation; an independent full feature run passed. Hosted final-head
+gates remain before this new checkpoint can be merged.

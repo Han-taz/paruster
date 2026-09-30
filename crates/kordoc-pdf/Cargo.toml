@@ -7,7 +7,7 @@ rust-version.workspace = true
 
 [features]
 default = []
-pdfjs-v8 = ["dep:v8", "dep:serde", "dep:serde_json"]
+pdfjs-v8 = ["dep:v8", "dep:serde", "dep:serde_json", "dep:unicode-normalization"]
 pdfjs-worker-tests = ["pdfjs-v8"]
 
 [[bin]]
@@ -28,6 +28,7 @@ lopdf.workspace = true
 v8 = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
+unicode-normalization = { workspace = true, optional = true }
 
 [dev-dependencies]
 serde_json.workspace = true

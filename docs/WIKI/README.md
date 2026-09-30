@@ -100,3 +100,6 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 - [`2026/09/2026-09-30-pdf-rust-text-scalar.md`](2026/09/2026-09-30-pdf-rust-text-scalar.md)
 
 - [`2026/09/2026-09-30-hwpml-collision-captures-merge.md`](2026/09/2026-09-30-hwpml-collision-captures-merge.md)
+
+- [`2026/10/2026-10-01-pdf-base-text-merge.md`](2026/10/2026-10-01-pdf-base-text-merge.md)
+- [`2026/10/2026-10-01-pdf-text-rewrites.md`](2026/10/2026-10-01-pdf-text-rewrites.md)
