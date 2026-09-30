@@ -87,6 +87,20 @@ unregistered and exposes no parser capability. H2a is still under review; H1b
 starts only after their interface join. See the append-only
 [H1a merge record](../../WIKI/2026/09/2026-09-30-hwpx-h1a-merge.md).
 
+H2a XML and section lowering is present as a crate-local candidate on
+`feature/parse-hwpx-xml` and remains under code review. The candidate has
+bounded XML parsing, transactional section lowering, styles/notes/page
+evidence, and focused unit coverage. Review regressions now cover mixed layout
+fallback, note suffix inheritance, and omitted-empty-paragraph page transitions.
+H2a final review and hosted gates remain pending. See the
+[HWPX component page](../components/hwpx.md) and append-only
+[H2a candidate record](../../WIKI/2026/09/2026-09-30-hwpx-h2a.md).
+
+The current HWPX crate has 44 unit tests and 8 integration tests, including
+deterministic synthetic fixture checks. These do not establish public parser
+registration, Python behavior, or real-document parity. HWPX capability stays
+pending; the parser-oracle success numerator remains zero.
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy
