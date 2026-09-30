@@ -1,4 +1,4 @@
-use crate::hwpx::xml::{XmlFault, parse, parse_critical};
+use crate::hwpx::xml::{XmlFault, parse, parse_critical, unclosed_tag_name_ranges};
 use kordoc_ir::ErrorCode;
 
 #[test]
@@ -27,6 +27,35 @@ fn critical_xml_depth_201_is_corrupted() {
     assert!(matches!(error.fault, XmlFault::DepthLimit));
     let error = parse_critical(xml.as_bytes()).unwrap_err();
     assert_eq!(error.code, ErrorCode::Corrupted);
+}
+
+#[test]
+fn unfinished_tag_ranges_preserve_qualified_opening_order() {
+    let xml = b"<hs:sec><hp:p><hp:t>partial";
+    let ranges = unclosed_tag_name_ranges(xml).unwrap();
+    let names: Vec<_> = ranges
+        .iter()
+        .map(|range| std::str::from_utf8(&xml[range.clone()]).unwrap())
+        .collect();
+    assert_eq!(names, ["hs:sec", "hp:p", "hp:t"]);
+}
+
+#[test]
+fn unfinished_tag_ranges_are_only_reported_for_clean_eof() {
+    assert!(unclosed_tag_name_ranges(b"<root><child></root>").is_none());
+    assert!(unclosed_tag_name_ranges(b"<root><child/></root>").is_none());
+    let attributed = b"<root attr='value&lt;fake'>";
+    let ranges = unclosed_tag_name_ranges(attributed).unwrap();
+    assert_eq!(&attributed[ranges[0].clone()], b"root");
+    assert!(unclosed_tag_name_ranges(b"<root attr='value<fake'>").is_none());
+    assert!(unclosed_tag_name_ranges(b"<root><bad attr='raw<value'/ >").is_none());
+    assert!(unclosed_tag_name_ranges(b"<root><child>&#xZZ;").is_none());
+}
+
+#[test]
+fn unfinished_tag_diagnostic_respects_xml_depth_bound() {
+    let xml = "<x>".repeat(201);
+    assert!(unclosed_tag_name_ranges(xml.as_bytes()).is_none());
 }
 
 #[test]

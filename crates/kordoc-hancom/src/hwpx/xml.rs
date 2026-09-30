@@ -5,6 +5,7 @@
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
+use std::ops::Range;
 
 use kordoc_ir::{ErrorCode, KordocError};
 use quick_xml::Reader;
@@ -77,6 +78,7 @@ pub(crate) enum XmlFault {
     InvalidUtf8,
     ForbiddenDeclaration,
     Malformed,
+    UnclosedTags,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -233,7 +235,13 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<XmlNode, XmlError> {
             Event::Comment(_) | Event::PI(_) => {}
         }
     }
-    if !stack.is_empty() || root.is_none() {
+    if !stack.is_empty() {
+        return Err(XmlError {
+            fault: XmlFault::UnclosedTags,
+            message: "malformed XML",
+        });
+    }
+    if root.is_none() {
         return Err(XmlError {
             fault: XmlFault::Malformed,
             message: "malformed XML",
@@ -243,6 +251,70 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<XmlNode, XmlError> {
         fault: XmlFault::Malformed,
         message: "malformed XML",
     })
+}
+
+/// Returns borrowed source ranges for start-tag names left open at EOF. Callers use this only
+/// after the primary parser classifies an unclosed-tag EOF, so valid XML pays no second-pass or
+/// name-copy cost. The range stack is bounded by the same depth limit as the primary parser.
+pub(crate) fn unclosed_tag_name_ranges(bytes: &[u8]) -> Option<Vec<Range<usize>>> {
+    if bytes.len() > MAX_XML_BYTES {
+        return None;
+    }
+    let source = std::str::from_utf8(bytes).ok()?;
+    let mut reader = Reader::from_str(source);
+    reader.config_mut().trim_text(false);
+    reader.config_mut().check_end_names = true;
+    reader.config_mut().expand_empty_elements = false;
+    let mut names = Vec::new();
+    loop {
+        match reader.read_event().ok()? {
+            Event::Start(element) => {
+                if names.len() >= MAX_DEPTH || names.try_reserve(1).is_err() {
+                    return None;
+                }
+                for attribute in element.attributes().with_checks(false) {
+                    let attribute = attribute.ok()?;
+                    if attribute.value.as_ref().contains('<') {
+                        return None;
+                    }
+                }
+                let name = element.name();
+                let name = name.as_ref();
+                let start = (name.as_ptr() as usize).checked_sub(source.as_ptr() as usize)?;
+                let end = start.checked_add(name.len())?;
+                if source.get(start..end)? != name {
+                    return None;
+                }
+                names.push(start..end);
+            }
+            Event::End(_) => {
+                names.pop()?;
+            }
+            Event::Eof => return (!names.is_empty()).then_some(names),
+            Event::Empty(element) => {
+                for attribute in element.attributes().with_checks(false) {
+                    let attribute = attribute.ok()?;
+                    if attribute.value.as_ref().contains('<') {
+                        return None;
+                    }
+                }
+            }
+            Event::Text(_)
+            | Event::CData(_)
+            | Event::DocType(_)
+            | Event::Decl(_)
+            | Event::Comment(_)
+            | Event::PI(_) => {}
+            Event::GeneralRef(reference) => {
+                let reference_name = reference.as_ref();
+                if !matches!(reference_name, "amp" | "lt" | "gt" | "apos" | "quot")
+                    && reference.resolve_char_ref().ok().flatten().is_none()
+                {
+                    return None;
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -335,6 +407,12 @@ fn node_from_start(
             fault: XmlFault::Malformed,
             message: "malformed XML attributes",
         })?;
+        if attribute.value.as_ref().contains('<') {
+            return Err(XmlError {
+                fault: XmlFault::Malformed,
+                message: "XML attribute value contains an unescaped less-than sign",
+            });
+        }
         attribute_count = attribute_count.checked_add(1).ok_or(XmlError {
             fault: XmlFault::TreeLimit,
             message: "XML attribute count exceeds the configured bound",

@@ -1,6 +1,9 @@
 # HWPX component
 
-Status: H1a merged; H2a, H1b, and H2b are locally reviewed private candidates. H3 composes private crate entry points and locally bounded IR/metadata allocation on a feature branch. Coordinator-owned public dispatch/Python wiring, fuzzing review, and protected hosted gates remain separate pending gates.
+Status: bounded package/XML/crypto/section composition, core dispatch and the
+Python HWPX candidate are merged through PR #22. The five existing option
+restorations merged in PR #24. Full parser parity remains pending; private
+stage evidence below does not replace representative-corpus qualification.
 
 ## Package boundary
 
@@ -172,6 +175,25 @@ synthesize an invalid half-surrogate or silently discard the text.
 Shared core owns the remaining `scriptTags`, `plain` and `htmlTables` transforms;
 see [normalization](normalization.md). Original H0 fixture hashes, seven complete
 ordinary/encrypted answers and protected parity accounting are unchanged.
-Malformed-section diagnostics, compressed-versus-decompressed ODF checksum
-interoperability and representative/restricted-corpus evidence remain explicit
-full-parser gaps.
+Compressed-versus-decompressed ODF checksum interoperability and
+representative/restricted-corpus evidence remain explicit full-parser gaps.
+
+## Unfinished XML diagnostic restoration
+
+The [focused warning plan](../migration/plans/2026-09-30-hwpx-warning-parity-plan.md)
+restores the known H0 `malformed_section` warning without changing its input or
+captured answer. The candidate preserves the original qualified open-tag names
+in opening order, Korean section ordinal wrapper, `PARTIAL_PARSE` code and
+page 2, while retaining the sound first/third section output. Non-EOF syntax
+errors retain the generic diagnostic; unfinished-tag compatibility text is
+selected only by the primary parser's EOF fault. Other malformed diagnostics
+remain unproven.
+
+Qualified-name source ranges are collected only on that error path, under the
+existing XML input/depth limits. Valid XML avoids a second scan and extra
+qualified-name copies. Every warning append is charged to the shared lowering-allocation budget
+before growth; resource exhaustion remains a
+hard failure. Public IR/error/Python/MCP shapes and existing security limits
+are unchanged. The separate candidate harness now compares eight original
+full-result captures, including this recoverable malformed input, without
+normalization. The protected document-parser success numerator remains zero.

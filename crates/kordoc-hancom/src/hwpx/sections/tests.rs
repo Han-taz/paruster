@@ -1,9 +1,10 @@
 use crate::hwpx::budget::LoweringBudget;
 use crate::hwpx::sections::{
     SectionInput, lower_sections, lower_sections_impl, lower_sections_with_package,
-    order_section_paths,
+    order_section_paths, section_unclosed_eof_message,
 };
 use crate::hwpx::styles::StyleCatalog;
+use crate::hwpx::xml::unclosed_tag_name_ranges;
 use kordoc_ir::{
     ErrorCode, IrBlock, IrBlockType, IrCell, IrTable, PageMode, PageNumber, PageSelection,
     ParseOptions, WarningCode,
@@ -150,6 +151,73 @@ fn malformed_middle_section_preserves_neighbors() {
     assert_eq!(output.blocks[1].page_number, Some(3));
     assert_eq!(output.warnings.len(), 1);
     assert_eq!(output.warnings[0].code, WarningCode::PartialParse);
+}
+
+#[test]
+fn non_eof_xml_failure_keeps_generic_section_warning() {
+    let output = lower_sections(
+        &[SectionInput::new(
+            "Contents/section0.xml",
+            b"<hs:sec><hp:p></hs:sec>".to_vec(),
+        )],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.warnings.len(), 1);
+    assert_eq!(output.warnings[0].code, WarningCode::PartialParse);
+    assert_eq!(
+        output.warnings[0].message,
+        "section Contents/section0.xml could not be parsed"
+    );
+}
+
+#[test]
+fn invalid_entity_with_open_tags_does_not_become_unclosed_eof_warning() {
+    let output = lower_sections(
+        &[SectionInput::new(
+            "Contents/section0.xml",
+            b"<hs:sec><hp:p>&#xZZ;".to_vec(),
+        )],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(output.warnings.len(), 1);
+    assert_eq!(
+        output.warnings[0].message,
+        "section Contents/section0.xml could not be parsed"
+    );
+}
+
+#[test]
+fn unclosed_eof_warning_obeys_inclusive_lowering_budget() {
+    let source = b"<hs:sec><hp:p>";
+    let names = unclosed_tag_name_ranges(source).unwrap();
+    let expected = "섹션 2 파싱 실패: Reporting fatalError \"unclosed xml tag(s): hs:sec, hp:p\" caused KordocError: XML 파싱 실패: unclosed xml tag(s): hs:sec, hp:p";
+    let mut exact_budget = LoweringBudget::with_limit(expected.len());
+    let message = section_unclosed_eof_message(2, source, &names, &mut exact_budget).unwrap();
+    assert_eq!(message, expected);
+
+    let mut short_budget = LoweringBudget::with_limit(expected.len() - 1);
+    let error = section_unclosed_eof_message(2, source, &names, &mut short_budget).unwrap_err();
+    assert_eq!(error.code, ErrorCode::OutputTooLarge);
+}
+
+#[test]
+fn long_unclosed_qualified_name_fails_before_warning_copy_exceeds_budget() {
+    let name = format!("{}:section", "p".repeat(8 * 1024));
+    let xml = format!("<{name}>");
+    let error = lower_with_budget_limit(
+        &[SectionInput::new("Contents/section0.xml", xml.into_bytes())],
+        &StyleCatalog::default(),
+        &ParseOptions::default(),
+        2048,
+    )
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::OutputTooLarge);
 }
 
 #[test]

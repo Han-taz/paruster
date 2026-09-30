@@ -122,8 +122,8 @@ tests after the lowering-budget and image-option follow-ups. Independent review
 and fresh locked workspace verification pass locally. The seven ordinary/encrypted complete-result captures are
 compared separately without normalization; their initial failures exposed
 unstyled-span emission and nested-cell newline differences. The malformed
-section warning diagnostic remains an explicit discrepancy, and no frozen
-oracle result, scoring, or security boundary is changed to hide it. Generated
+section EOF warning diagnostic is restored by the focused candidate below;
+no frozen oracle result, scoring or security boundary is changed to hide it. Generated
 fixture input hashes are checked against all twelve unchanged H0 pins.
 
 PR [#22](https://github.com/Han-taz/paruster/pull/22) merged this executable candidate as `e10a2df2dd57d1b69f55afeb0a07295e0c29db7f` after final-head protected gates passed. Head `adaa106` passed hosted [CI](https://github.com/Han-taz/paruster/actions/runs/36701020628), [Security/CodeQL](https://github.com/Han-taz/paruster/actions/runs/36701020709), [six native wheels](https://github.com/Han-taz/paruster/actions/runs/36701020659), and [six bounded fuzz targets](https://github.com/Han-taz/paruster/actions/runs/36701020615). Independent SOL review passed for candidate publication. Final head `b5ceec2` passed the required checks before protected squash merge. H4 candidate evidence
@@ -140,8 +140,15 @@ six native wheels, six bounded fuzz targets and independent review passed. It im
 helper observations and authored native/Python cases cover default/false/true,
 Unicode, nested cells/fields and ordering. Independent review identified and
 fixed transient character/column allocations and repeated suffix rescans.
-Full HWPX capability remains pending for diagnostic/checksum discrepancies and
-representative/restricted-corpus parity; the protected success numerator stays 0.
+The focused [unfinished-XML warning candidate](plans/2026-09-30-hwpx-warning-parity-plan.md)
+adds the unchanged eighth full-result capture, including complete warning text,
+code/page and retained neighboring sections. The original extension first fails
+on all three public parse paths at `/warnings/0/message`. Qualified source-name
+ranges are collected only after the primary parser reports unfinished-tag EOF;
+non-EOF syntax faults retain their prior diagnostic and new message appends
+remain allocation-metered. Full HWPX capability remains pending for other
+malformed diagnostics, checksum interoperability and representative/restricted
+corpus parity; the protected success numerator stays 0.
 The preceding H2a candidate had 53 unit tests and 8 integration tests, including
 deterministic synthetic fixture checks. These do not establish public parser
 registration, Python behavior, or real-document parity. HWPX capability stays
@@ -154,14 +161,15 @@ described in the [PDF component page](../components/pdf.md). This checkpoint
 does not parse pages or glyphs, expose a public function, or advance PDF parity;
 those remain pending until the rest of P2a and its protected merge complete.
 
-The active private V8/PDF.js spike is published in draft PR [#23](https://github.com/Han-taz/paruster/pull/23). Fresh local feature tests execute V8 `15.2.124.1-rusty` with PDF.js `4.10.38` and extract the authored one-page text exactly. Eight scoped executions, offline asset integrity, strict all-feature Clippy, normal locked workspace tests and docs checks pass. This demonstrates embedded runtime feasibility only. Source-neutral IR/layout/table integration, supervised native-process containment, full result/option parity and feature-enabled six-target installed-wheel gates remain pending; no PDF production capability or manifest success numerator is promoted.
+The active private V8/PDF.js spike merged in PR [#23](https://github.com/Han-taz/paruster/pull/23). Fresh local feature tests execute V8 `15.2.124.1-rusty` with PDF.js `4.10.38` and extract the authored one-page text exactly. Eight scoped executions, offline asset integrity, strict all-feature Clippy, normal locked workspace tests and docs checks pass. This demonstrates embedded runtime feasibility only. Source-neutral IR/layout/table integration, OS-calibrated process resource containment, full result/option parity and feature-enabled six-target installed-wheel gates remain pending; no PDF production capability or manifest success numerator is promoted.
 
 The private [native PDF.js worker](plans/2026-09-30-pdf-v8-worker-plan.md)
 adds bounded one-document framing, two-slot supervision and kill/wait/I/O
 cleanup around the existing V8 probe. Actual supervised Helvetica and
 ToUnicode Hangul/astral probes compare exactly to in-process extraction. This
-checkpoint does not register PDF or package a worker in base wheels;
-OS-specific resource containment, six-target worker wheels, factories and
+checkpoint merged in PR [#25](https://github.com/Han-taz/paruster/pull/25) as
+`43c30fd2239fb762eba4530e61bb46802176a663` after all protected gates passed.
+It does not register PDF or package a worker in base wheels; OS-specific resource containment, six-target worker wheels, factories and
 full-result IR/layout/option parity remain pending.
 
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
