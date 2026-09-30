@@ -88,15 +88,15 @@ starts only after their interface join. See the append-only
 [H1a merge record](../../WIKI/2026/09/2026-09-30-hwpx-h1a-merge.md).
 
 H2a XML and section lowering is present as a crate-local candidate on
-`feature/parse-hwpx-xml` and remains under code review. The candidate has
+`feature/parse-hwpx-xml` and passed its final scoped SOL review. The candidate has
 bounded XML parsing, transactional section lowering, styles/notes/page
 evidence, and focused unit coverage. Review regressions now cover mixed layout
 fallback, note suffix inheritance, and omitted-empty-paragraph page transitions.
-H2a final review and hosted gates remain pending. See the
+H2a hosted gates remain pending; the current session cannot publish GitHub writes. See the
 [HWPX component page](../components/hwpx.md) and append-only
 [H2a candidate record](../../WIKI/2026/09/2026-09-30-hwpx-h2a.md).
 
-The current HWPX crate has 44 unit tests and 8 integration tests, including
+The current HWPX crate has 53 unit tests and 8 integration tests, including
 deterministic synthetic fixture checks. These do not establish public parser
 registration, Python behavior, or real-document parity. HWPX capability stays
 pending; the parser-oracle success numerator remains zero.
