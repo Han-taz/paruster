@@ -231,6 +231,7 @@ fn lower_sections_impl(
                     &root,
                     styles,
                     &note_formats,
+                    options,
                     options.keep_empty_paragraphs == Some(true),
                     &mut delta,
                     &mut section_cell_budget,
@@ -681,6 +682,7 @@ fn lower_content(
     node: &XmlNode,
     styles: &StyleCatalog,
     note_formats: &NoteNumberFormats,
+    options: &ParseOptions,
     keep_empty_paragraphs: bool,
     delta: &mut SectionDelta,
     cell_budget: &mut CellBudget,
@@ -696,6 +698,7 @@ fn lower_content(
             node,
             styles,
             note_formats,
+            options,
             keep_empty_paragraphs,
             delta,
             cell_budget,
@@ -729,6 +732,7 @@ fn lower_content(
                 0,
                 cell_budget,
                 lowering_budget,
+                options,
                 package.as_deref_mut(),
                 image_cache,
                 images,
@@ -774,6 +778,7 @@ fn lower_content(
                         &node.children[*index],
                         styles,
                         note_formats,
+                        options,
                         keep_empty_paragraphs,
                         delta,
                         cell_budget,
@@ -795,6 +800,7 @@ fn lower_paragraph(
     node: &XmlNode,
     styles: &StyleCatalog,
     note_formats: &NoteNumberFormats,
+    options: &ParseOptions,
     keep_empty_paragraphs: bool,
     delta: &mut SectionDelta,
     cell_budget: &mut CellBudget,
@@ -805,6 +811,8 @@ fn lower_paragraph(
     warnings: &mut Vec<ParseWarning>,
 ) -> Result<(), KordocError> {
     let level = styles.paragraph_level(node);
+    let mark_placeholder_fields =
+        options.include_field_placeholders != Some(true) && !paragraph_contains_inline_table(node);
     let mut notes = Vec::new();
     let mut parts = Vec::new();
     let mut spans = Vec::new();
@@ -816,6 +824,8 @@ fn lower_paragraph(
         &mut spans,
         &mut notes,
         &mut parts,
+        &mut Vec::new(),
+        mark_placeholder_fields,
         lowering_budget,
     )?;
     if !spans.is_empty() {
@@ -858,7 +868,8 @@ fn lower_paragraph(
                         || span.italic.is_some()
                         || span.strike.is_some()
                         || span.underline.is_some()
-                }) || !notes.is_empty();
+                }) || !notes.is_empty()
+                    || spans.iter().any(|span| span.placeholder == Some(true));
                 let block = IrBlock {
                     kind: if heading.is_some() {
                         IrBlockType::Heading
@@ -908,6 +919,7 @@ fn lower_paragraph(
                     0,
                     cell_budget,
                     lowering_budget,
+                    options,
                     package.as_deref_mut(),
                     image_cache,
                     images,
@@ -963,6 +975,105 @@ enum ParagraphPart<'a> {
     Image(&'a str),
 }
 
+struct OpenField {
+    guide: Option<String>,
+    part_start: usize,
+    span_start: usize,
+}
+
+pub(crate) fn click_here_guide(
+    field: &XmlNode,
+    budget: &mut LoweringBudget,
+) -> Result<Option<String>, KordocError> {
+    if !field
+        .attr("type")
+        .is_some_and(|kind| kind.eq_ignore_ascii_case("CLICK_HERE"))
+        || field.attr("dirty") == Some("1")
+    {
+        return Ok(None);
+    }
+    let Some(parameters) = field.children.iter().find(|node| node.name == "parameters") else {
+        return Ok(None);
+    };
+    let mut command_guide = None;
+    for parameter in parameters
+        .children
+        .iter()
+        .filter(|node| node.name == "stringParam")
+    {
+        let value = budget.raw_xml_text(parameter)?;
+        match parameter.attr("name") {
+            Some("Direction") => {
+                return if value.is_empty() {
+                    Ok(None)
+                } else {
+                    budget.copy_str(&value).map(Some)
+                };
+            }
+            Some("Command") => {
+                if let Some((_, remainder)) = value.split_once("Direction:wstring:")
+                    && let Some((length, text)) = remainder.split_once(':')
+                    && let Ok(length) = length.parse::<usize>()
+                {
+                    command_guide = match utf16_prefix(text, length) {
+                        Some(guide) if !guide.is_empty() => Some(budget.copy_str(guide)?),
+                        _ => None,
+                    };
+                }
+            }
+            _ => {}
+        }
+    }
+    Ok(command_guide)
+}
+
+fn utf16_prefix(value: &str, units: usize) -> Option<&str> {
+    if units == 0 {
+        return Some("");
+    }
+    let mut consumed = 0usize;
+    for (start, character) in value.char_indices() {
+        let next = consumed.checked_add(character.len_utf16())?;
+        if units < next {
+            // JavaScript would return a lone surrogate here, which Rust's UTF-8 String cannot hold.
+            return None;
+        }
+        consumed = next;
+        if consumed == units {
+            return Some(&value[..start + character.len_utf8()]);
+        }
+    }
+    Some(value)
+}
+
+pub(crate) fn paragraph_contains_inline_table(node: &XmlNode) -> bool {
+    fn visit(node: &XmlNode) -> bool {
+        node.children.iter().any(|child| match child.name.as_str() {
+            "tbl" => child.children.iter().any(|position| {
+                position.name == "pos" && position.attr("treatAsChar") == Some("1")
+            }),
+            // These are consumed as inline data or field metadata, not emitted as table parts.
+            "footNote" | "endNote" | "fieldBegin" => false,
+            _ => visit(child),
+        })
+    }
+    visit(node)
+}
+
+pub(crate) fn append_field_comparison_text(
+    target: &mut String,
+    source: &str,
+    budget: &mut LoweringBudget,
+) -> Result<(), KordocError> {
+    let mut cursor = 0;
+    for (start, _) in source.match_indices("\\$") {
+        budget.append_str(target, &source[cursor..start])?;
+        budget.append_str(target, "$")?;
+        cursor = start + 2;
+    }
+    budget.append_str(target, &source[cursor..])
+}
+
 #[allow(clippy::too_many_arguments)]
 fn collect_paragraph_parts<'a>(
     node: &'a XmlNode,
@@ -972,6 +1083,8 @@ fn collect_paragraph_parts<'a>(
     spans: &mut Vec<IrSpan>,
     notes: &mut Vec<String>,
     parts: &mut Vec<ParagraphPart<'a>>,
+    fields: &mut Vec<OpenField>,
+    mark_placeholder_fields: bool,
     budget: &mut LoweringBudget,
 ) -> Result<(), KordocError> {
     let active_style = if node.name == "run" {
@@ -1001,6 +1114,70 @@ fn collect_paragraph_parts<'a>(
             XmlContent::Child(index) => {
                 let child = &node.children[*index];
                 match child.name.as_str() {
+                    "fieldBegin" => {
+                        if mark_placeholder_fields {
+                            budget.charge_items::<OpenField>(1)?;
+                            let guide = click_here_guide(child, budget)?;
+                            budget.push(
+                                fields,
+                                OpenField {
+                                    guide,
+                                    part_start: parts.len(),
+                                    span_start: spans.len(),
+                                },
+                            )?;
+                        }
+                    }
+                    "fieldEnd" => {
+                        if mark_placeholder_fields
+                            && let Some(field) = fields.pop()
+                            && let Some(guide) = field.guide
+                        {
+                            let mut value = String::new();
+                            let mut contains_nested_placeholder = false;
+                            let mut first_text_part = true;
+                            for part in parts.iter().skip(field.part_start) {
+                                if let ParagraphPart::Text(prior_spans) = part {
+                                    let skip = if first_text_part { field.span_start } else { 0 };
+                                    first_text_part = false;
+                                    for span in prior_spans.iter().skip(skip) {
+                                        contains_nested_placeholder |=
+                                            span.placeholder == Some(true);
+                                        append_field_comparison_text(
+                                            &mut value, &span.text, budget,
+                                        )?;
+                                    }
+                                }
+                            }
+                            let current_span_start =
+                                if first_text_part { field.span_start } else { 0 };
+                            for span in spans.iter().skip(current_span_start) {
+                                contains_nested_placeholder |= span.placeholder == Some(true);
+                                append_field_comparison_text(&mut value, &span.text, budget)?;
+                            }
+                            if !contains_nested_placeholder
+                                && !value.is_empty()
+                                && (value == guide || value.trim_end() == guide)
+                            {
+                                first_text_part = true;
+                                for part in parts.iter_mut().skip(field.part_start) {
+                                    if let ParagraphPart::Text(prior_spans) = part {
+                                        let skip =
+                                            if first_text_part { field.span_start } else { 0 };
+                                        first_text_part = false;
+                                        for span in prior_spans.iter_mut().skip(skip) {
+                                            span.placeholder = Some(true);
+                                        }
+                                    }
+                                }
+                                let current_span_start =
+                                    if first_text_part { field.span_start } else { 0 };
+                                for span in &mut spans[current_span_start..] {
+                                    span.placeholder = Some(true);
+                                }
+                            }
+                        }
+                    }
                     "tbl" => {
                         if !spans.is_empty() {
                             budget.push(parts, ParagraphPart::Text(std::mem::take(spans)))?;
@@ -1026,6 +1203,8 @@ fn collect_paragraph_parts<'a>(
                         spans,
                         notes,
                         parts,
+                        fields,
+                        mark_placeholder_fields,
                         budget,
                     )?,
                 }

@@ -617,6 +617,22 @@ fn cell_html(cell: &IrCell, depth: usize) -> Result<String, KordocError> {
             } else if block.kind == IrBlockType::Separator {
                 pieces.push("<hr>".to_owned());
             } else if let Some(text) = block.text.as_deref() {
+                let mut visible = String::new();
+                let text = if let Some(spans) = block
+                    .spans
+                    .as_deref()
+                    .filter(|spans| spans.iter().any(|span| span.placeholder == Some(true)))
+                {
+                    for span in spans.iter().filter(|span| span.placeholder != Some(true)) {
+                        append_limited(&mut visible, &span.text)?;
+                    }
+                    visible.as_str()
+                } else {
+                    text
+                };
+                if text.is_empty() {
+                    continue;
+                }
                 let mut value = sanitize_text(text);
                 if let Some(note) = block.footnote_text.as_deref()
                     && block.text.is_some()
@@ -781,7 +797,9 @@ fn table_markdown(table: &IrTable, depth: usize) -> Result<String, KordocError> 
     if cols == 1 {
         let mut lines = Vec::new();
         for row in table.cells.iter().take(rows) {
-            for line in text(&row[0])?
+            // The oracle's one-column branch deliberately uses flat IR text,
+            // before the span-aware multi-column path.
+            for line in escape_gfm(&sanitize_text(&row[0].text))?
                 .lines()
                 .map(str::trim)
                 .filter(|line| !line.is_empty())
@@ -1015,6 +1033,32 @@ mod tests {
         let output = blocks_to_markdown(&[block]).unwrap();
         assert_eq!(output.matches("<table>").count(), 2, "{output}");
         assert!(output.contains("<th>inner</th>"), "{output}");
+    }
+
+    #[test]
+    fn table_placeholders_preserve_ir_text_and_are_hidden_in_both_renderings() {
+        let input = block(
+            r#"{"type":"table","table":{"rows":1,"cols":2,"hasHeader":false,"cells":[[{"text":"Label Guide","colSpan":1,"rowSpan":1,"blocks":[{"type":"paragraph","text":"Label Guide","spans":[{"text":"Label "},{"text":"Guide","placeholder":true}]}]},{"text":"Other","colSpan":1,"rowSpan":1}]]}}"#,
+        );
+        let mut html = input.clone();
+        html.table.as_mut().unwrap().render_as_table = Some(true);
+        for table in [&input, &html] {
+            let rendered = blocks_to_markdown(std::slice::from_ref(table)).unwrap();
+            assert!(rendered.contains("Label"));
+            assert!(!rendered.contains("Guide"), "{rendered}");
+            assert_eq!(
+                table.table.as_ref().unwrap().cells[0][0].text,
+                "Label Guide"
+            );
+        }
+    }
+
+    #[test]
+    fn one_column_table_uses_flat_source_text_before_placeholder_policy() {
+        let input = block(
+            r#"{"type":"table","table":{"rows":2,"cols":1,"hasHeader":false,"cells":[[{"text":"Guide","colSpan":1,"rowSpan":1,"blocks":[{"type":"paragraph","text":"Guide","spans":[{"text":"Guide","placeholder":true}]}]}],[{"text":"Value","colSpan":1,"rowSpan":1}]]}}"#,
+        );
+        assert_eq!(blocks_to_markdown(&[input]).unwrap(), "Guide\nValue");
     }
 
     #[test]

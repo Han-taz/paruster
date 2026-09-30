@@ -14,7 +14,7 @@ Coordinator: root dependency/lockfile, `crates/kordoc-pdf/Cargo.toml`, SSOT desi
 
 ## Current checkpoint
 
-R0 assets/dependencies, R1 actual RED/GREEN runtime tests, and R2 private execution with custom ArrayBuffer allocation and watchdog guards are implemented locally. Eight feature-test executions and the default-feature offline asset test pass. R3 hosted review/publication gates are in progress. Resource factories, complete host compatibility, supervised native-process containment and production six-wheel support remain pending. Detailed evidence is in the [runtime record](../../../WIKI/2026/09/2026-09-30-pdf-v8-runtime.md).
+R0 assets/dependencies, R1 actual RED/GREEN runtime tests, and R2 private execution with custom ArrayBuffer allocation and watchdog guards are implemented locally. Eight feature-test executions and the default-feature offline asset test pass. R3 independent review and required hosted gates passed; the private checkpoint merged in PR [#23](https://github.com/Han-taz/paruster/pull/23) as `df7d4c9167e534c7ee44d5609f6f5babfcd2993d`. Resource factories, complete host compatibility, supervised native-process containment and production six-wheel support remain pending. Detailed evidence is in the [runtime record](../../../WIKI/2026/09/2026-09-30-pdf-v8-runtime.md).
 
 ## R0: Freeze assets and dependency
 
