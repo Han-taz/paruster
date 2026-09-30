@@ -138,7 +138,7 @@ jobs:
           rustup toolchain install 1.97.0 --profile minimal --component llvm-tools-preview
           cargo +1.97.0 install cargo-llvm-cov --version 0.9.1 --locked
       - name: Enforce foundation coverage
-        run: cargo +1.97.0 llvm-cov -p kordoc-ir -p kordoc-core --locked --fail-under-lines 80 --lcov --output-path lcov.info
+        run: cargo +1.97.0 llvm-cov -p kordoc-ir -p kordoc-core -p kordoc-tables --locked --fail-under-lines 80 --lcov --output-path lcov.info
       - name: Generate HTML report
         run: cargo +1.97.0 llvm-cov report --html
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

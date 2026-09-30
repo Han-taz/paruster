@@ -193,6 +193,13 @@ default wheels, ordinary PEP 517/sdist worker builds and public PDF registration
 are unchanged. Windows ARM64 uses CPython 3.12 for this feasibility gate and
 minimum-version native execution remains unproven there.
 
+A [shared table-builder extraction candidate](plans/2026-09-30-shared-table-builder-plan.md)
+registers an IR-only sibling used by core and Hancom, avoiding a format-to-core
+cycle. Its metered grid construction and consuming nested-cell API are under
+implementation and review; legacy core placement/projection semantics remain
+the compatibility gate. This scaffold does not implement HWPML tables, promote
+any parser capability, or change frozen IR/errors or protected scoring.
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy

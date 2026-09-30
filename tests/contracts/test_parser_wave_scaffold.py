@@ -14,6 +14,7 @@ def test_parser_scaffolds_are_protected_workspace_members() -> None:
     members = set(re.findall(r'"([^"]+)"', members_match.group(1)))
     assert members == {
         "crates/kordoc-ir",
+        "crates/kordoc-tables",
         "crates/kordoc-core",
         "crates/kordoc-hancom",
         "crates/kordoc-pdf",
