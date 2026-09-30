@@ -171,7 +171,7 @@ This remains CI-only staging and does not register a production PDF parser.
 
 ## Private embedded CMap and standard-font factories
 
-The locally reviewed [resource checkpoint](../migration/plans/2026-09-30-pdf-v8-resources-plan.md)
+The merged [resource checkpoint](../migration/plans/2026-09-30-pdf-v8-resources-plan.md)
 adds custom PDF.js factories backed by Rust `include_bytes!` assets: 168 CMaps
 and 14 standard-font payloads, 1,940,006 bytes total. Exact allowlisted names,
 kinds and ASCII basenames <=128 bytes are mandatory. Resource URL options are
@@ -194,6 +194,8 @@ no-I/O and subprocess-equivalence tests pass. All 182 embedded byte/name/hash
 mappings match unchanged upstream provenance. The strict wheel notice inventory
 now includes the existing CMap, Foxit and Liberation notices: 36 entries,
 229,224 bytes. The separate six-target workflow retains both old probes and
-adds the new resource probe. Hosted results for this checkpoint remain pending;
+adds the new resource probe. PR [#29](https://github.com/Han-taz/paruster/pull/29) merged as
+`f7528a6a40b1df80617c961f2225c40eeb4b7f68` after required CI and all six
+installed-worker targets passed on final head `11fbabd`;
 full PDF IR/layout/metadata/options/corpus and production containment/assembly
 are still separate gates.
