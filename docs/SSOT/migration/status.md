@@ -174,13 +174,23 @@ checkpoint merged in PR [#25](https://github.com/Han-taz/paruster/pull/25) as
 It does not register PDF or package a worker in base wheels; OS-specific resource containment, six-target worker wheels, factories and
 full-result IR/layout/option parity remain pending.
 
-The [HWPML H0 checkpoint](plans/2026-09-30-hwpml-fixture-plan.md) now has eight
-CC0 inputs and 13 pinned complete oracle observations with four offline
-provenance/inventory tests. This is reviewed fixture evidence only: HWPML
-native parsing, bounded recovery, dedicated table lowering, public Python
-integration and corpus parity remain pending. The local capture JS stays
-ignored and the oracle is never an ordinary CI/runtime/packaging dependency.
-Protected document success accounting is unchanged.
+The [HWPML H0 checkpoint](plans/2026-09-30-hwpml-fixture-plan.md) merged in
+PR [#28](https://github.com/Han-taz/paruster/pull/28) as
+`5a077eb78704b8b60e03963a22297978f9854d63`. It freezes eight CC0 inputs
+and 13 complete oracle observations with four offline provenance/inventory
+tests. The local capture JS stays ignored; ordinary CI, runtime and artifacts
+do not depend on the oracle.
+
+The merged [private HWPML text candidate](plans/2026-09-30-hwpml-private-text-plan.md)
+merged in PR [#30](https://github.com/Han-taz/paruster/pull/30) as
+`5a8e27c4d67a3cfcff9f31bb5e9dcc304fda6f34` after all required checks and
+six installed-worker targets passed. It adds bounded valid-XML text, metadata, headings and section page selection
+inside `kordoc-hancom`, with three byte-identical crate fixture copies and a
+strict hard error for selected structural tables. Its module is unregistered;
+no public Python entry point or full-result parser claim is added. Bounded
+malformed-XML recovery, HWPML-specific table lowering, option qualification,
+corpus parity and protected document success accounting remain pending until
+their own evidence and merges.
 
 The separate [PDF worker-wheel gate](plans/2026-09-30-pdf-worker-wheel-plan.md)
 merged in PR [#27](https://github.com/Han-taz/paruster/pull/27) as

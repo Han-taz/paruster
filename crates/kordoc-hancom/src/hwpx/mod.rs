@@ -54,6 +54,16 @@ mod tables;
 mod validate;
 mod xml;
 
+// Coordinator-approved strict tree seam for the private HWPML lowerer.
+#[cfg_attr(
+    test,
+    allow(
+        unused_imports,
+        reason = "standalone HWPX test modules omit the HWPML sibling"
+    )
+)]
+pub(crate) use xml::{XmlContent, XmlNode, parse_critical as parse_xml_critical};
+
 #[allow(
     unused_imports,
     reason = "H3 validator types await the coordinator-owned crate facade"
