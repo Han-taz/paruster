@@ -163,6 +163,12 @@ Installed worker probes explicitly use `python -I -X utf8`: isolated mode
 ignores environment-based `PYTHONUTF8`, and the explicit flag preserves exact
 Hangul/astral status output on Windows. All six targets remain mandatory.
 
+The separate worker-wheel feasibility checkpoint merged in PR
+[#27](https://github.com/Han-taz/paruster/pull/27) as
+`8d565cc6e4a05ffd16c3686a87f4cc4449b3008f`. All six installed-worker targets
+and required CI/security/wheel/fuzz gates passed on final head `e981f6c`.
+This remains CI-only staging and does not register a production PDF parser.
+
 ## Private embedded CMap and standard-font factories
 
 The locally reviewed [resource checkpoint](../migration/plans/2026-09-30-pdf-v8-resources-plan.md)

@@ -174,10 +174,21 @@ checkpoint merged in PR [#25](https://github.com/Han-taz/paruster/pull/25) as
 It does not register PDF or package a worker in base wheels; OS-specific resource containment, six-target worker wheels, factories and
 full-result IR/layout/option parity remain pending.
 
+The [HWPML H0 checkpoint](plans/2026-09-30-hwpml-fixture-plan.md) now has eight
+CC0 inputs and 13 pinned complete oracle observations with four offline
+provenance/inventory tests. This is reviewed fixture evidence only: HWPML
+native parsing, bounded recovery, dedicated table lowering, public Python
+integration and corpus parity remain pending. The local capture JS stays
+ignored and the oracle is never an ordinary CI/runtime/packaging dependency.
+Protected document success accounting is unchanged.
+
 The separate [PDF worker-wheel gate](plans/2026-09-30-pdf-worker-wheel-plan.md)
-now has a locally reviewed CI-only candidate for six targets. Actual macOS
+merged in PR [#27](https://github.com/Han-taz/paruster/pull/27) as
+`8d565cc6e4a05ffd16c3686a87f4cc4449b3008f` after all six installed-worker
+targets and protected gates passed. Actual macOS
 arm64 installed execution and 339 Python/tooling cases pass with pinned
-upstream notices included. The six hosted worker targets are still pending;
+upstream notices included. Linux, macOS and Windows x64/ARM64 all passed
+installed ASCII and Hangul/astral worker probes;
 default wheels, ordinary PEP 517/sdist worker builds and public PDF registration
 are unchanged. Windows ARM64 uses CPython 3.12 for this feasibility gate and
 minimum-version native execution remains unproven there.
