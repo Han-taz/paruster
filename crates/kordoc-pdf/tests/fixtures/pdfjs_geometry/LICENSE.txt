@@ -1,0 +1,8 @@
+CC0 1.0 Universal
+
+The synthetic PDF input and its generator are original works dedicated to the
+public domain under the Creative Commons CC0 1.0 Universal dedication:
+https://creativecommons.org/publicdomain/zero/1.0/ .
+
+The JSON files are small output captures used as test evidence. No oracle
+source code is included.

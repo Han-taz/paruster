@@ -48,4 +48,8 @@ implementation truth; `quality/` for validation policy; `operations/` —
 development and release procedures; and `migration/` for plans and status. New
 sections are added only when they have canonical content.
 
+- [`migration/plans/2026-09-30-pdf-rust-geometry-plan.md`](migration/plans/2026-09-30-pdf-rust-geometry-plan.md): private fractional CropBox and V8 rounding geometry checkpoint
+
 - [`migration/plans/2026-09-30-hwpml-collision-capture-plan.md`](migration/plans/2026-09-30-hwpml-collision-capture-plan.md): separately authored HWPML collision observations and deliberate private rejection boundary
+
+- [`migration/plans/2026-09-30-pdf-rust-text-normalization-plan.md`](migration/plans/2026-09-30-pdf-rust-text-normalization-plan.md): private bounded base text scalars and pinned V8 numerical semantics in Rust

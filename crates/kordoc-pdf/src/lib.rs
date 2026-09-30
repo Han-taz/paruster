@@ -4,6 +4,11 @@
 
 mod cmap;
 mod document;
+#[cfg(feature = "pdfjs-v8")]
+#[allow(
+    dead_code,
+    reason = "private geometry checkpoint is not yet wired to PDF parser layout"
+)]
 mod geometry;
 mod glyph;
 mod headings;
@@ -32,6 +37,12 @@ mod regions;
 mod stream;
 mod table;
 mod text;
+#[cfg(feature = "pdfjs-v8")]
+#[allow(
+    dead_code,
+    reason = "private scalar-normalization checkpoint is not wired into PDF parser yet"
+)]
+mod text_scalar;
 #[cfg(feature = "pdfjs-v8")]
 #[allow(
     dead_code,

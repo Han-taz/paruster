@@ -1,0 +1,11 @@
+The authored PDF fixture and its generator are dedicated to the public domain
+under CC0 1.0 Universal. Fixture-specific input/output records captured from
+this document, the synthetic raw-text vectors, and the numeric comparison
+vectors are also dedicated to the public domain under CC0 1.0 Universal.
+
+To the extent possible under law, the authors waive all copyright and related
+or neighboring rights to these works worldwide. The source projects and tools
+named in the provenance documentation remain under their own licenses; their
+source code is not included here.
+
+CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/

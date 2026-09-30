@@ -1,0 +1,107 @@
+{
+  "oracle_commit": "bb71f7fb0bf51dd456d27505a8c04772df182144",
+  "text_line_sha256": "034b6a882eb913b723e21a1729e032bc45147e60acdf88aab655dfd415253072",
+  "node_version": "v22.22.0",
+  "command": "node --experimental-strip-types synthetic-capture.mjs",
+  "purpose": "Synthetic raw PdfTextItem inputs exercise oracle trim, whitespace skip with sequence gap, and stable equal-coordinate ordering; these are not claimed as raw PDF.js output.",
+  "cases": {
+    "whitespace_gap_and_stable_tie": {
+      "input": [
+        {
+          "str": "﻿ before　",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10.2,
+            20.2
+          ],
+          "width": 20.4,
+          "height": 12,
+          "fontName": "font-a"
+        },
+        {
+          "str": " \t  ",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            11.2,
+            20.2
+          ],
+          "width": 0,
+          "height": 12,
+          "fontName": "font-a"
+        },
+        {
+          "str": "after﻿",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10.2,
+            20.2
+          ],
+          "width": 18.4,
+          "height": 12,
+          "fontName": "font-b"
+        },
+        {
+          "str": "NEL",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            5.1,
+            2.1
+          ],
+          "width": 18.4,
+          "height": 12,
+          "fontName": "font-c"
+        }
+      ],
+      "output": [
+        {
+          "text": "before",
+          "x": 10,
+          "y": 20,
+          "w": 20,
+          "h": 12,
+          "fontSize": 12,
+          "fontName": "font-a",
+          "isHidden": false,
+          "seq": 1,
+          "rotated": null
+        },
+        {
+          "text": "after",
+          "x": 10,
+          "y": 20,
+          "w": 18,
+          "h": 12,
+          "fontSize": 12,
+          "fontName": "font-b",
+          "isHidden": false,
+          "seq": 3,
+          "rotated": null
+        },
+        {
+          "text": "NEL",
+          "x": 5,
+          "y": 2,
+          "w": 18,
+          "h": 12,
+          "fontSize": 12,
+          "fontName": "font-c",
+          "isHidden": false,
+          "seq": 4,
+          "rotated": null
+        }
+      ]
+    }
+  }
+}
