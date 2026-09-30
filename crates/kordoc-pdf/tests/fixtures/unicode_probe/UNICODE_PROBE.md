@@ -20,7 +20,7 @@ python3 make_unicode_probe.py
 
 The Rust integration test independently reconstructs the same bytes and
 compares them with the checked-in fixture, so normal tests do not invoke
-Python. SHA-256 values:
+Python. The classic xref subsection uses 20-byte CRLF records. SHA-256 values:
 
-- PDF: `e2dbd29cee44ce50c03fab2385141252e566fe80e59c72e2f2187b53affc2f86`
-- Python recipe: `63576c817a8fba1f68d8664f0cba1a9d958e21c8a5062142a408c89e3b9214ac`
+- PDF: `331f40fcf23b600772b4baa04d7118c537832ffb2f2f9b0c6e7fca685635dc93`
+- Python recipe: `0456e099df963a05fb7a2bb9f149a3b3f950c805ca2faf3c797986608cea5582`

@@ -40,7 +40,28 @@ fn unicode_probe_roundtrips_over_the_worker_json_protocol() {
 
 #[test]
 fn checked_in_unicode_pdf_is_reproducible_from_its_rust_recipe() {
-    assert_eq!(UNICODE_PDF, build_unicode_pdf());
+    let rebuilt = build_unicode_pdf();
+    assert_eq!(UNICODE_PDF, rebuilt);
+    let marker = b"startxref\n";
+    let marker_at = rebuilt
+        .windows(marker.len())
+        .rposition(|window| window == marker)
+        .unwrap();
+    let xref_offset = std::str::from_utf8(&rebuilt[marker_at + marker.len()..])
+        .unwrap()
+        .lines()
+        .next()
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
+    let xref_lines = rebuilt[xref_offset..]
+        .split(|byte| *byte == b'\n')
+        .skip(2)
+        .take(9);
+    for line in xref_lines {
+        assert_eq!(line.len() + 1, 20, "xref record must be 20 bytes");
+        assert_eq!(line.last(), Some(&b'\r'), "xref records use CRLF");
+    }
 }
 
 fn build_unicode_pdf() -> Vec<u8> {
@@ -64,7 +85,7 @@ fn build_unicode_pdf() -> Vec<u8> {
         stream(content),
     ];
 
-    let mut pdf = b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\n".to_vec();
+    let mut pdf = b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\x00\n".to_vec();
     let mut offsets = Vec::with_capacity(objects.len());
     for (index, object) in objects.iter().enumerate() {
         offsets.push(pdf.len());
@@ -74,9 +95,9 @@ fn build_unicode_pdf() -> Vec<u8> {
     }
     let xref = pdf.len();
     pdf.extend_from_slice(format!("xref\n0 {}\n", offsets.len() + 1).as_bytes());
-    pdf.extend_from_slice(b"0000000000 65535 f \n");
+    pdf.extend_from_slice(b"0000000000 65535 f\r\n");
     for offset in offsets {
-        pdf.extend_from_slice(format!("{offset:010} 00000 n \n").as_bytes());
+        pdf.extend_from_slice(format!("{offset:010} 00000 n\r\n").as_bytes());
     }
     pdf.extend_from_slice(
         format!(

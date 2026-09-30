@@ -251,16 +251,17 @@ impl<'de> Visitor<'de> for BoundedPageTextVisitor {
     {
         let mut pages = Vec::new();
         if let Some(size) = sequence.size_hint() {
-            if size > MAX_WORKER_PAGES {
-                return Err(A::Error::custom("too many pages"));
-            }
             pages
-                .try_reserve_exact(size)
+                .try_reserve_exact(size.min(MAX_WORKER_PAGES))
                 .map_err(|_| A::Error::custom("page allocation failed"))?;
         }
         while pages.len() < MAX_WORKER_PAGES {
             match sequence.next_element::<String>()? {
-                Some(page) => pages.push(page),
+                Some(page) => {
+                    pages.push(page);
+                    #[cfg(test)]
+                    PAGE_STRINGS_DESERIALIZED.with(|count| count.set(count.get() + 1));
+                }
                 None => return Ok(BoundedPageText(pages)),
             }
         }
@@ -282,6 +283,11 @@ impl<'de> DeserializeSeed<'de> for RejectExtraPage {
     {
         Err(D::Error::custom("too many pages"))
     }
+}
+
+#[cfg(test)]
+std::thread_local! {
+    static PAGE_STRINGS_DESERIALIZED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 #[derive(Deserialize)]
@@ -581,10 +587,12 @@ mod tests {
         json.push_str(suffix);
         assert!(json.len() <= MAX_RESPONSE_BYTES);
         assert!(json.len() >= MAX_RESPONSE_BYTES - 2);
+        PAGE_STRINGS_DESERIALIZED.with(|count| count.set(0));
         assert_eq!(
             read_response(&mut Cursor::new(response_frame(json.as_bytes()))),
             Err(ProtocolError::InvalidJson)
         );
+        PAGE_STRINGS_DESERIALIZED.with(|count| assert_eq!(count.get(), MAX_WORKER_PAGES));
     }
 
     #[test]
@@ -594,11 +602,13 @@ mod tests {
             json.push_str(",\"\"");
         }
         json.push_str(",[]]},\"status\":\"success\"}");
+        PAGE_STRINGS_DESERIALIZED.with(|count| count.set(0));
         let error = match serde_json::from_slice::<ResponseIn>(json.as_bytes()) {
             Ok(_) => panic!("expected the page budget to reject the response"),
             Err(error) => error,
         };
         assert!(error.to_string().contains("too many pages"));
+        PAGE_STRINGS_DESERIALIZED.with(|count| assert_eq!(count.get(), MAX_WORKER_PAGES));
     }
 
     #[test]

@@ -133,7 +133,9 @@ blocker for candidate publication after the `images=false` regression fix.
 That option omits image collections and recursive image payloads while retaining
 Markdown, page projections, and image placeholders. HWPX intentionally ignores
 the PDF-only `tables` option. The focused [option follow-up](plans/2026-09-30-hwpx-option-parity-plan.md)
-implements `plain`, `htmlTables`, `scriptTags`, `keepTrailingEmptyCols`, and
+merged in PR [#24](https://github.com/Han-taz/paruster/pull/24) as
+`0cd5b261371aaf697c11db825bb22500db369782` after final-head CI, security,
+six native wheels, six bounded fuzz targets and independent review passed. It implements `plain`, `htmlTables`, `scriptTags`, `keepTrailingEmptyCols`, and
 `includeFieldPlaceholders` through existing Rust/Python options. Five pinned
 helper observations and authored native/Python cases cover default/false/true,
 Unicode, nested cells/fields and ordering. Independent review identified and

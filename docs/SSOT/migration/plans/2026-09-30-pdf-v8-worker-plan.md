@@ -1,6 +1,6 @@
 # Private PDF.js native worker supervision
 
-Status: Private worker implementation and review in progress under the approved embedded-V8 runtime plan; no production registration.
+Status: Private worker implementation is independently reviewed locally; protected hosted gates are pending under the approved embedded-V8 runtime plan; no production registration.
 
 The next checkpoint moves the existing bounded V8 probe into a one-document
 Rust executable and supervises it from Rust. No public parser, API/IR/error/MCP
