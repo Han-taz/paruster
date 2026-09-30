@@ -53,6 +53,18 @@ fit. This is an intentional no-loss security divergence from the oracle's
 clamping and `rows.slice(0, maxRows)` behavior. In-budget table topology and
 Markdown remain the parity target.
 
+The [shared-table extraction candidate](../migration/plans/2026-09-30-shared-table-builder-plan.md)
+moves only source-neutral grid construction into `kordoc-tables`, whose sole
+dependency is shared IR. Core retains its existing cell/options facade and
+strict placement semantics. New metered entry points charge transient and
+retained allocations before fallible reservation; an independent cumulative
+cell budget charges actual output geometry. A consuming rich-cell entry point
+transfers caller-owned nested blocks without deep cloning. Format-specific
+lowering and placement decisions remain adapter responsibilities; this
+checkpoint adds no HWPML table parser or public wire fields. The compatibility
+entry point preserves the existing logical limits and adds fallible allocation;
+aggregate allocation accounting requires the explicit metered entry point.
+
 Classification is opt-in (`classify_tables: Some(true)` at the parse boundary).
 It adds classification summaries to table IR without changing block order,
 cell text, or default Markdown. Representation selection is separate from

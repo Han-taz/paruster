@@ -214,13 +214,17 @@ inventory has 36 notices and a third mandatory installed resource probe.
 Production containment/assembly and full PDF IR parity
 remain pending; this does not promote public capability or protected scoring.
 
-A private [PDF text-document candidate](plans/2026-09-30-pdf-v8-text-document-plan.md)
-adds bounded raw page-item geometry and seven Info metadata fields through
+The [PDF text-document checkpoint](plans/2026-09-30-pdf-v8-text-document-plan.md)
+merged in PR [#32](https://github.com/Han-taz/paruster/pull/32) as
+`762ddde4050660abaaa815889ed76da21a589612` after required gates and all six
+installed worker targets passed. It adds bounded raw page-item geometry and seven Info metadata fields through
 new worker kinds 3/4, retaining exact kind-1/kind-2 behavior. Independent
 runtime and protocol reviews pass after boundary/typed-error fixes. The
 six-target worker workflow adds a fourth complete-result probe. A fresh macOS
-ARM worker wheel passes all four probes and 351 isolated Python/helper tests;
-hosted publication evidence follows. No public PDF capability,
+ARM worker wheel passes all four probes before mainline table integration; the
+combined fresh wheel then passes 354 isolated Python/helper tests and exact DTO
+probe;
+final-head hosted publication passed. No public PDF capability,
 layout/IR parity or protected score is promoted.
 
 A private [Rust PDF metadata candidate](plans/2026-09-30-pdf-rust-metadata-plan.md)
@@ -230,6 +234,19 @@ including duplicate keywords, delimiter-only empty arrays and permissive dates.
 Ten focused cases and 243 scoped feature executions pass with independent
 review. No public metadata entry point, geometry or DTO/wire change is made;
 latest-main artifact/hosted qualification remains before publication.
+
+The [shared table-builder extraction](plans/2026-09-30-shared-table-builder-plan.md)
+merged in PR [#31](https://github.com/Han-taz/paruster/pull/31) as
+`a8956457949f82e9a22281b5580ef1be4ee5c229` after all required checks and
+six installed worker targets passed. It registers an IR-only sibling used by core and Hancom, avoiding a format-to-core
+cycle. Its metered grid construction and consuming nested-cell API pass local
+verification and independent review. Ten thousand deterministic grids preserve
+exact previous core IR/errors, and 91.75% selected line coverage passes the
+unchanged 80% threshold with moved table code included. A fresh macOS ARM abi3
+wheel passes 348 isolated Python tests and three subtests; wheel and sdist
+artifact audits pass. Hosted final-head publication passed; legacy core semantics
+stay intact. This scaffold does not implement HWPML tables, promote
+any parser capability, or change frozen IR/errors or protected scoring.
 
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 

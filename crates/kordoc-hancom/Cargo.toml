@@ -10,6 +10,7 @@ aes.workspace = true
 cbc.workspace = true
 flate2.workspace = true
 kordoc-ir = { path = "../kordoc-ir", version = "=0.1.0" }
+kordoc-tables = { path = "../kordoc-tables", version = "=0.1.0" }
 pbkdf2.workspace = true
 quick-xml.workspace = true
 serde.workspace = true

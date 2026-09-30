@@ -299,6 +299,7 @@ dependencies = [
  "cfb",
  "kordoc-hancom",
  "kordoc-ir",
+ "kordoc-tables",
  "regex",
  "zip",
 ]
@@ -322,6 +323,7 @@ dependencies = [
  "cbc",
  "flate2",
  "kordoc-ir",
+ "kordoc-tables",
  "pbkdf2",
  "quick-xml",
  "serde",
@@ -338,6 +340,13 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
+]
+
+[[package]]
+name = "kordoc-tables"
+version = "0.1.0"
+dependencies = [
+ "kordoc-ir",
 ]
 
 [[package]]

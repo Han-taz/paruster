@@ -247,3 +247,7 @@ and 16 KiB total before fallible allocation. Full mode retains layout page mode;
 metadata-only leaves it absent. Ten focused native cases and six captured
 metadata projections pass; independent review is clean. Latest-main artifacts
 and hosted gates remain before publication. No geometry, DTO, wire or public parser contract changes are approved.
+
+PR [#32](https://github.com/Han-taz/paruster/pull/32) merged the private text
+transfer as `762ddde4050660abaaa815889ed76da21a589612` after final-head
+required checks and all six four-probe installed-worker targets passed.

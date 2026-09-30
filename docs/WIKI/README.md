@@ -81,3 +81,9 @@ Entries use `YYYY/MM/YYYY-MM-DD-<topic>.md`. Each entry begins with the metadata
 - [`2026/09/2026-09-30-pdf-v8-text-document-merge.md`](2026/09/2026-09-30-pdf-v8-text-document-merge.md)
 
 - [`2026/09/2026-09-30-pdf-rust-metadata.md`](2026/09/2026-09-30-pdf-rust-metadata.md)
+
+- [`2026/09/2026-09-30-shared-table-builder.md`](2026/09/2026-09-30-shared-table-builder.md)
+
+
+
+- [`2026/09/2026-09-30-shared-table-builder-merge.md`](2026/09/2026-09-30-shared-table-builder-merge.md)

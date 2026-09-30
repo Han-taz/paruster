@@ -72,3 +72,28 @@ all four worker smokes and 351 full Python/helper tests; root also repeats the
 complete kind-4 installed result comparison. Temporary package stage inputs
 are preserved under ignored build storage. Latest-main and all six hosted
 worker targets remain required before publication.
+
+
+## Latest-main verification
+
+The branch merges protected HWPML PR #30. Squashed resource ancestry produces
+merge conflicts, resolved by a three-way merge using the reviewed identical
+resource head as the synthetic base. Runtime/protocol/workflow source is
+unchanged by the mainline merge; HWPML fixture/source changes are preserved.
+Root repeats merged locked workspace tests, strict all-feature Clippy/rustdoc,
+fmt, Ruff (53 files), actionlint, zizmor and documentation validation. A fresh
+macOS ARM worker wheel passes all four installed probes and 352 isolated tests
+plus ten subtests. Wheel and base sdist audits pass; the three HWPML fixture
+copies retain exact bytes. Private PDF worker sources are outside the base
+sdist dependency closure, as before; ordinary worker build/assembly remains a
+separate production gate. No full-source-sdist worker support is claimed.
+
+
+## Shared-table mainline join
+
+Protected PR #31 is incorporated before final hosted review. Only additive
+SSOT/WIKI merge conflicts need resolution; native PDF source is unchanged.
+Merged locked workspace tests, all-feature Clippy/rustdoc and fmt pass.
+A freshly rebuilt combined worker wheel passes 354 isolated Python/helper
+cases and ten subtests; the exact installed kind-4 probe still passes.
+Both artifact audits pass. Final-head six-platform gates remain pending.

@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/kordoc-ir",
+    "crates/kordoc-tables",
     "crates/kordoc-core",
     "crates/kordoc-hancom",
     "crates/kordoc-pdf",
