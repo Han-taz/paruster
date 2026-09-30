@@ -3,6 +3,7 @@
 mod allocator;
 mod engine;
 mod host;
+mod resources;
 
 use kordoc_ir::{ErrorCode, KordocError};
 
@@ -58,4 +59,46 @@ pub(crate) fn test_external_buffer_limit() -> Result<(), KordocError> {
 #[cfg(test)]
 pub(crate) fn test_v8_engine_version() -> &'static str {
     engine::test_v8_engine_version()
+}
+
+#[cfg(test)]
+#[allow(
+    dead_code,
+    reason = "resource integration entry point is unused by other runtime integration targets"
+)]
+pub(crate) fn test_probe_with_resource_stats(
+    bytes: &[u8],
+) -> Result<(PdfJsProbe, resources::ResourceStats), KordocError> {
+    engine::test_probe_with_resource_stats(bytes)
+}
+
+#[cfg(test)]
+#[allow(
+    dead_code,
+    reason = "resource integration entry point is unused by other runtime integration targets"
+)]
+pub(crate) fn test_probe_with_resource_limits(
+    bytes: &[u8],
+    max_item_bytes: usize,
+    max_requests: usize,
+    max_total_bytes: usize,
+) -> Result<(PdfJsProbe, resources::ResourceStats), KordocError> {
+    engine::test_probe_with_resource_limits(
+        bytes,
+        resources::ResourceLimits {
+            max_item_bytes,
+            max_requests,
+            max_total_bytes,
+        },
+    )
+}
+
+#[cfg(test)]
+#[allow(
+    dead_code,
+    reason = "resource integration entry point is unused by other runtime integration targets"
+)]
+pub(crate) fn test_resource_callback_rejects_unbounded_arguments()
+-> Result<(resources::ResourceStats, Option<ErrorCode>), KordocError> {
+    engine::test_resource_callback_rejects_unbounded_arguments()
 }
