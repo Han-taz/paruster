@@ -2,6 +2,7 @@ use super::PdfJsProbe;
 use super::allocator::{AllocationCap, new_v8_allocator};
 use super::host;
 use super::resources::{self, ResourceLimits, ResourceState, ResourceStats};
+use super::text_document::{PdfJsTextDocument, TextDocumentLimits};
 use kordoc_ir::{ErrorCode, KordocError};
 use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Once};
@@ -69,6 +70,17 @@ fn ensure_external_capacity(cap: &AllocationCap, bytes: usize) -> Result<(), Kor
             "PDF.js external buffer limit exceeded",
         ))
     }
+}
+
+#[cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "only the rich DTO extraction path uses this typed cap helper"
+    )
+)]
+fn output_error(message: &str) -> KordocError {
+    KordocError::new(ErrorCode::OutputTooLarge, message)
 }
 
 pub(super) fn probe(
@@ -253,6 +265,232 @@ fn probe_with_resource_limits(
     let probe = serde_json::from_str(&json)
         .map_err(|_| parse_error("PDF.js returned an invalid result"))?;
     Ok((probe, resource_state.stats()))
+}
+
+#[cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "used by the kind-3 worker and focused DTO integration target"
+    )
+)]
+pub(super) fn extract_text_document(
+    bytes: &[u8],
+    limits: TextDocumentLimits,
+) -> Result<(PdfJsTextDocument, usize), KordocError> {
+    extract_text_document_inner(bytes, limits, false)
+}
+
+#[cfg(test)]
+#[cfg_attr(
+    test,
+    allow(dead_code, reason = "used only by the focused DTO integration target")
+)]
+pub(super) fn test_stream_matches_default_get_text_content(
+    bytes: &[u8],
+) -> Result<bool, KordocError> {
+    extract_text_document_inner(bytes, TextDocumentLimits::default(), true).map(|_| true)
+}
+
+#[cfg(test)]
+#[cfg_attr(
+    test,
+    allow(dead_code, reason = "used only by the focused DTO integration target")
+)]
+pub(super) fn test_text_document_json_bytes(
+    bytes: &[u8],
+    limits: TextDocumentLimits,
+) -> Result<usize, KordocError> {
+    extract_text_document_inner(bytes, limits, false).map(|(_, json_bytes)| json_bytes)
+}
+
+#[cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "only the rich DTO extraction entry points use this implementation"
+    )
+)]
+fn extract_text_document_inner(
+    bytes: &[u8],
+    limits: TextDocumentLimits,
+    compare_default: bool,
+) -> Result<(PdfJsTextDocument, usize), KordocError> {
+    initialize_v8();
+    let external_cap = AllocationCap::new(EXTERNAL_BUFFER_LIMIT);
+    let mut resource_state =
+        ResourceState::new(ResourceLimits::default(), Arc::clone(&external_cap));
+    let mut isolate = v8::Isolate::new(
+        v8::Isolate::create_params()
+            .set_max_old_generation_size_in_bytes(HEAP_LIMIT)
+            .array_buffer_allocator(new_v8_allocator(&external_cap)),
+    );
+    isolate.set_microtasks_policy(v8::MicrotasksPolicy::Explicit);
+    let _deadline = DeadlineGuard::new(&isolate, Duration::from_secs(10));
+    v8::scope!(let handle_scope, &mut isolate);
+    let context = v8::Context::new(handle_scope, Default::default());
+    v8::scope_with_context!(let scope, handle_scope, context);
+
+    run_script(scope, host::SHIMS)
+        .ok_or_else(|| parse_error("PDF.js host initialization failed"))?;
+    let global = context.global(scope);
+    if !resources::install_callback(scope, global, &mut resource_state) {
+        return Err(parse_error(
+            "PDF.js resource callback initialization failed",
+        ));
+    }
+    let worker = compile_module(scope, PDFJS_WORKER)
+        .ok_or_else(|| parse_error("PDF.js worker module compilation failed"))?;
+    worker
+        .instantiate_module(scope, |_context, _specifier, _assertions, _referrer| None)
+        .ok_or_else(|| parse_error("PDF.js worker requested an unsupported import"))?;
+    worker
+        .evaluate(scope)
+        .ok_or_else(|| parse_error("PDF.js worker evaluation failed"))?;
+    scope.perform_microtask_checkpoint();
+    let worker_namespace = worker
+        .get_module_namespace()
+        .to_object(scope)
+        .ok_or_else(|| parse_error("PDF.js worker namespace unavailable"))?;
+    let handler_key = v8::String::new(scope, "WorkerMessageHandler").unwrap();
+    let handler = worker_namespace
+        .get(scope, handler_key.into())
+        .ok_or_else(|| parse_error("PDF.js worker handler unavailable"))?;
+    let worker_obj = v8::Object::new(scope);
+    worker_obj.set(scope, handler_key.into(), handler);
+    context.global(scope).set(
+        scope,
+        v8::String::new(scope, "pdfjsWorker").unwrap().into(),
+        worker_obj.into(),
+    );
+
+    let main = compile_module(scope, PDFJS_MAIN)
+        .ok_or_else(|| parse_error("PDF.js main module compilation failed"))?;
+    main.instantiate_module(scope, |_context, _specifier, _assertions, _referrer| None)
+        .ok_or_else(|| parse_error("PDF.js main requested an unsupported import"))?;
+    main.evaluate(scope)
+        .ok_or_else(|| parse_error("PDF.js main evaluation failed"))?;
+    scope.perform_microtask_checkpoint();
+    if main.get_status() == v8::ModuleStatus::Errored {
+        return Err(parse_error("PDF.js main module errored"));
+    }
+    context.global(scope).set(
+        scope,
+        v8::String::new(scope, "pdfjsLib").unwrap().into(),
+        main.get_module_namespace(),
+    );
+    if run_script(
+        scope,
+        "typeof globalThis.pdfjsLib?.getDocument === 'function'",
+    )
+    .is_none_or(|value| !value.boolean_value(scope))
+    {
+        return Err(parse_error("PDF.js getDocument export is unavailable"));
+    }
+
+    ensure_external_capacity(&external_cap, bytes.len())?;
+    let array_buffer = v8::ArrayBuffer::new(scope, bytes.len());
+    for (slot, byte) in array_buffer.get_backing_store().iter().zip(bytes) {
+        slot.set(*byte);
+    }
+    let input = v8::Uint8Array::new(scope, array_buffer, 0, bytes.len())
+        .ok_or_else(|| parse_error("could not create PDF.js input buffer"))?;
+    context.global(scope).set(
+        scope,
+        v8::String::new(scope, "__pdfInput").unwrap().into(),
+        input.into(),
+    );
+    let script = format!(
+        r#"
+      globalThis.__textState={{done:false,error:null,json:null,limit:false}};
+      const lim={{pages:{pages},items:{items},itemText:{itemText},text:{text},font:{font},fonts:{fonts},metaValue:{metaValue},metadata:{metadata},response:{response}}};
+      const utf8=s=>{{let n=0; for(let i=0;i<s.length;i++){{const c=s.charCodeAt(i); if(c<128)n++; else if(c<2048)n+=2; else if(c>=0xD800&&c<=0xDBFF&&i+1<s.length&&s.charCodeAt(i+1)>=0xDC00&&s.charCodeAt(i+1)<=0xDFFF){{n+=4;i++;}} else n+=3;}} return n;}};
+      const fail=m=>{{__textState.limit=true;throw new Error(m)}};
+      const task=pdfjsLib.getDocument({{data:globalThis.__pdfInput,useWorkerFetch:false,cMapUrl:null,cMapPacked:true,CMapReaderFactory:globalThis.__pdfjsCMapReaderFactory,standardFontDataUrl:null,StandardFontDataFactory:globalThis.__pdfjsStandardFontDataFactory,useSystemFonts:false,isEvalSupported:false,disableFontFace:true,isOffscreenCanvasSupported:false,isImageDecoderSupported:false}});
+      const settled=task.promise.then(async doc=>{{
+        if(!Number.isInteger(doc.numPages)||doc.numPages<1||doc.numPages>lim.pages) fail('page limit exceeded');
+        let info=null; try{{const meta=await doc.getMetadata(); info=meta&&meta.info;}}catch(_){{info=null;}}
+        const names=[['title','Title'],['author','Author'],['creator','Creator'],['subject','Subject'],['keywords','Keywords'],['creation_date','CreationDate'],['modified_date','ModDate']];
+        const metadata={{}}; let metadataBytes=0;
+        for(const [target,key] of names){{const value=info&&typeof info[key]==='string'?info[key]:null; if(value!==null){{if(value.length>lim.metaValue) fail('metadata value limit exceeded'); const n=utf8(value); if(n>lim.metaValue) fail('metadata value limit exceeded'); metadataBytes+=n; if(metadataBytes>lim.metadata) fail('metadata limit exceeded');}} metadata[target]=value;}}
+        const prefix='{{"page_count":'+doc.numPages+',"metadata":'+JSON.stringify(metadata)+',"pages":[';
+        let responseBytes=utf8(prefix)+2,itemCount=0,textBytes=0,fontBytes=0,normalizationDiff=false; const pages=[];
+        for(let p=1;p<=doc.numPages;p++){{const page=await doc.getPage(p); const view=page.view; if(!Array.isArray(view)||view.length!==4||!Number.isInteger(page.rotate)) throw new Error('invalid page geometry');
+          if(view.some(v=>!Number.isFinite(v))) throw new Error('invalid page view');
+          const header='{{"page_number":'+p+',"view_box":'+JSON.stringify(view)+',"rotation":'+page.rotate+',"items":[';
+          const pageSuffix=']}}'; const separator=pages.length?1:0;
+          responseBytes+=utf8(header)+utf8(pageSuffix)+separator; if(responseBytes>lim.response) fail('response limit exceeded');
+          const encodedItems=[];
+          const reader=page.streamTextContent().getReader();
+          for(;;){{const chunk=await reader.read(); if(chunk.done)break; for(const item of chunk.value.items){{
+            if(++itemCount>lim.items) fail('text item limit exceeded');
+            if(typeof item.str!=='string'||typeof item.fontName!=='string') throw new Error('invalid text item strings');
+            const text=item.str,font=item.fontName;
+            if(text.length>lim.itemText||font.length>lim.font) fail('text field limit exceeded');
+            const itemBytes=utf8(text),fontNameBytes=utf8(font);
+            if(itemBytes>lim.itemText||fontNameBytes>lim.font) fail('text field limit exceeded');
+            if(font.split('').some(c=>c.charCodeAt(0)<32||c.charCodeAt(0)===127)) throw new Error('invalid font name');
+            textBytes+=itemBytes; fontBytes+=fontNameBytes; if(textBytes>lim.text||fontBytes>lim.fonts) fail('text output limit exceeded');
+            if(!Number.isFinite(item.width)||!Number.isFinite(item.height)||!Array.isArray(item.transform)||item.transform.length!==6||item.transform.some(v=>!Number.isFinite(v))) throw new Error('invalid text geometry');
+            const projected={{text,width:item.width,height:item.height,transform:item.transform.slice(),font_name:font}};
+            const encoded=JSON.stringify(projected); responseBytes+=utf8(encoded)+(encodedItems.length?1:0);
+            if(responseBytes>lim.response) fail('response limit exceeded'); encodedItems.push(encoded);
+          }}}}
+          if({compare_default}){{const tc=await page.getTextContent(); const fields=x=>x.map(i=>[i.str,i.width,i.height,i.transform,i.fontName]); const projected=encodedItems.map(s=>{{const i=JSON.parse(s);return [i.text,i.width,i.height,i.transform,i.font_name]}}); if(JSON.stringify(fields(tc.items))!==JSON.stringify(projected)) throw new Error('streamed text differs from default getTextContent'); const raw=await page.getTextContent({{disableNormalization:true}}); if(JSON.stringify(fields(tc.items))!==JSON.stringify(fields(raw.items))) normalizationDiff=true;}}
+          pages.push(header+encodedItems.join(',')+pageSuffix);
+        }}
+        const json=prefix+pages.join(',')+']}}';
+        if({compare_default}&&!normalizationDiff) throw new Error('fixture does not distinguish disabled normalization');
+        if(utf8(json)!==responseBytes) throw new Error('text document size accounting mismatch'); __textState.json=json;
+      }}).catch(e=>{{__textState.error=String(e&&e.message||e);}}).finally(()=>task.destroy());
+      settled.then(()=>{{__textState.done=true;}},e=>{{__textState.error=String(e&&e.message||e);__textState.done=true;}});
+    "#,
+        pages = limits.max_pages,
+        items = limits.max_items,
+        itemText = limits.max_item_text_bytes,
+        text = limits.max_text_bytes,
+        font = limits.max_font_name_bytes,
+        fonts = limits.max_font_names_bytes,
+        metaValue = limits.max_metadata_value_bytes,
+        metadata = limits.max_metadata_bytes,
+        response = limits.max_response_bytes,
+        compare_default = compare_default
+    );
+    run_script(scope, &script).ok_or_else(|| parse_error("PDF.js rejected the document"))?;
+    for _ in 0..10_000 {
+        scope.perform_microtask_checkpoint();
+        if get_bool(scope, "__textState.done") {
+            break;
+        }
+    }
+    if !get_bool(scope, "__textState.done") {
+        return Err(parse_error("PDF.js extraction deadline exceeded"));
+    }
+    if let Some(failure) = resource_state.failure() {
+        return Err(failure.to_error());
+    }
+    if external_cap.rejected() {
+        return Err(output_error("PDF.js external buffer limit exceeded"));
+    }
+    let error = get_string_property(scope, "__textState", "error");
+    if !error.is_empty() {
+        if get_bool(scope, "__textState.limit") {
+            return Err(output_error("PDF.js text document exceeds runtime limits"));
+        }
+        return Err(parse_error(&error));
+    }
+    let Some(json) =
+        run_script(scope, "globalThis.__textState.json").and_then(|value| value.to_string(scope))
+    else {
+        return Err(parse_error("PDF.js result is unavailable"));
+    };
+    let json_bytes = json.utf8_length(scope);
+    if json_bytes > limits.max_response_bytes {
+        return Err(output_error("PDF.js output exceeds runtime limit"));
+    }
+    let json = json.to_rust_string_lossy(scope);
+    let document = super::text_document::deserialize_text_document(json.as_bytes(), limits)?;
+    Ok((document, json_bytes))
 }
 
 #[cfg(test)]

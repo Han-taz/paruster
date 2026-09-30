@@ -34,14 +34,32 @@ fn protocol_error(error: worker_protocol::ProtocolError) -> KordocError {
 fn run() -> Result<(), worker_protocol::ProtocolError> {
     let stdin = io::stdin();
     let mut request = stdin.lock();
-    let result = match worker_protocol::read_request(&mut request) {
-        Ok(bytes) => v8_runtime::probe_pdf_text(&bytes),
-        Err(error) => Err(protocol_error(error)),
-    };
-
     let stdout = io::stdout();
     let mut response = stdout.lock();
-    match worker_protocol::write_response(&mut response, result.as_ref()) {
+    match worker_protocol::read_worker_request(&mut request) {
+        Ok(worker_protocol::WorkerRequest::Probe(bytes)) => {
+            write_probe_result(&mut response, v8_runtime::probe_pdf_text(&bytes))?
+        }
+        Ok(worker_protocol::WorkerRequest::TextDocument(bytes)) => {
+            write_text_result(&mut response, v8_runtime::extract_text_document(&bytes))?
+        }
+        Err((worker_protocol::ResponseKind::Probe, error)) => {
+            write_probe_result(&mut response, Err(protocol_error(error)))?
+        }
+        Err((worker_protocol::ResponseKind::TextDocument, error)) => {
+            write_text_result(&mut response, Err(protocol_error(error)))?
+        }
+    }
+    response
+        .flush()
+        .map_err(|_| worker_protocol::ProtocolError::Io)
+}
+
+fn write_probe_result<W: Write>(
+    response: &mut W,
+    result: Result<v8_runtime::PdfJsProbe, KordocError>,
+) -> Result<(), worker_protocol::ProtocolError> {
+    match worker_protocol::write_response(response, result.as_ref()) {
         Ok(()) => response
             .flush()
             .map_err(|_| worker_protocol::ProtocolError::Io),
@@ -50,10 +68,27 @@ fn run() -> Result<(), worker_protocol::ProtocolError> {
                 ErrorCode::OutputTooLarge,
                 "PDF worker response exceeds its limit",
             );
-            worker_protocol::write_response(&mut response, Err(&bounded))?;
+            worker_protocol::write_response(response, Err(&bounded))?;
             response
                 .flush()
                 .map_err(|_| worker_protocol::ProtocolError::Io)
+        }
+        Err(error) => Err(error),
+    }
+}
+
+fn write_text_result<W: Write>(
+    response: &mut W,
+    result: Result<v8_runtime::text_document::PdfJsTextDocument, KordocError>,
+) -> Result<(), worker_protocol::ProtocolError> {
+    match worker_protocol::write_text_response(response, result.as_ref()) {
+        Ok(()) => Ok(()),
+        Err(worker_protocol::ProtocolError::TooLarge) => {
+            let bounded = KordocError::new(
+                ErrorCode::OutputTooLarge,
+                "PDF worker response exceeds its limit",
+            );
+            worker_protocol::write_text_response(response, Err(&bounded))
         }
         Err(error) => Err(error),
     }

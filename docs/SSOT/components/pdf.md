@@ -199,3 +199,40 @@ adds the new resource probe. PR [#29](https://github.com/Han-taz/paruster/pull/2
 installed-worker targets passed on final head `11fbabd`;
 full PDF IR/layout/metadata/options/corpus and production containment/assembly
 are still separate gates.
+
+
+## Private ordered text and Info metadata transfer
+
+The [text-document checkpoint](../migration/plans/2026-09-30-pdf-v8-text-document-plan.md)
+adds explicit KPDF v1 request/response kinds 3/4 beside unchanged kinds 1/2.
+Rust owns the same supervised child lifecycle, framing and strict DTO decoder.
+For normal non-XFA pages, default PDF.js text streaming preserves item order,
+raw strings, width/height, six transform values, font names, CropBox-origin view
+and rotation. Seven fixed Info metadata strings remain raw; missing/non-string
+values become null and empty strings stay empty. Metadata retrieval failures
+are best-effort, while resource/quota failures remain fatal. XFA, operator-list
+and annotation parity are separate work.
+
+Document-wide limits are inclusive: 200 pages, 100,000 items, 64 KiB per text
+string and 2 MiB total text, 128 bytes per font name and 512 KiB total names,
+4 KiB per Info value and 16 KiB total metadata, and 4 MiB response frames.
+Cheap UTF-16 length checks precede exact UTF-8 scans; bounded item fragments
+account exact JSON bytes before retention. Shared Rust deserialization budgets
+reject excessive counts/bytes, unknown/duplicate fields and invalid geometry;
+fallible collection growth ignores input size hints. An extra sequence value
+is rejected immediately. Escaped strings/map keys can use transient serde
+scratch up to the capped input frame; this is not a zero-allocation guarantee.
+Internal sticky quota state and anchored decoder markers keep attacker error
+text from changing parse failures into quota failures.
+
+The authored two-page fixture covers reversed stream/x order, nonzero CropBox,
+90-degree rotation, Hangul/astral text and default U+FB03 normalization, plus
+raw empty and whitespace metadata. Offline recipe/complete-result hashes and
+Git autocrlf byte preservation are verified. All six installed worker targets
+retain the three old probes and add exact full kind-4 result comparison.
+This remains a private unregistered substrate; Rust layout/IR lowering and
+production containment/packaging remain pending.
+
+PR [#32](https://github.com/Han-taz/paruster/pull/32) merged this private text
+transfer as `762ddde4050660abaaa815889ed76da21a589612` after final-head
+required checks and all six four-probe installed-worker targets passed.

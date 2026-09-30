@@ -1,18 +1,19 @@
 #![cfg(feature = "pdfjs-worker-tests")]
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-struct PdfJsProbe {
-    page_count: u32,
-    page_text: Vec<String>,
-}
-
-mod v8_runtime {
-    pub(crate) use super::PdfJsProbe;
-}
+#[path = "../src/v8_runtime/mod.rs"]
+#[allow(
+    dead_code,
+    reason = "supervisor integration uses the runtime DTO and probe types but does not invoke V8 directly"
+)]
+mod v8_runtime;
 
 #[path = "../src/worker_protocol.rs"]
 mod worker_protocol;
 #[path = "../src/worker_supervisor.rs"]
+#[allow(
+    dead_code,
+    reason = "helper integration exercises the legacy request but does not invoke the rich production entry point"
+)]
 mod worker_supervisor;
 
 use kordoc_ir::{ErrorCode, KordocError};
@@ -20,6 +21,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Barrier, Mutex};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use v8_runtime::PdfJsProbe;
 
 static SUPERVISOR_TEST_LOCK: Mutex<()> = Mutex::new(());
 

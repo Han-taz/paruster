@@ -13,3 +13,7 @@ tests/golden/document/pdf/**/*.pdf -text
 
 # Keep the crate-local nested-table fixture identical to its authored H0 input.
 crates/kordoc-hancom/tests/support/hwpml/table_fixture_inputs/*.xml -text
+
+# Preserve the pinned text-document recipe and complete expected DTO bytes.
+crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/expected.json -text
+crates/kordoc-pdf/tests/fixtures/pdfjs_text_document/generate.py -text
