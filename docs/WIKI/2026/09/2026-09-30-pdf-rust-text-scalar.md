@@ -45,3 +45,11 @@ worker wheel is 21,426,318 bytes, SHA-256
 Staged inputs are preserved under ignored build storage. Ordinary base-sdist
 closure still excludes the optional PDF crate; production worker/source-build
 assembly is not claimed. Final-head hosted six-target publication remains.
+
+## Native test failure propagation
+
+Linux container preparation and native worker build scripts explicitly enable
+`set -euo pipefail`, ensuring a failed native release test cannot be masked by
+subsequent notice staging. The first hosted head passes all six worker targets,
+including new release native tests; final-head gates are rerun after this
+fail-fast declaration. No target, test, probe or threshold is removed.
