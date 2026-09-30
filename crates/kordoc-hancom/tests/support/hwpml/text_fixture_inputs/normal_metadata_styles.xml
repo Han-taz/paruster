@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<HWPML xmlns="http://www.hancom.co.kr/hwpml/2011/hwpml" xmlns:h="http://www.hancom.co.kr/hwpml/2011/hwpml" Version="2.9">
+  <h:DOCSUMMARY><h:TITLE>합성 HWPML 제목</h:TITLE><h:AUTHOR>Open Fixture</h:AUTHOR><h:DATE>2026-09-30</h:DATE></h:DOCSUMMARY>
+  <h:HEAD><h:MAPPINGTABLE><h:PARASHAPELIST>
+    <h:PARASHAPE Id="title" HeadingType="Outline" Level="0"/>
+    <h:PARASHAPE Id="deep" HeadingType="Outline" Level="99"/>
+  </h:PARASHAPELIST></h:MAPPINGTABLE></h:HEAD>
+  <h:BODY>
+    <h:SECTION Id="0">
+      <h:P ParaShape="title"><h:TEXT><h:CHAR>첫</h:CHAR><h:CHAR> 제목</h:CHAR></h:TEXT></h:P>
+      <h:P ParaShape="plain"><h:TEXT><h:CHAR>앞&nbsp;뒤</h:CHAR><h:CHAR> &amp; 끝</h:CHAR>
+        <h:AUTONUM>자동번호제외</h:AUTONUM>
+        <h:PICTURE><h:CHAR>그림텍스트제외</h:CHAR></h:PICTURE>
+        <h:SHAPEOBJECT><h:CHAR>도형텍스트제외</h:CHAR></h:SHAPEOBJECT>
+        <h:FOOTNOTE><h:TEXT><h:CHAR>각주내용은문단에포함</h:CHAR></h:TEXT></h:FOOTNOTE>
+      </h:TEXT></h:P>
+      <h:HEADER><h:P><h:TEXT><h:CHAR>머리말제외</h:CHAR></h:TEXT></h:P></h:HEADER>
+      <h:FOOTER><h:P><h:TEXT><h:CHAR>꼬리말제외</h:CHAR></h:TEXT></h:P></h:FOOTER>
+    </h:SECTION>
+    <h:SECTION Id="1">
+      <h:P ParaShape="deep"><h:TEXT><h:CHAR>둘째 구역 제목</h:CHAR></h:TEXT></h:P>
+      <h:P><h:TEXT><h:CHAR>둘째 구역 본문</h:CHAR></h:TEXT></h:P>
+    </h:SECTION>
+  </h:BODY>
+</HWPML>
