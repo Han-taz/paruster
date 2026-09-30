@@ -147,6 +147,8 @@ described in the [PDF component page](../components/pdf.md). This checkpoint
 does not parse pages or glyphs, expose a public function, or advance PDF parity;
 those remain pending until the rest of P2a and its protected merge complete.
 
+The active private V8/PDF.js spike is published in draft PR [#23](https://github.com/Han-taz/paruster/pull/23). Fresh local feature tests execute V8 `15.2.124.1-rusty` with PDF.js `4.10.38` and extract the authored one-page text exactly. Eight scoped executions, offline asset integrity, strict all-feature Clippy, normal locked workspace tests and docs checks pass. This demonstrates embedded runtime feasibility only. Source-neutral IR/layout/table integration, supervised native-process containment, full result/option parity and feature-enabled six-target installed-wheel gates remain pending; no PDF production capability or manifest success numerator is promoted.
+
 All 17 MCP tools remain pending and must preserve their frozen names, schemas, descriptions, envelopes, limits, security policy, and stdio discipline when implemented.
 
 ## Evidence policy

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** Use `superpowers:subagent-driven-development`, test-driven development, and verification-before-completion. Follow the existing GitHub Flow and SSOT/WIKI evidence rules.
 
-**Goal:** Establish a private, feature-gated PDF.js text/metadata runtime in Rust using embedded V8, without a Node.js runtime requirement.
+**Goal:** Establish a private, feature-gated PDF.js text/page-count runtime in Rust using embedded V8, without a Node.js runtime requirement.
 
 **Architecture:** The user's September 30 instruction explicitly supersedes the earlier pure-Rust PDF semantic-backend decision. Rust embeds V8 and evaluates the pinned PDF.js main/worker ES modules in one isolate; `globalThis.pdfjsWorker` provides the in-process worker handler. Rust owns input validation, execution limits, typed output, downstream source-neutral IR, and core projections. The first checkpoint is an isolated test/runtime spike, not production registry or Python capability registration. Production memory/fatal-failure process isolation and native wheel packaging remain mandatory later gates.
 
@@ -11,6 +11,10 @@
 ## Ownership and file map
 
 Coordinator: root dependency/lockfile, `crates/kordoc-pdf/Cargo.toml`, SSOT design/plan/status/index and WIKI. Runtime worker: `crates/kordoc-pdf/src/v8_runtime/{mod,host,engine}.rs`, colocated tests, private module registration in `src/lib.rs`, authored runtime fixtures. No core/Python/schema changes. Separate review must verify runtime boundaries and supply-chain evidence.
+
+## Current checkpoint
+
+R0 assets/dependencies, R1 actual RED/GREEN runtime tests, and R2 private execution with custom ArrayBuffer allocation and watchdog guards are implemented locally. Eight feature-test executions and the default-feature offline asset test pass. R3 hosted review/publication gates are in progress. Resource factories, complete host compatibility, supervised native-process containment and production six-wheel support remain pending. Detailed evidence is in the [runtime record](../../../WIKI/2026/09/2026-09-30-pdf-v8-runtime.md).
 
 ## R0: Freeze assets and dependency
 
