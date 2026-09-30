@@ -1,0 +1,419 @@
+{
+  "schema_version": 1,
+  "description": "Authored synthetic PdfTextItem records passed to pinned normalizeItems.",
+  "cases": [
+    {
+      "name": "numeric_ascii_space_rewrite",
+      "items": [
+        {
+          "str": "45 0 -7 3 40 )",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "numeric_full_permitted_punctuation_class",
+      "items": [
+        {
+          "str": "☎ (45.0, -7·3)",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "numeric_non_ascii_whitespace_survives_ascii_space_removal",
+      "items": [
+        {
+          "str": "1\t2 3　4 5",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "numeric_newline_survives_ascii_space_removal",
+      "items": [
+        {
+          "str": "1\n2 3",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "nel_is_not_ecmascript_regex_whitespace",
+      "items": [
+        {
+          "str": "12 3",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "phone_symbol_is_permitted",
+      "items": [
+        {
+          "str": "☎ 1 2",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "plus_sign_prevents_numeric_rewrite",
+      "items": [
+        {
+          "str": "+ 1 2",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "unicode_digit_prevents_numeric_rewrite",
+      "items": [
+        {
+          "str": "١ 2 3",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "astral_neighbor_prevents_numeric_rewrite",
+      "items": [
+        {
+          "str": "😀1 2",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "ecmascript_edge_trim_includes_bom_nbsp_em_space_and_line_separator",
+      "items": [
+        {
+          "str": "﻿ A  ",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "ecmascript_trim_retains_nel",
+      "items": [
+        {
+          "str": "N",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "radical_nfkc_preserves_astral_neighbors",
+      "items": [
+        {
+          "str": "x😀⼀😀y",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "nfkc_is_limited_to_radical_block",
+      "items": [
+        {
+          "str": "Ａ⼀①⿕⿖",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "uppercase_label_at_rounded_font_gate",
+      "items": [
+        {
+          "str": "H O W",
+          "transform": [
+            13.5,
+            0,
+            0,
+            13.5,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "uppercase_label_below_font_gate",
+      "items": [
+        {
+          "str": "H O W",
+          "transform": [
+            13.499,
+            0,
+            0,
+            13.499,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "uppercase_label_accepts_curly_apostrophe",
+      "items": [
+        {
+          "str": "L ’ E T",
+          "transform": [
+            16,
+            0,
+            0,
+            16,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "uppercase_label_allows_numeric_and_ascii_punctuation",
+      "items": [
+        {
+          "str": "A 1 ? ! & ' ’",
+          "transform": [
+            16,
+            0,
+            0,
+            16,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "uppercase_label_rejects_non_ascii_letter",
+      "items": [
+        {
+          "str": "Å B C",
+          "transform": [
+            16,
+            0,
+            0,
+            16,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "uppercase_label_rejects_two_groups",
+      "items": [
+        {
+          "str": "A B",
+          "transform": [
+            16,
+            0,
+            0,
+            16,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "uppercase_label_rejects_double_space",
+      "items": [
+        {
+          "str": "A  B C",
+          "transform": [
+            16,
+            0,
+            0,
+            16,
+            10,
+            10
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    },
+    {
+      "name": "rewrite_precedes_even_spacing_split_and_sort_preserves_sequence",
+      "items": [
+        {
+          "str": "1 2 3",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            100,
+            20
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        },
+        {
+          "str": "가 나 다",
+          "transform": [
+            12,
+            0,
+            0,
+            12,
+            10,
+            30
+          ],
+          "width": 30,
+          "height": 12,
+          "fontName": "authored-font"
+        }
+      ]
+    }
+  ]
+}

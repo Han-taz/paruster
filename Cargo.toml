@@ -34,3 +34,4 @@ flate2 = { version = "=1.1.10", default-features = false, features = ["zlib-rs"]
 lopdf = { version = "=0.45.0", default-features = false }
 regex = "=1.13.1"
 v8 = "=152.2.0"
+unicode-normalization = "=0.1.25"

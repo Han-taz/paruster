@@ -40,6 +40,12 @@ mod text;
 #[cfg(feature = "pdfjs-v8")]
 #[allow(
     dead_code,
+    reason = "private text-rewrite checkpoint is not wired into PDF parser pipeline yet"
+)]
+mod text_rewrites;
+#[cfg(feature = "pdfjs-v8")]
+#[allow(
+    dead_code,
     reason = "private scalar-normalization checkpoint is not wired into PDF parser yet"
 )]
 mod text_scalar;

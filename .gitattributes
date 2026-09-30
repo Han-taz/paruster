@@ -34,3 +34,7 @@ crates/kordoc-pdf/tests/fixtures/pdfjs_geometry/*.json -text
 # Preserve independent scalar recipe and engine/source capture bytes.
 crates/kordoc-pdf/tests/fixtures/pdfjs_text_normalization/make_fixture.py -text
 crates/kordoc-pdf/tests/fixtures/pdfjs_text_normalization/*.json -text
+
+# Preserve independent rewrite recipe and captured source bytes.
+crates/kordoc-pdf/tests/fixtures/pdf_text_rewrites/generate.py -text
+crates/kordoc-pdf/tests/fixtures/pdf_text_rewrites/*.json -text

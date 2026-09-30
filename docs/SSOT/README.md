@@ -53,3 +53,5 @@ sections are added only when they have canonical content.
 - [`migration/plans/2026-09-30-hwpml-collision-capture-plan.md`](migration/plans/2026-09-30-hwpml-collision-capture-plan.md): separately authored HWPML collision observations and deliberate private rejection boundary
 
 - [`migration/plans/2026-09-30-pdf-rust-text-normalization-plan.md`](migration/plans/2026-09-30-pdf-rust-text-normalization-plan.md): private bounded base text scalars and pinned V8 numerical semantics in Rust
+
+- [`migration/plans/2026-09-30-pdf-text-rewrites-plan.md`](migration/plans/2026-09-30-pdf-text-rewrites-plan.md): bounded private Rust text rewrites and 214 selective radical mappings
