@@ -635,6 +635,7 @@ name = "kordoc-core"
 version = "0.1.0"
 dependencies = [
  "cfb",
+ "kordoc-hancom",
  "kordoc-ir",
  "proptest",
  "serde_json",
@@ -651,6 +652,7 @@ dependencies = [
  "kordoc-ir",
  "pbkdf2",
  "quick-xml",
+ "serde",
  "sha1",
  "sha2",
  "subtle",

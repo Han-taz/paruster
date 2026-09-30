@@ -12,10 +12,13 @@ private injectable registry, panic containment, result assembly, and P7's
 shared Markdown/page/chunk projections, table policy, and one Markdown
 table-unit reader. Format
 crates depend on IR only; core-side adapters call them, preventing a Cargo
-cycle. `kordoc-hancom` and `kordoc-pdf` are registered, compilable scaffold
-crates that depend only on `kordoc-ir`; they intentionally expose no public
-parser or validator entry points and are not registered in production. The
-production registry remains empty until a real parser passes parity.
+cycle. `kordoc-hancom` exposes real HWPX parsing, metadata-only and validation
+facades and is the first candidate registered in core dispatch. Its Python
+boundary is executable locally; final allocation, full-result and hosted
+gates still govern capability promotion. `kordoc-pdf` remains a private
+substrate with no public parser or production registration. Both format
+crates depend on shared IR and their bounded implementation dependencies,
+never on `kordoc-core`.
 `kordoc-python` validates owned options and translates calls and wire results.
 
 The `python/kordoc` Python facade normalizes supported caller inputs—bytes-like
@@ -31,7 +34,7 @@ Python caller
   -> Python facade: normalize bytes / filesystem paths / binary streams
   -> PyO3 extension: detach core operation from the GIL
   -> kordoc-core: validate, detect, dispatch, contain panics, project IR/result
-  -> format adapter: return source-neutral ParsedDocument (future)
+  -> format adapter: return source-neutral ParsedDocument (HWPX candidate)
   -> kordoc-ir wire DTOs: serialize the result envelope
   -> Python facade result or typed error
 ```
@@ -41,9 +44,10 @@ dependencies in the workspace and lockfile so each worker slice is exercised
 by locked workspace CI. A dependency pin is not an implementation or parity
 claim. In particular, `lopdf` is only the P2 substrate-spike candidate: its
 default eager document loader and per-stream decompression limit do not yet
-satisfy the required pre-allocation and cumulative budgets. P2 must reject it
-or wrap/replace it according to the child plan's spike exit criterion before
-semantic work proceeds. PDFium, Node, and pdfjs are absent from the base parser
+satisfy the required pre-allocation and cumulative budgets. The PDF substrate
+spike rejects its runtime loader and uses a borrowed-source bounded reader;
+the audited candidate dependency remains pinned pending separate removal.
+PDFium, Node, and pdfjs are absent from the base parser
 dependency graph.
 
 ## Security boundaries

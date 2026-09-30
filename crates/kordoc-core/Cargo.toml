@@ -10,6 +10,7 @@ fuzzing = []
 
 [dependencies]
 cfb.workspace = true
+kordoc-hancom = { path = "../kordoc-hancom", version = "=0.1.0" }
 kordoc-ir = { path = "../kordoc-ir", version = "=0.1.0" }
 zip.workspace = true
 

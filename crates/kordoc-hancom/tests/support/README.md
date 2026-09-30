@@ -6,7 +6,10 @@ CC0-1.0. The generator source SHA-256 is
 It creates fixed-order ZIP records with the 1980-01-01 00:00:00 timestamp,
 stored payloads, and explicit UTF-8 XML. No bytes from the ignored migration
 oracle or its fixtures are copied into an archive. Generated ZIPs are not
-committed; Rust tests regenerate and hash them. The fixed encryption password
+committed by H0; H4 materializes the exact generated inputs under
+[`tests/golden/document/hwpx/`](../../../../tests/golden/document/hwpx/README.md)
+for installed-wheel tests. Rust tests still regenerate and hash every recipe.
+The fixed encryption password
 is `fixture-password`, with salt `11` repeated 16 times, IV `22` repeated 16
 times, and 1,024 PBKDF2 iterations. The `encrypted_sha1` and
 `encrypted_sha256` names identify the HMAC PRF used to derive the ciphertext.

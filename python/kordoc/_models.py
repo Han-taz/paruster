@@ -25,6 +25,84 @@ _ERROR_CODES = frozenset(_ERROR_TYPES)
 
 
 @dataclass(frozen=True, slots=True)
+class ValidateIssue:
+    """One ordered structural validation issue."""
+
+    message: str
+    path: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.message, str):
+            raise TypeError("validation issue message must be a string")
+        if self.path is not None and not isinstance(self.path, str):
+            raise TypeError("validation issue path must be a string")
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, Any]) -> ValidateIssue:
+        if not isinstance(value, Mapping):
+            raise TypeError("validation issue must be an object")
+        if "message" not in value or set(value) - {"message", "path"}:
+            raise ValueError("validation issue requires message and optional path only")
+        if "path" in value and not isinstance(value["path"], str):
+            raise TypeError(
+                "validation issue path must be a string; omit if unavailable"
+            )
+        return cls(value["message"], value.get("path"))
+
+    def to_dict(self) -> dict[str, Any]:
+        value: dict[str, Any] = {"message": self.message}
+        if self.path is not None:
+            value["path"] = self.path
+        return value
+
+
+@dataclass(frozen=True, slots=True)
+class ValidateResult:
+    """Immutable HWPX structural validation result with files-only count."""
+
+    ok: bool
+    issues: tuple[ValidateIssue, ...]
+    entry_count: int
+
+    def __post_init__(self) -> None:
+        if type(self.ok) is not bool:
+            raise TypeError("validation ok must be a boolean")
+        if type(self.entry_count) is not int or self.entry_count < 0:
+            raise TypeError("entryCount must be a nonnegative integer")
+        if not isinstance(self.issues, Sequence) or isinstance(
+            self.issues, (str, bytes)
+        ):
+            raise TypeError("validation issues must be a sequence")
+        if any(not isinstance(issue, ValidateIssue) for issue in self.issues):
+            raise TypeError("validation issues must contain ValidateIssue objects")
+        object.__setattr__(self, "issues", tuple(self.issues))
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, Any]) -> ValidateResult:
+        if not isinstance(value, Mapping):
+            raise TypeError("validation result must be an object")
+        if set(value) != {"ok", "issues", "entryCount"}:
+            raise ValueError(
+                "validation result requires exactly ok, issues and entryCount"
+            )
+        issues = value["issues"]
+        if not isinstance(issues, Sequence) or isinstance(issues, (str, bytes)):
+            raise TypeError("validation issues must be a sequence")
+        return cls(
+            value["ok"],
+            tuple(ValidateIssue.from_dict(issue) for issue in issues),
+            value["entryCount"],
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ok": self.ok,
+            "issues": [issue.to_dict() for issue in self.issues],
+            "entryCount": self.entry_count,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class PageMarkdown:
     """Markdown rendered for one numbered page."""
 
