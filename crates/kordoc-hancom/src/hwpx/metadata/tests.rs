@@ -1,5 +1,8 @@
-use super::extract_metadata;
+use super::{extract_metadata, metadata_value, read_dublin_core, read_opf};
+use crate::hwpx::budget::LoweringBudget;
 use crate::hwpx::package::Package;
+use crate::hwpx::xml::parse;
+use kordoc_ir::{DocumentMetadata, ErrorCode};
 use std::io::{Cursor, Write};
 use zip::{ZipWriter, write::SimpleFileOptions};
 
@@ -109,4 +112,77 @@ fn existing_opf_title_prevents_optional_author_fallback() {
     let metadata = extract_metadata(&mut package).unwrap();
     assert_eq!(metadata.title.as_deref(), Some("OPF title"));
     assert_eq!(metadata.author, None);
+}
+
+#[test]
+fn nested_opf_text_obeys_reduced_aggregate_metadata_budget() {
+    let nested = format!(
+        "<package><metadata><title>{}{}{}</title></metadata></package>",
+        "<n>".repeat(32),
+        "x".repeat(2048),
+        "</n>".repeat(32)
+    );
+    let root = parse(nested.as_bytes()).unwrap();
+    let mut metadata = DocumentMetadata::default();
+    let mut budget = LoweringBudget::with_limit(1024);
+    assert_eq!(
+        read_opf(&root, &mut metadata, &mut budget)
+            .unwrap_err()
+            .code,
+        ErrorCode::OutputTooLarge
+    );
+    assert_eq!(metadata.title, None);
+}
+
+#[test]
+fn optional_metadata_budget_failure_is_not_skipped() {
+    let root = parse(b"<meta><title>0123456789</title></meta>").unwrap();
+    let mut metadata = DocumentMetadata::default();
+    let mut budget = LoweringBudget::with_limit(9);
+    assert_eq!(
+        read_dublin_core(&root, &mut metadata, &mut budget)
+            .unwrap_err()
+            .code,
+        ErrorCode::OutputTooLarge
+    );
+}
+
+#[test]
+fn metadata_value_budget_is_inclusive_at_both_transient_and_retained_copies() {
+    let root = parse(b"<title>abc</title>").unwrap();
+    assert_eq!(
+        metadata_value(&root, &mut LoweringBudget::with_limit(6)).unwrap(),
+        Some("abc".to_owned())
+    );
+    assert_eq!(
+        metadata_value(&root, &mut LoweringBudget::with_limit(5))
+            .unwrap_err()
+            .code,
+        ErrorCode::OutputTooLarge
+    );
+}
+
+#[test]
+fn opf_and_optional_fallback_share_one_metadata_budget() {
+    let opf = parse(
+        format!(
+            "<package><metadata><meta name=\"subject\">{}</meta></metadata></package>",
+            "x".repeat(700)
+        )
+        .as_bytes(),
+    )
+    .unwrap();
+    let optional =
+        parse(format!("<meta><title>{}</title></meta>", "y".repeat(700)).as_bytes()).unwrap();
+    let mut metadata = DocumentMetadata::default();
+    let mut budget = LoweringBudget::with_limit(2_500);
+
+    read_opf(&opf, &mut metadata, &mut budget).unwrap();
+    assert_eq!(metadata.description.as_deref().map(str::len), Some(700));
+    assert_eq!(
+        read_dublin_core(&optional, &mut metadata, &mut budget)
+            .unwrap_err()
+            .code,
+        ErrorCode::OutputTooLarge
+    );
 }

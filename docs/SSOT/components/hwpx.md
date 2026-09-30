@@ -1,6 +1,6 @@
 # HWPX component
 
-Status: H1a merged; H2a, H1b, and H2b are locally reviewed private candidates. H3 composes private crate entry points on a local feature branch. Coordinator-owned public dispatch/Python wiring, full parity, fuzzing, and protected hosted gates remain pending.
+Status: H1a merged; H2a, H1b, and H2b are locally reviewed private candidates. H3 composes private crate entry points and locally bounded IR/metadata allocation on a feature branch. Coordinator-owned public dispatch/Python wiring, fuzzing review, and protected hosted gates remain separate pending gates.
 
 ## Package boundary
 
@@ -25,8 +25,8 @@ distinguish a rightward column transition from a new page. Empty initial pages
 and malformed sections retain source-page evidence. An explicitly supplied
 cache preserves pages through its maximum page number and rejects range
 expansion above 100,000 entries before allocation with `DECOMPRESSION_BOMB`.
-This guard applies to supplied-cache range expansion; XML-derived evidence is
-bounded by the package and XML budgets. Empty supplied cache sections use
+The same 100,000-entry cap and a pre-insertion allocation charge apply to
+XML-derived and page-selection evidence. Empty supplied cache sections use
 section fallback instead of selecting a layout with no source pages.
 
 Omitted options remain distinct from explicit `false`; the candidate keeps empty paragraphs only when `keep_empty_paragraphs == Some(true)`. No final Markdown operation or public Python progress callback is introduced by this crate-local work.
@@ -107,16 +107,35 @@ page-selected nested assets, unreferenced sweep, full source page count, and
 plain-versus-structural table fields. These do not constitute public Python or
 full-wire parity evidence.
 
-The deterministic fixtures and twelve captured oracle results are research evidence, not a full-wire parity result. Over-depth section handling intentionally differs from the current oracle, which returns clipped/empty content; the bounded implementation reports `PARTIAL_PARSE`. Such security divergences are recorded and excluded from parity scoring according to the parity policy. Public Python and production dispatch verification remain coordinator-owned H4 work.
+The deterministic fixtures and twelve captured oracle results are research evidence, not by themselves a hosted full-wire result. Over-depth section handling intentionally differs from the current oracle, which returns clipped/empty content; the bounded implementation reports `PARTIAL_PARSE`. Such security divergences are recorded and excluded from parity scoring according to the parity policy. Coordinator-owned H4 public dispatch/Python checks remain separate from this crate-private evidence.
 
-The H3 candidate still has an unclosed textual-allocation hard gate: nested cell
-flattening, captions, paragraph spans, and placeholders can duplicate source
-text before any shared IR-text budget is charged. The 200-column/2,000,000-cell
-and 64-depth bounds do not prevent a large source string from being replicated
-at each ancestor. A private, aggregate 256 MiB IR textual-allocation ceiling,
-charged before each retained copy and returning hard `OUTPUT_TOO_LARGE`, must
-land and pass reduced-budget amplification tests before HWPX can be called
-security-complete. This is independent of ZIP plaintext and image-output
-limits.
+### H3 allocation follow-up
 
-H2a, H1b, and H2b final scoped SOL reviews are CLEAN and their local checks pass; H3 remains a candidate with the textual-allocation gate above. Protected hosted gates remain pending because the session cannot publish GitHub writes. H4 coordinator dispatch/Python/golden wiring and H5 full fuzz/hosted gates remain separate gates. Capability and parity remain pending in the [migration ledger](../migration/status.md).
+One private, inclusive 256 MiB lowering-allocation budget is shared across
+sections. Text is copied from XML leaves through charged appends, avoiding
+recursive `text_content` amplification. Paragraph spans, nested cell text and
+captions, note markers, outline strings, image placeholders, transient
+paragraph/layout collections, IR block/span/cell/outline structures, and page
+evidence are charged before retained copies or collection growth. Zero-length
+paragraphs are not free because their IR structures count. Discarded malformed
+sections roll back only their own charge; `OUTPUT_TOO_LARGE` escapes as a hard
+error. The existing ZIP plaintext, 256 MiB image-output, XML tree, 200-column,
+2,000,000-cell, and 64-depth limits remain independent. Page selection occurs
+before retained image resolution; no excluded image is charged to the image
+output meter.
+
+Metadata extraction uses a separate inclusive 256 MiB budget across OPF and
+optional Dublin Core fallback. It streams leaf text before each append and
+charges retained values and keyword copies. Unknown OPF fields do not trigger
+text materialization; metadata precedence and malformed-optional behavior are
+unchanged. Budget failures from optional metadata are hard `OUTPUT_TOO_LARGE`,
+not skipped as malformed XML. Reduced-limit tests cover nested text,
+N/N-minus-one boundaries, OPF-to-fallback accumulation, and section/table
+amplification without allocating large test payloads.
+
+H2a, H1b, and H2b scoped SOL reviews and local gates passed; the H3 allocation
+follow-up has local Hancom tests and strict Clippy/fmt gates, with coordinator
+review still pending. Protected hosted gates remain unavailable because this
+session cannot publish GitHub writes. H4 coordinator dispatch/Python/golden
+wiring and H5 fuzz/hosted gates remain separate gates. Capability and parity
+stay pending in the [migration ledger](../migration/status.md).

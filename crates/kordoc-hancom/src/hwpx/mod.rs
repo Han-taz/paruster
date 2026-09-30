@@ -43,6 +43,7 @@
     reason = "H3 entry points await the coordinator-owned crate facade"
 )]
 
+pub(crate) mod budget;
 mod crypto;
 mod images;
 mod metadata;

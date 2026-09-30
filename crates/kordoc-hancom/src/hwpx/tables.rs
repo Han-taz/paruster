@@ -1,5 +1,6 @@
 //! Bounded HWPX table lowering.
 
+use crate::hwpx::budget::{LoweringBudget, output_limit};
 use crate::hwpx::images::{ImageCache, image_placeholder, image_reference, resolve_image};
 use crate::hwpx::package::Package;
 use crate::hwpx::xml::{XmlContent, XmlNode};
@@ -17,6 +18,104 @@ fn limit(message: &'static str) -> KordocError {
     KordocError::new(ErrorCode::DecompressionBomb, message)
 }
 
+fn cell_text(node: &XmlNode, lowering: &mut LoweringBudget) -> Result<String, KordocError> {
+    let mut paragraphs = Vec::new();
+    for part in &node.content {
+        if let XmlContent::Child(index) = part {
+            let child = &node.children[*index];
+            if child.name == "p" {
+                let value = paragraph_text(child, lowering)?;
+                if !value.trim().is_empty() {
+                    lowering.push(&mut paragraphs, value)?;
+                }
+            } else if child.name == "tbl" {
+                collect_table_text(child, lowering, &mut paragraphs)?;
+            } else {
+                collect_cell_text(child, lowering, &mut paragraphs)?;
+            }
+        }
+    }
+    lowering.join_strings(&paragraphs, "\n")
+}
+
+fn paragraph_text(node: &XmlNode, lowering: &mut LoweringBudget) -> Result<String, KordocError> {
+    fn walk(
+        node: &XmlNode,
+        lowering: &mut LoweringBudget,
+        text: &mut String,
+        parts: &mut Vec<String>,
+    ) -> Result<(), KordocError> {
+        for part in &node.content {
+            match part {
+                XmlContent::Text { start, end } => {
+                    lowering.append_str(text, &node.text[*start..*end])?;
+                }
+                XmlContent::Child(index) => {
+                    let child = &node.children[*index];
+                    if child.name == "tbl" {
+                        if !text.is_empty() {
+                            lowering.push(parts, std::mem::take(text))?;
+                        }
+                        collect_table_text(child, lowering, parts)?;
+                    } else {
+                        walk(child, lowering, text, parts)?;
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+    let mut text = String::new();
+    let mut parts = Vec::new();
+    walk(node, lowering, &mut text, &mut parts)?;
+    if !text.is_empty() {
+        lowering.push(&mut parts, text)?;
+    }
+    lowering.join_strings(&parts, "\n")
+}
+
+fn collect_cell_text(
+    node: &XmlNode,
+    lowering: &mut LoweringBudget,
+    out: &mut Vec<String>,
+) -> Result<(), KordocError> {
+    for part in &node.content {
+        if let XmlContent::Child(index) = part {
+            let child = &node.children[*index];
+            match child.name.as_str() {
+                "p" => {
+                    let value = paragraph_text(child, lowering)?;
+                    if !value.trim().is_empty() {
+                        lowering.push(out, value)?;
+                    }
+                }
+                "tbl" => collect_table_text(child, lowering, out)?,
+                _ => collect_cell_text(child, lowering, out)?,
+            }
+        }
+    }
+    Ok(())
+}
+
+fn collect_table_text(
+    node: &XmlNode,
+    lowering: &mut LoweringBudget,
+    out: &mut Vec<String>,
+) -> Result<(), KordocError> {
+    for child in &node.children {
+        if child.name == "caption" {
+            collect_cell_text(child, lowering, out)?;
+        } else if child.name == "tr" {
+            for cell in child.children.iter().filter(|node| node.name == "tc") {
+                if let Some(sub) = cell.children.iter().find(|node| node.name == "subList") {
+                    collect_cell_text(sub, lowering, out)?;
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 pub(crate) fn lower_table(
     node: &XmlNode,
@@ -27,6 +126,7 @@ pub(crate) fn lower_table(
         node,
         depth,
         budget,
+        &mut LoweringBudget::default(),
         None,
         &mut ImageCache::default(),
         &mut Vec::new(),
@@ -34,10 +134,12 @@ pub(crate) fn lower_table(
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn lower_table_with_assets(
     node: &XmlNode,
     depth: usize,
     budget: &mut CellBudget,
+    lowering: &mut LoweringBudget,
     mut package: Option<&mut Package<'_>>,
     image_cache: &mut ImageCache,
     images: &mut Vec<ExtractedImage>,
@@ -46,35 +148,57 @@ pub(crate) fn lower_table_with_assets(
     if depth >= MAX_LOGICAL_DEPTH {
         return Err(limit("HWPX logical table nesting exceeds its bound"));
     }
-    let rows: Vec<_> = node
+    let row_count = node
         .children
         .iter()
         .filter(|child| child.name == "tr")
-        .collect();
-    let mut anchors = Vec::with_capacity(rows.len());
-    let mut max_rows = rows.len();
+        .count();
+    lowering.charge_items::<Vec<(usize, usize, IrCell)>>(row_count)?;
+    let mut anchors = Vec::new();
+    anchors
+        .try_reserve_exact(row_count)
+        .map_err(|_| output_limit())?;
+    let mut max_rows = row_count;
     let mut max_cols = 0usize;
     let mut caption = Vec::new();
     let mut caption_blocks = Vec::new();
     for child in &node.children {
         if child.name == "caption" {
-            let value = child.text_content().trim().to_owned();
+            let value = lowering.raw_xml_text(child)?;
+            let value = lowering.copy_str(value.trim())?;
             if !value.is_empty() {
-                caption.push(value);
+                lowering.push(&mut caption, value)?;
             }
-            caption_blocks.extend(lower_nested(
+            for block in lower_nested(
                 child,
                 depth + 1,
                 budget,
+                lowering,
                 package.as_deref_mut(),
                 image_cache,
                 images,
                 warnings,
-            )?);
+            )? {
+                lowering.push(&mut caption_blocks, block)?;
+            }
         }
     }
-    for (row_index, row) in rows.into_iter().enumerate() {
+    for (row_index, row) in node
+        .children
+        .iter()
+        .filter(|child| child.name == "tr")
+        .enumerate()
+    {
+        let cell_count = row
+            .children
+            .iter()
+            .filter(|child| child.name == "tc")
+            .count();
+        lowering.charge_items::<(usize, usize, IrCell)>(cell_count)?;
         let mut out_row = Vec::new();
+        out_row
+            .try_reserve_exact(cell_count)
+            .map_err(|_| output_limit())?;
         let mut logical_cols = 0usize;
         for tc in row.children.iter().filter(|child| child.name == "tc") {
             let (row_span, col_span) =
@@ -107,12 +231,16 @@ pub(crate) fn lower_table_with_assets(
             max_rows = max_rows.max(rows_required);
             logical_cols = logical_cols.max(end);
             let sub = tc.children.iter().find(|n| n.name == "subList");
-            let text = sub.map_or_else(String::new, XmlNode::text_content);
+            let text = match sub {
+                Some(sub) => cell_text(sub, lowering)?,
+                None => String::new(),
+            };
             let nested = if let Some(sub) = sub {
                 lower_nested(
                     sub,
                     depth + 1,
                     budget,
+                    lowering,
                     package.as_deref_mut(),
                     image_cache,
                     images,
@@ -158,7 +286,21 @@ pub(crate) fn lower_table_with_assets(
         row_span: 1,
         ..IrCell::default()
     };
-    let mut cells = vec![vec![empty_cell; max_cols]; max_rows];
+    lowering.charge_items::<IrCell>(logical)?;
+    lowering.charge_items::<Vec<IrCell>>(max_rows)?;
+    let mut cells = Vec::new();
+    cells
+        .try_reserve_exact(max_rows)
+        .map_err(|_| output_limit())?;
+    for _ in 0..max_rows {
+        let mut row = Vec::new();
+        row.try_reserve_exact(max_cols)
+            .map_err(|_| output_limit())?;
+        for _ in 0..max_cols {
+            row.push(empty_cell.clone());
+        }
+        cells.push(row);
+    }
     let has_header = anchors
         .iter()
         .flatten()
@@ -175,8 +317,15 @@ pub(crate) fn lower_table_with_assets(
         cols: max_cols as u32,
         cells,
         has_header,
-        source_id: node.attr("id").map(str::to_owned),
-        caption: (!caption.is_empty()).then(|| caption.join("\n")),
+        source_id: node
+            .attr("id")
+            .map(|id| lowering.copy_str(id))
+            .transpose()?,
+        caption: if caption.is_empty() {
+            None
+        } else {
+            Some(lowering.join_strings(&caption, "\n")?)
+        },
         caption_blocks: caption_blocks
             .iter()
             .any(|block| block.kind != IrBlockType::Paragraph)
@@ -201,10 +350,12 @@ fn attr_span(node: &XmlNode, key: &str) -> Result<usize, KordocError> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn lower_nested(
     node: &XmlNode,
     depth: usize,
     budget: &mut CellBudget,
+    lowering: &mut LoweringBudget,
     mut package: Option<&mut Package<'_>>,
     image_cache: &mut ImageCache,
     images: &mut Vec<ExtractedImage>,
@@ -215,45 +366,55 @@ fn lower_nested(
         if let XmlContent::Child(i) = part {
             let child = &node.children[*i];
             if child.name == "tbl" {
-                out.push(lower_table_with_assets(
+                let block = lower_table_with_assets(
                     child,
                     depth,
                     budget,
+                    lowering,
                     package.as_deref_mut(),
                     image_cache,
                     images,
                     warnings,
-                )?);
+                )?;
+                lowering.push(&mut out, block)?;
             } else if child.name == "p" {
-                out.extend(lower_nested_paragraph(
+                for block in lower_nested_paragraph(
                     child,
                     depth,
                     budget,
+                    lowering,
                     package.as_deref_mut(),
                     image_cache,
                     images,
                     warnings,
-                )?);
+                )? {
+                    lowering.push(&mut out, block)?;
+                }
             } else {
-                out.extend(lower_nested(
+                for block in lower_nested(
                     child,
                     depth,
                     budget,
+                    lowering,
                     package.as_deref_mut(),
                     image_cache,
                     images,
                     warnings,
-                )?);
+                )? {
+                    lowering.push(&mut out, block)?;
+                }
             }
         }
     }
     Ok(out)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn lower_nested_paragraph(
     node: &XmlNode,
     depth: usize,
     budget: &mut CellBudget,
+    lowering: &mut LoweringBudget,
     mut package: Option<&mut Package<'_>>,
     image_cache: &mut ImageCache,
     images: &mut Vec<ExtractedImage>,
@@ -264,6 +425,7 @@ fn lower_nested_paragraph(
         node: &XmlNode,
         depth: usize,
         budget: &mut CellBudget,
+        lowering: &mut LoweringBudget,
         package: &mut Option<&mut Package<'_>>,
         image_cache: &mut ImageCache,
         images: &mut Vec<ExtractedImage>,
@@ -273,34 +435,38 @@ fn lower_nested_paragraph(
     ) -> Result<(), KordocError> {
         for part in &node.content {
             match part {
-                XmlContent::Text { start, end } => text.push_str(&node.text[*start..*end]),
+                XmlContent::Text { start, end } => {
+                    lowering.append_str(text, &node.text[*start..*end])?
+                }
                 XmlContent::Child(index) => {
                     let child = &node.children[*index];
                     if child.name == "tbl" {
                         if !text.trim().is_empty() {
-                            out.push(IrBlock::paragraph(std::mem::take(text)));
+                            lowering.push(out, IrBlock::paragraph(std::mem::take(text)))?;
                         } else {
                             text.clear();
                         }
-                        out.push(lower_table_with_assets(
+                        let block = lower_table_with_assets(
                             child,
                             depth,
                             budget,
+                            lowering,
                             package.as_deref_mut(),
                             image_cache,
                             images,
                             warnings,
-                        )?);
+                        )?;
+                        lowering.push(out, block)?;
                     } else if matches!(child.name.as_str(), "pic" | "img" | "imgRect" | "imgClip") {
                         if !text.trim().is_empty() {
-                            out.push(IrBlock::paragraph(std::mem::take(text)));
+                            lowering.push(out, IrBlock::paragraph(std::mem::take(text)))?;
                         } else {
                             text.clear();
                         }
                         if let Some(reference) = image_reference(child) {
                             let block = if let Some(package) = package.as_deref_mut() {
                                 resolve_image(
-                                    &reference,
+                                    reference,
                                     None,
                                     package,
                                     image_cache,
@@ -308,15 +474,16 @@ fn lower_nested_paragraph(
                                     warnings,
                                 )?
                             } else {
-                                image_placeholder(reference)
+                                image_placeholder(lowering.copy_str(reference)?)
                             };
-                            out.push(block);
+                            lowering.push(out, block)?;
                         }
                     } else {
                         walk(
                             child,
                             depth,
                             budget,
+                            lowering,
                             package,
                             image_cache,
                             images,
@@ -336,6 +503,7 @@ fn lower_nested_paragraph(
         node,
         depth,
         budget,
+        lowering,
         &mut package,
         image_cache,
         images,
@@ -344,7 +512,7 @@ fn lower_nested_paragraph(
         &mut out,
     )?;
     if !text.trim().is_empty() {
-        out.push(IrBlock::paragraph(text));
+        lowering.push(&mut out, IrBlock::paragraph(text))?;
     }
     Ok(out)
 }
@@ -352,7 +520,28 @@ fn lower_nested_paragraph(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::hwpx::budget::LoweringBudget;
     use crate::hwpx::xml::parse;
+
+    fn lower_with_budget(
+        node: &XmlNode,
+        lowering: &mut LoweringBudget,
+    ) -> Result<IrBlock, KordocError> {
+        lower_table_with_assets(
+            node,
+            0,
+            &mut CellBudget::default(),
+            lowering,
+            None,
+            &mut ImageCache::default(),
+            &mut Vec::new(),
+            &mut Vec::new(),
+        )
+    }
+
+    fn lower_table_with_limit(node: &XmlNode, limit: usize) -> Result<IrBlock, KordocError> {
+        lower_with_budget(node, &mut LoweringBudget::with_limit(limit))
+    }
 
     #[test]
     fn keeps_merged_cell_topology() {
@@ -367,6 +556,59 @@ mod tests {
         assert_eq!(
             (table.cells[1][0].col_span, table.cells[1][0].row_span),
             (1, 1)
+        );
+    }
+
+    #[test]
+    fn flattens_nested_cell_text_and_retains_ordered_blocks() {
+        let root = parse(br#"<tbl><tr><tc><cellAddr rowAddr="0" colAddr="0"/><subList><p><run><t>Outer cell</t></run><tbl><caption><subList><p><run><t>Synthetic caption</t></run></p></subList></caption><tr><tc><cellAddr rowAddr="0" colAddr="0"/><subList><p><run><t>Inner cell</t></run><tbl><tr><tc><cellAddr rowAddr="0" colAddr="0"/><subList><p><run><t>Deep cell</t></run></p></subList></tc></tr></tbl></p></subList></tc></tr></tbl></p></subList></tc></tr></tbl>"#).unwrap();
+        let block = lower_table(&root, 0, &mut CellBudget::default()).unwrap();
+        let table = block.table.unwrap();
+        let cell = &table.cells[0][0];
+
+        assert_eq!(
+            cell.text,
+            "Outer cell\nSynthetic caption\nInner cell\nDeep cell"
+        );
+        let blocks = cell.blocks.as_ref().unwrap();
+        assert_eq!(blocks.len(), 2);
+        assert_eq!(blocks[0].kind, IrBlockType::Paragraph);
+        assert_eq!(blocks[0].text.as_deref(), Some("Outer cell"));
+        assert_eq!(blocks[1].kind, IrBlockType::Table);
+    }
+
+    #[test]
+    fn table_lowering_budget_accepts_exact_minimum_and_rejects_one_byte_less() {
+        let root = parse(br#"<tbl id="id"><tr><tc><cellAddr rowAddr="0" colAddr="0"/><subList><p><run><t>cell text</t></run></p></subList></tc></tr></tbl>"#).unwrap();
+        let minimum = (0..=16_384)
+            .find(|limit| lower_table_with_limit(&root, *limit).is_ok())
+            .expect("small one-cell table should fit within 16 KiB");
+
+        assert!(lower_table_with_limit(&root, minimum).is_ok());
+        assert_eq!(
+            lower_table_with_limit(&root, minimum - 1).unwrap_err().code,
+            ErrorCode::OutputTooLarge
+        );
+    }
+
+    #[test]
+    fn repeated_nested_table_text_fails_the_lowering_allocation_budget() {
+        let repeated = (0..32)
+            .map(|_| {
+                "<tbl><tr><tc><cellAddr rowAddr=\"0\" colAddr=\"0\"/><subList><p><run><t>"
+                    .to_owned()
+                    + &"x".repeat(128)
+                    + "</t></run></p></subList></tc></tr></tbl>"
+            })
+            .collect::<String>();
+        let source = format!(
+            "<tbl><tr><tc><cellAddr rowAddr=\"0\" colAddr=\"0\"/><subList>{repeated}</subList></tc></tr></tbl>"
+        );
+        let root = parse(source.as_bytes()).unwrap();
+
+        assert_eq!(
+            lower_table_with_limit(&root, 512).unwrap_err().code,
+            ErrorCode::OutputTooLarge
         );
     }
 

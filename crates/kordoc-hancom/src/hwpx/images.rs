@@ -84,15 +84,15 @@ impl ImageCache {
     }
 }
 
-pub(crate) fn image_reference(node: &XmlNode) -> Option<String> {
-    fn find(node: &XmlNode) -> Option<String> {
+pub(crate) fn image_reference(node: &XmlNode) -> Option<&str> {
+    fn find(node: &XmlNode) -> Option<&str> {
         if matches!(node.name.as_str(), "imgRect" | "img" | "imgClip")
             && let Some(reference) = node.attr("binaryItemIDRef").or_else(|| node.attr("href"))
         {
-            return Some(reference.to_owned());
+            return Some(reference);
         }
         if let Some(reference) = node.attr("binaryItemIDRef") {
-            return Some(reference.to_owned());
+            return Some(reference);
         }
         for part in &node.content {
             if let XmlContent::Child(index) = part
@@ -379,6 +379,17 @@ mod tests {
     use super::*;
     use std::io::{Cursor, Write};
     use zip::{ZipWriter, write::SimpleFileOptions};
+
+    #[test]
+    fn image_reference_borrows_xml_attribute_without_a_prebudget_copy() {
+        let root =
+            crate::hwpx::xml::parse(br#"<pic><imgRect binaryItemIDRef="picture.png"/></pic>"#)
+                .unwrap();
+        let borrowed = image_reference(&root).unwrap();
+        let attribute = root.children[0].attr("binaryItemIDRef").unwrap();
+        assert_eq!(borrowed, attribute);
+        assert!(std::ptr::eq(borrowed.as_ptr(), attribute.as_ptr()));
+    }
 
     fn package() -> Package<'static> {
         let mut writer = ZipWriter::new(Cursor::new(Vec::new()));

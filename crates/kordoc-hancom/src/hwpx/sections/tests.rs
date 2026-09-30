@@ -1,11 +1,98 @@
+use crate::hwpx::budget::LoweringBudget;
 use crate::hwpx::sections::{
-    SectionInput, lower_sections, lower_sections_with_package, order_section_paths,
+    SectionInput, lower_sections, lower_sections_impl, lower_sections_with_package,
+    order_section_paths,
 };
 use crate::hwpx::styles::StyleCatalog;
 use kordoc_ir::{
     ErrorCode, IrBlock, IrBlockType, IrCell, IrTable, PageMode, PageNumber, PageSelection,
     ParseOptions, WarningCode,
 };
+
+fn lower_with_budget_limit(
+    inputs: &[SectionInput],
+    styles: &StyleCatalog,
+    options: &ParseOptions,
+    limit: usize,
+) -> Result<super::SectionOutput, kordoc_ir::KordocError> {
+    let mut budget = LoweringBudget::with_limit(limit);
+    lower_sections_impl(inputs, styles, None, options, None, &mut budget)
+}
+
+#[test]
+fn section_budget_accepts_exact_empty_block_charge_and_rejects_one_less() {
+    let inputs = [section("Contents/section0.xml", "<hp:p/>")];
+    let options = ParseOptions {
+        keep_empty_paragraphs: Some(true),
+        ..ParseOptions::default()
+    };
+
+    let exact = (0..=4096)
+        .find(|limit| {
+            lower_with_budget_limit(&inputs, &StyleCatalog::default(), &options, *limit).is_ok()
+        })
+        .expect("small empty paragraph has a finite minimum budget");
+    let output = lower_with_budget_limit(&inputs, &StyleCatalog::default(), &options, exact)
+        .expect("minimum budget should lower the empty paragraph");
+    assert_eq!(output.blocks.len(), 1);
+
+    let error = lower_with_budget_limit(&inputs, &StyleCatalog::default(), &options, exact - 1)
+        .unwrap_err();
+    assert_eq!(error.code, ErrorCode::OutputTooLarge);
+}
+
+#[test]
+fn omits_spans_for_empty_unstyled_paragraphs() {
+    let inputs = [section("Contents/section0.xml", "<hp:p/>")];
+    let output = lower_sections(
+        &inputs,
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions {
+            keep_empty_paragraphs: Some(true),
+            ..ParseOptions::default()
+        },
+    )
+    .unwrap();
+    assert!(output.blocks[0].spans.is_none());
+}
+
+#[test]
+fn nested_note_text_amplification_is_budgeted() {
+    let note_text = "n".repeat(4096);
+    let input = section(
+        "Contents/section0.xml",
+        &format!(
+            "<hp:p><hp:run><hp:t>host</hp:t><hp:ctrl><hp:footNote><hp:subList><hp:p><hp:run><hp:t>{note_text}</hp:t></hp:run></hp:p></hp:subList></hp:footNote></hp:ctrl></hp:run></hp:p>"
+        ),
+    );
+    let limit = note_text.len() * 2;
+    let error = lower_with_budget_limit(
+        &[input],
+        &StyleCatalog::default(),
+        &ParseOptions::default(),
+        limit,
+    )
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::OutputTooLarge);
+}
+
+#[test]
+fn repeated_note_markers_charge_large_format_text_before_copying() {
+    let prefix = "p".repeat(4096);
+    let body = format!(
+        "<hp:footNotePr><hp:autoNumFormat type=\"DIGIT\" prefixChar=\"{prefix}\"/></hp:footNotePr><hp:p><hp:run><hp:t>x</hp:t><hp:ctrl><hp:footNote><hp:subList><hp:p><hp:run><hp:t>note</hp:t></hp:run></hp:p></hp:subList></hp:footNote></hp:ctrl></hp:run></hp:p>"
+    );
+    let input = section("Contents/section0.xml", &body);
+    let error = lower_with_budget_limit(
+        &[input],
+        &StyleCatalog::default(),
+        &ParseOptions::default(),
+        prefix.len() * 3 + 2048,
+    )
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::OutputTooLarge);
+}
 
 fn section(path: &str, body: &str) -> SectionInput {
     SectionInput::new(
@@ -116,7 +203,7 @@ fn keeps_nested_table_and_caption_blocks_in_order() {
         &StyleCatalog::default(), None, &ParseOptions::default()).unwrap();
     let table = output.blocks[0].table.as_ref().unwrap();
     let cell_blocks = table.cells[0][0].blocks.as_ref().unwrap();
-    assert_eq!(table.cells[0][0].text, "beforenestedafter");
+    assert_eq!(table.cells[0][0].text, "before\nnested\nafter");
     assert_eq!(cell_blocks.len(), 3);
     assert_eq!(cell_blocks[0].text.as_deref(), Some("before"));
     assert!(cell_blocks[1].table.is_some());

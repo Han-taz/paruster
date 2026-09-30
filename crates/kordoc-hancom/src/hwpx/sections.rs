@@ -10,6 +10,7 @@ use kordoc_ir::{
     PageEvidence, PageMode, PageSelection, ParseOptions, ParseWarning, WarningCode,
 };
 
+use crate::hwpx::budget::LoweringBudget;
 use crate::hwpx::images::{ImageCache, image_placeholder, image_reference, resolve_image};
 use crate::hwpx::package::Package;
 use crate::hwpx::styles::StyleCatalog;
@@ -148,7 +149,15 @@ pub(crate) fn lower_sections(
     layout_cache: Option<&[Vec<u32>]>,
     options: &ParseOptions,
 ) -> Result<SectionOutput, KordocError> {
-    lower_sections_impl(inputs, styles, layout_cache, options, None)
+    let mut lowering_budget = LoweringBudget::default();
+    lower_sections_impl(
+        inputs,
+        styles,
+        layout_cache,
+        options,
+        None,
+        &mut lowering_budget,
+    )
 }
 
 pub(crate) fn lower_sections_with_package(
@@ -158,7 +167,15 @@ pub(crate) fn lower_sections_with_package(
     options: &ParseOptions,
     package: &mut Package<'_>,
 ) -> Result<SectionOutput, KordocError> {
-    lower_sections_impl(inputs, styles, layout_cache, options, Some(package))
+    let mut lowering_budget = LoweringBudget::default();
+    lower_sections_impl(
+        inputs,
+        styles,
+        layout_cache,
+        options,
+        Some(package),
+        &mut lowering_budget,
+    )
 }
 
 fn lower_sections_impl(
@@ -167,8 +184,10 @@ fn lower_sections_impl(
     layout_cache: Option<&[Vec<u32>]>,
     options: &ParseOptions,
     mut package: Option<&mut Package<'_>>,
+    lowering_budget: &mut LoweringBudget,
 ) -> Result<SectionOutput, KordocError> {
     let mut output = SectionOutput::default();
+    lowering_budget.charge_items::<Option<SectionDelta>>(inputs.len())?;
     let mut deltas: Vec<Option<SectionDelta>> = Vec::with_capacity(inputs.len());
     let mut cell_budget = CellBudget::default();
     let mut image_cache = ImageCache::default();
@@ -180,6 +199,7 @@ fn lower_sections_impl(
         match parse(bytes) {
             Ok(root) => {
                 let image_checkpoint = image_cache.checkpoint();
+                let lowering_checkpoint = lowering_budget.checkpoint();
                 let mut section_cell_budget = cell_budget;
                 let mut section_images = Vec::new();
                 let mut section_warnings = Vec::new();
@@ -187,17 +207,26 @@ fn lower_sections_impl(
                     .and_then(|columns| columns.attr("colCount"))
                     .and_then(|value| value.parse::<f64>().ok())
                     .is_some_and(|count| count > 1.0);
-                let top_level_paragraphs = root.children.iter().filter(|child| child.name == "p");
-                let paragraph_layouts: Vec<_> = top_level_paragraphs
-                    .map(paragraph_layout_position)
-                    .collect();
+                let paragraph_count = root
+                    .children
+                    .iter()
+                    .filter(|child| child.name == "p")
+                    .count();
+                lowering_budget.charge_items::<ParagraphLayout>(paragraph_count)?;
+                let mut paragraph_layouts = Vec::new();
+                paragraph_layouts
+                    .try_reserve_exact(paragraph_count)
+                    .map_err(|_| crate::hwpx::budget::output_limit())?;
+                for paragraph in root.children.iter().filter(|child| child.name == "p") {
+                    paragraph_layouts.push(paragraph_layout_position(paragraph, lowering_budget)?);
+                }
                 let mut delta = SectionDelta {
                     layout_usable: !paragraph_layouts.is_empty()
                         && paragraph_layouts.iter().all(|layout| layout.has_lines),
                     multi_column,
                     ..SectionDelta::default()
                 };
-                let note_formats = parse_note_number_formats(&root);
+                let note_formats = parse_note_number_formats(&root, lowering_budget)?;
                 let lowering = lower_content(
                     &root,
                     styles,
@@ -205,6 +234,7 @@ fn lower_sections_impl(
                     options.keep_empty_paragraphs == Some(true),
                     &mut delta,
                     &mut section_cell_budget,
+                    lowering_budget,
                     package.as_deref_mut(),
                     &mut image_cache,
                     &mut section_images,
@@ -220,11 +250,17 @@ fn lower_sections_impl(
                     }
                     Err(error) if error.code == ErrorCode::Corrupted => {
                         image_cache.rollback(image_checkpoint);
-                        output.warnings.push(ParseWarning {
+                        lowering_budget.rollback(lowering_checkpoint);
+                        let warning = ParseWarning {
                             page: u32::try_from(index + 1).ok(),
-                            message: format!("section {} could not be lowered", input.path),
+                            message: section_warning_message(
+                                &input.path,
+                                "lowered",
+                                lowering_budget,
+                            )?,
                             code: WarningCode::PartialParse,
-                        });
+                        };
+                        lowering_budget.push(&mut output.warnings, warning)?;
                         deltas.push(None);
                     }
                     Err(error) => return Err(error),
@@ -237,17 +273,18 @@ fn lower_sections_impl(
                 ));
             }
             Err(_) => {
-                output.warnings.push(ParseWarning {
+                let warning = ParseWarning {
                     page: u32::try_from(index + 1).ok(),
-                    message: format!("section {} could not be parsed", input.path),
+                    message: section_warning_message(&input.path, "parsed", lowering_budget)?,
                     code: WarningCode::PartialParse,
-                });
+                };
+                lowering_budget.push(&mut output.warnings, warning)?;
                 deltas.push(None);
             }
         }
     }
 
-    let xml_layout_cache = derive_xml_layout_cache(&deltas);
+    let xml_layout_cache = derive_xml_layout_cache(&deltas, lowering_budget)?;
     let supplied_layout_usable = layout_cache.is_some_and(|cache| {
         cache.len() == deltas.len()
             && deltas.iter().zip(cache).all(|(delta, pages)| {
@@ -266,7 +303,9 @@ fn lower_sections_impl(
 
     let mut pages_seen = BTreeSet::new();
     if let Some(xml_layout_cache) = &xml_layout_cache {
-        pages_seen.extend(xml_layout_cache.evidence_pages.iter().copied());
+        for page in xml_layout_cache.evidence_pages.iter().copied() {
+            insert_page_evidence(&mut pages_seen, page, lowering_budget)?;
+        }
     } else if supplied_layout_usable {
         let max_page = layout_cache
             .into_iter()
@@ -281,7 +320,9 @@ fn lower_sections_impl(
                 "layout cache page evidence exceeds the page limit",
             ));
         }
-        pages_seen.extend(1..=max_page);
+        for page in 1..=max_page {
+            insert_page_evidence(&mut pages_seen, page, lowering_budget)?;
+        }
     }
     for (index, delta) in deltas.into_iter().enumerate() {
         let fallback_page = u32::try_from(index + 1).map_err(|_| {
@@ -291,7 +332,7 @@ fn lower_sections_impl(
             )
         })?;
         if !layout_usable {
-            pages_seen.insert(fallback_page);
+            insert_page_evidence(&mut pages_seen, fallback_page, lowering_budget)?;
         }
         let Some(mut delta) = delta else {
             continue;
@@ -300,7 +341,7 @@ fn lower_sections_impl(
         for (block_index, block) in delta.blocks.iter_mut().enumerate() {
             let page = cache_pages.map_or(fallback_page, |pages| pages[block_index]);
             assign_page_recursive(block, page);
-            pages_seen.insert(page);
+            insert_page_evidence(&mut pages_seen, page, lowering_budget)?;
         }
         for (block_index, item) in &mut delta.outline {
             item.page_number = delta
@@ -315,12 +356,18 @@ fn lower_sections_impl(
                     .message
                     .strip_prefix("Optional HWPX image is missing or unsupported: ")
             {
-                let marker = format!("[Image: {reference}]");
+                let mut marker = String::new();
+                lowering_budget.append_str(&mut marker, "[Image: ")?;
+                lowering_budget.append_str(&mut marker, reference)?;
+                lowering_budget.append_str(&mut marker, "]")?;
                 warning.page = find_block_page(&delta.blocks, &marker);
             }
         }
+        lowering_budget.charge_items::<ParseWarning>(delta.warnings.len())?;
         output.warnings.extend(delta.warnings);
+        lowering_budget.charge_items::<IrBlock>(delta.blocks.len())?;
         output.blocks.extend(delta.blocks);
+        lowering_budget.charge_items::<OutlineItem>(delta.outline.len())?;
         output
             .outline
             .extend(delta.outline.into_iter().map(|(_, item)| item));
@@ -331,6 +378,7 @@ fn lower_sections_impl(
     } else {
         PageMode::Section
     });
+    lowering_budget.charge_items::<PageEvidence>(pages_seen.len())?;
     output.page_evidence = pages_seen
         .into_iter()
         .map(|page_number| PageEvidence { page_number })
@@ -341,7 +389,7 @@ fn lower_sections_impl(
             "HWPX page evidence exceeds its bound",
         )
     })?;
-    apply_page_selection(&mut output, options.pages.as_ref());
+    apply_page_selection(&mut output, options.pages.as_ref(), lowering_budget)?;
     Ok(output)
 }
 
@@ -375,6 +423,37 @@ fn find_block_page(blocks: &[IrBlock], text: &str) -> Option<u32> {
         }
     }
     None
+}
+
+fn insert_page_evidence(
+    pages: &mut BTreeSet<u32>,
+    page: u32,
+    budget: &mut LoweringBudget,
+) -> Result<(), KordocError> {
+    if !pages.contains(&page) {
+        if pages.len() >= MAX_PAGE_EVIDENCE_ENTRIES as usize {
+            return Err(KordocError::new(
+                ErrorCode::OutputTooLarge,
+                "HWPX page evidence exceeds its allocation limit",
+            ));
+        }
+        budget.charge_bytes(std::mem::size_of::<u32>() + 3 * std::mem::size_of::<usize>())?;
+        pages.insert(page);
+    }
+    Ok(())
+}
+
+fn section_warning_message(
+    path: &str,
+    action: &str,
+    budget: &mut LoweringBudget,
+) -> Result<String, KordocError> {
+    let mut message = String::new();
+    budget.append_str(&mut message, "section ")?;
+    budget.append_str(&mut message, path)?;
+    budget.append_str(&mut message, " could not be ")?;
+    budget.append_str(&mut message, action)?;
+    Ok(message)
 }
 
 /// Resolves only image placeholders retained by source-page selection. This keeps excluded-page
@@ -431,22 +510,32 @@ pub(crate) fn resolve_selected_images(
     Ok(cache)
 }
 
-fn apply_page_selection(output: &mut SectionOutput, selection: Option<&PageSelection>) {
-    let Some(selection) = selection else { return };
-    let selected: BTreeSet<u32> = match selection {
-        PageSelection::Numbers(numbers) => numbers
-            .iter()
-            .filter_map(|number| {
+fn apply_page_selection(
+    output: &mut SectionOutput,
+    selection: Option<&PageSelection>,
+    budget: &mut LoweringBudget,
+) -> Result<(), KordocError> {
+    let Some(selection) = selection else {
+        return Ok(());
+    };
+    let mut selected = BTreeSet::new();
+    match selection {
+        PageSelection::Numbers(numbers) => {
+            for number in numbers {
                 let value = number.get();
                 if value >= 1.0 && value <= u32::MAX as f64 {
-                    Some(value.round() as u32)
-                } else {
-                    None
+                    insert_page_evidence(&mut selected, value.round() as u32, budget)?;
                 }
-            })
-            .collect(),
-        PageSelection::Range(range) => parse_page_range(range).unwrap_or_default(),
-    };
+            }
+        }
+        PageSelection::Range(range) => {
+            if let Some((start, end)) = parse_page_range(range) {
+                for page in start..=end {
+                    insert_page_evidence(&mut selected, page, budget)?;
+                }
+            }
+        }
+    }
     output.blocks.retain(|block| {
         block
             .page_number
@@ -459,28 +548,35 @@ fn apply_page_selection(output: &mut SectionOutput, selection: Option<&PageSelec
     output
         .page_evidence
         .retain(|page| selected.contains(&page.page_number));
+    Ok(())
 }
 
-fn parse_page_range(value: &str) -> Option<BTreeSet<u32>> {
+fn parse_page_range(value: &str) -> Option<(u32, u32)> {
     let (start, end) = value.split_once('-')?;
     let start = start.trim().parse::<u32>().ok()?;
     let end = end.trim().parse::<u32>().ok()?;
     if start == 0 || end < start || end.saturating_sub(start) > 10_000 {
         return None;
     }
-    Some((start..=end).collect())
+    Some((start, end))
 }
 
-fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<XmlLayoutCache> {
+fn derive_xml_layout_cache(
+    deltas: &[Option<SectionDelta>],
+    budget: &mut LoweringBudget,
+) -> Result<Option<XmlLayoutCache>, KordocError> {
     if deltas.is_empty() {
-        return None;
+        return Ok(None);
     }
+    budget.charge_items::<Vec<u32>>(deltas.len())?;
     let mut cache = Vec::with_capacity(deltas.len());
     let mut evidence_pages = BTreeSet::new();
     let mut last_page = 0u32;
     let mut saw_layout_hint = false;
     for delta in deltas {
-        let delta = delta.as_ref()?;
+        let Some(delta) = delta.as_ref() else {
+            return Ok(None);
+        };
         if !delta.layout_usable
             || delta
                 .layout_positions
@@ -489,20 +585,26 @@ fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<XmlLayoutC
                 .count()
                 != delta.blocks.len()
         {
-            return None;
+            return Ok(None);
         }
-        let mut page = last_page.checked_add(1)?;
-        evidence_pages.insert(page);
+        let Some(mut page) = last_page.checked_add(1) else {
+            return Ok(None);
+        };
+        insert_page_evidence(&mut evidence_pages, page, budget)?;
         let mut previous_position = None;
         let mut previous_horizontal = None;
+        budget.charge_items::<u32>(delta.blocks.len())?;
         let mut section_pages = vec![page; delta.blocks.len()];
         let mut saw_paragraph = false;
         let mut suppress_midpage_reset = false;
         for layout in &delta.layout_positions {
             let explicit_break = layout.explicit_page_break && saw_paragraph;
             if explicit_break {
-                page = page.checked_add(1)?;
-                evidence_pages.insert(page);
+                let Some(next) = page.checked_add(1) else {
+                    return Ok(None);
+                };
+                page = next;
+                insert_page_evidence(&mut evidence_pages, page, budget)?;
                 suppress_midpage_reset = false;
             }
             let mut first_line = true;
@@ -523,14 +625,17 @@ fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<XmlLayoutC
                 let suppressed =
                     first_line && suppress_midpage_reset && position.vertical >= 2000.0;
                 if line_reset && !(first_line && broke_by_explicit) && !suppressed {
-                    page = page.checked_add(1)?;
-                    evidence_pages.insert(page);
+                    let Some(next) = page.checked_add(1) else {
+                        return Ok(None);
+                    };
+                    page = next;
+                    insert_page_evidence(&mut evidence_pages, page, budget)?;
                 }
                 if first_line {
                     suppress_midpage_reset = false;
                     if let Some(block_index) = layout.block_index {
                         section_pages[block_index] = page;
-                        evidence_pages.insert(page);
+                        insert_page_evidence(&mut evidence_pages, page, budget)?;
                     }
                     broke_by_explicit = false;
                 }
@@ -540,29 +645,35 @@ fn derive_xml_layout_cache(deltas: &[Option<SectionDelta>]) -> Option<XmlLayoutC
             }
             if first_line && let Some(block_index) = layout.block_index {
                 section_pages[block_index] = page;
-                evidence_pages.insert(page);
+                insert_page_evidence(&mut evidence_pages, page, budget)?;
             }
             saw_layout_hint |= explicit_break || !layout.line_positions.is_empty();
             if let Some(block_index) = layout.block_index {
-                evidence_pages.insert(section_pages[block_index]);
+                insert_page_evidence(&mut evidence_pages, section_pages[block_index], budget)?;
             }
             saw_paragraph |= layout.is_paragraph;
             if layout.table_page_splits > 0 {
-                page = page.checked_add(u32::try_from(layout.table_page_splits).ok()?)?;
-                evidence_pages.insert(page);
+                let Some(increment) = u32::try_from(layout.table_page_splits).ok() else {
+                    return Ok(None);
+                };
+                let Some(next) = page.checked_add(increment) else {
+                    return Ok(None);
+                };
+                page = next;
+                insert_page_evidence(&mut evidence_pages, page, budget)?;
                 suppress_midpage_reset = true;
             }
         }
         if !delta.blocks.is_empty() {
-            evidence_pages.insert(page);
+            insert_page_evidence(&mut evidence_pages, page, budget)?;
         }
         last_page = page;
         cache.push(section_pages);
     }
-    saw_layout_hint.then_some(XmlLayoutCache {
+    Ok(saw_layout_hint.then_some(XmlLayoutCache {
         section_pages: cache,
         evidence_pages,
-    })
+    }))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -573,6 +684,7 @@ fn lower_content(
     keep_empty_paragraphs: bool,
     delta: &mut SectionDelta,
     cell_budget: &mut CellBudget,
+    lowering_budget: &mut LoweringBudget,
     package: Option<&mut Package<'_>>,
     image_cache: &mut ImageCache,
     images: &mut Vec<ExtractedImage>,
@@ -587,6 +699,7 @@ fn lower_content(
             keep_empty_paragraphs,
             delta,
             cell_budget,
+            lowering_budget,
             package.as_deref_mut(),
             image_cache,
             images,
@@ -596,47 +709,61 @@ fn lower_content(
             if let (Some(reference), Some(package)) =
                 (image_reference(node), package.as_deref_mut())
             {
-                let block =
-                    resolve_image(&reference, None, package, image_cache, images, warnings)?;
+                let block = resolve_image(reference, None, package, image_cache, images, warnings)?;
                 let block_index = delta.blocks.len();
-                delta.blocks.push(block);
-                delta.layout_positions.push(ParagraphLayout {
-                    block_index: Some(block_index),
-                    ..ParagraphLayout::default()
-                });
+                lowering_budget.push(&mut delta.blocks, block)?;
+                lowering_budget.push(
+                    &mut delta.layout_positions,
+                    ParagraphLayout {
+                        block_index: Some(block_index),
+                        ..ParagraphLayout::default()
+                    },
+                )?;
             }
             Ok(())
         }
         "tbl" => {
             let block_index = delta.blocks.len();
-            delta.blocks.push(lower_table_with_assets(
+            let block = lower_table_with_assets(
                 node,
                 0,
                 cell_budget,
+                lowering_budget,
                 package.as_deref_mut(),
                 image_cache,
                 images,
                 warnings,
-            )?);
-            delta.layout_positions.push(ParagraphLayout {
-                block_index: Some(block_index),
-                ..ParagraphLayout::default()
-            });
+            )?;
+            lowering_budget.push(&mut delta.blocks, block)?;
+            lowering_budget.push(
+                &mut delta.layout_positions,
+                ParagraphLayout {
+                    block_index: Some(block_index),
+                    ..ParagraphLayout::default()
+                },
+            )?;
             Ok(())
         }
         "footNote" | "endNote" => {
-            let text = node.text_content();
+            let text = lowering_budget.raw_xml_text(node)?;
             if !text.is_empty() {
                 let block_index = delta.blocks.len();
-                delta.blocks.push(IrBlock {
-                    text: Some(text.clone()),
-                    footnote_text: Some(text),
-                    ..IrBlock::default()
-                });
-                delta.layout_positions.push(ParagraphLayout {
-                    block_index: Some(block_index),
-                    ..ParagraphLayout::default()
-                });
+                let duplicate = lowering_budget.copy_str(&text)?;
+                lowering_budget.push(
+                    &mut delta.blocks,
+                    IrBlock {
+                        text: Some(duplicate),
+                        footnote_text: Some(text),
+                        ..IrBlock::default()
+                    },
+                )?;
+                lowering_budget.push(
+                    &mut delta.layout_positions,
+                    ParagraphLayout {
+                        block_index: Some(block_index),
+                        ..ParagraphLayout::default()
+                    },
+                )?;
             }
             Ok(())
         }
@@ -650,6 +777,7 @@ fn lower_content(
                         keep_empty_paragraphs,
                         delta,
                         cell_budget,
+                        lowering_budget,
                         package.as_deref_mut(),
                         image_cache,
                         images,
@@ -670,6 +798,7 @@ fn lower_paragraph(
     keep_empty_paragraphs: bool,
     delta: &mut SectionDelta,
     cell_budget: &mut CellBudget,
+    lowering_budget: &mut LoweringBudget,
     mut package: Option<&mut Package<'_>>,
     image_cache: &mut ImageCache,
     images: &mut Vec<ExtractedImage>,
@@ -687,62 +816,79 @@ fn lower_paragraph(
         &mut spans,
         &mut notes,
         &mut parts,
-    );
+        lowering_budget,
+    )?;
     if !spans.is_empty() {
-        parts.push(ParagraphPart::Text(std::mem::take(&mut spans)));
+        lowering_budget.push(&mut parts, ParagraphPart::Text(std::mem::take(&mut spans)))?;
     }
     if keep_empty_paragraphs && parts.is_empty() {
-        parts.push(ParagraphPart::Text(Vec::new()));
+        lowering_budget.push(&mut parts, ParagraphPart::Text(Vec::new()))?;
     }
     let has_text = parts
         .iter()
         .any(|part| matches!(part, ParagraphPart::Text(spans) if !spans.is_empty()));
     if !has_text && !keep_empty_paragraphs && notes.is_empty() && parts.is_empty() {
-        delta.layout_positions.push(paragraph_layout_position(node));
+        let layout = paragraph_layout_position(node, lowering_budget)?;
+        lowering_budget.push(&mut delta.layout_positions, layout)?;
         return Ok(());
     }
-    let layout_position = paragraph_layout_position(node);
+    let layout_position = paragraph_layout_position(node, lowering_budget)?;
     let mut host_layout_pending = true;
     let mut first_text = true;
     for part in parts {
         match part {
             ParagraphPart::Text(spans) => {
-                let text = spans
-                    .iter()
-                    .map(|span| span.text.as_str())
-                    .collect::<String>();
+                let mut text = String::new();
+                for span in &spans {
+                    lowering_budget.append_str(&mut text, &span.text)?;
+                }
                 if text.is_empty() && !keep_empty_paragraphs {
                     continue;
                 }
                 let block_index = delta.blocks.len();
                 let heading = first_text.then_some(level).flatten();
+                let block_text = lowering_budget.copy_str(&text)?;
+                let footnote_text = if first_text && !notes.is_empty() {
+                    Some(lowering_budget.join_strings(&notes, "\n")?)
+                } else {
+                    None
+                };
+                let keep_spans = spans.iter().any(|span| {
+                    span.bold.is_some()
+                        || span.italic.is_some()
+                        || span.strike.is_some()
+                        || span.underline.is_some()
+                }) || !notes.is_empty();
                 let block = IrBlock {
                     kind: if heading.is_some() {
                         IrBlockType::Heading
                     } else {
                         IrBlockType::Paragraph
                     },
-                    text: Some(text.clone()),
+                    text: Some(block_text),
                     level: heading,
-                    footnote_text: (first_text && !notes.is_empty()).then(|| notes.join("\n")),
-                    spans: Some(spans),
+                    footnote_text,
+                    spans: keep_spans.then_some(spans),
                     ..IrBlock::default()
                 };
                 if let Some(level) = heading {
-                    delta.outline.push((
-                        block_index,
-                        OutlineItem {
-                            level,
-                            text,
-                            page_number: None,
-                        },
-                    ));
+                    lowering_budget.push(
+                        &mut delta.outline,
+                        (
+                            block_index,
+                            OutlineItem {
+                                level,
+                                text,
+                                page_number: None,
+                            },
+                        ),
+                    )?;
                 }
-                delta.blocks.push(block);
+                lowering_budget.push(&mut delta.blocks, block)?;
                 let mut layout = if host_layout_pending {
                     ParagraphLayout {
                         block_index: Some(block_index),
-                        ..layout_position.clone()
+                        ..clone_layout_position(&layout_position, lowering_budget)?
                     }
                 } else {
                     ParagraphLayout {
@@ -751,45 +897,48 @@ fn lower_paragraph(
                     }
                 };
                 layout.block_index = Some(block_index);
-                delta.layout_positions.push(layout);
+                lowering_budget.push(&mut delta.layout_positions, layout)?;
                 host_layout_pending = false;
                 first_text = false;
             }
             ParagraphPart::Table(table_node) => {
                 let block_index = delta.blocks.len();
-                delta.blocks.push(lower_table_with_assets(
-                    &table_node,
+                let block = lower_table_with_assets(
+                    table_node,
                     0,
                     cell_budget,
+                    lowering_budget,
                     package.as_deref_mut(),
                     image_cache,
                     images,
                     warnings,
-                )?);
+                )?;
+                lowering_budget.push(&mut delta.blocks, block)?;
                 let layout = ParagraphLayout {
                     block_index: Some(block_index),
-                    table_page_splits: table_intra_breaks(&table_node),
+                    table_page_splits: table_intra_breaks(table_node, lowering_budget)?,
                     ..if host_layout_pending {
-                        layout_position.clone()
+                        clone_layout_position(&layout_position, lowering_budget)?
                     } else {
                         ParagraphLayout::default()
                     }
                 };
-                delta.layout_positions.push(layout);
+                lowering_budget.push(&mut delta.layout_positions, layout)?;
                 host_layout_pending = false;
             }
             ParagraphPart::Image(reference) => {
                 let block_index = delta.blocks.len();
+                let reference = lowering_budget.copy_str(reference)?;
                 let block = if let Some(package) = package.as_deref_mut() {
                     resolve_image(&reference, None, package, image_cache, images, warnings)?
                 } else {
                     image_placeholder(reference)
                 };
-                delta.blocks.push(block);
+                lowering_budget.push(&mut delta.blocks, block)?;
                 let layout = if host_layout_pending {
                     ParagraphLayout {
                         block_index: Some(block_index),
-                        ..layout_position.clone()
+                        ..clone_layout_position(&layout_position, lowering_budget)?
                     }
                 } else {
                     ParagraphLayout {
@@ -797,32 +946,34 @@ fn lower_paragraph(
                         ..ParagraphLayout::default()
                     }
                 };
-                delta.layout_positions.push(layout);
+                lowering_budget.push(&mut delta.layout_positions, layout)?;
                 host_layout_pending = false;
             }
         }
     }
     if host_layout_pending {
-        delta.layout_positions.push(layout_position);
+        lowering_budget.push(&mut delta.layout_positions, layout_position)?;
     }
     Ok(())
 }
 
-enum ParagraphPart {
+enum ParagraphPart<'a> {
     Text(Vec<IrSpan>),
-    Table(XmlNode),
-    Image(String),
+    Table(&'a XmlNode),
+    Image(&'a str),
 }
 
-fn collect_paragraph_parts(
-    node: &XmlNode,
+#[allow(clippy::too_many_arguments)]
+fn collect_paragraph_parts<'a>(
+    node: &'a XmlNode,
     style: Option<&kordoc_ir::InlineStyle>,
     styles: &StyleCatalog,
     note_formats: &NoteNumberFormats,
     spans: &mut Vec<IrSpan>,
     notes: &mut Vec<String>,
-    parts: &mut Vec<ParagraphPart>,
-) {
+    parts: &mut Vec<ParagraphPart<'a>>,
+    budget: &mut LoweringBudget,
+) -> Result<(), KordocError> {
     let active_style = if node.name == "run" {
         styles.character_style(node).or(style)
     } else {
@@ -833,14 +984,18 @@ fn collect_paragraph_parts(
             XmlContent::Text { start, end } => {
                 let text = &node.text[*start..*end];
                 if !text.is_empty() {
-                    spans.push(IrSpan {
-                        text: text.to_owned(),
-                        bold: active_style.and_then(|s| s.bold),
-                        italic: active_style.and_then(|s| s.italic),
-                        strike: active_style.and_then(|s| s.strike),
-                        underline: active_style.and_then(|s| s.underline),
-                        ..IrSpan::default()
-                    });
+                    let owned_text = budget.copy_str(text)?;
+                    budget.push(
+                        spans,
+                        IrSpan {
+                            text: owned_text,
+                            bold: active_style.and_then(|s| s.bold),
+                            italic: active_style.and_then(|s| s.italic),
+                            strike: active_style.and_then(|s| s.strike),
+                            underline: active_style.and_then(|s| s.underline),
+                            ..IrSpan::default()
+                        },
+                    )?;
                 }
             }
             XmlContent::Child(index) => {
@@ -848,20 +1003,20 @@ fn collect_paragraph_parts(
                 match child.name.as_str() {
                     "tbl" => {
                         if !spans.is_empty() {
-                            parts.push(ParagraphPart::Text(std::mem::take(spans)));
+                            budget.push(parts, ParagraphPart::Text(std::mem::take(spans)))?;
                         }
-                        parts.push(ParagraphPart::Table(child.clone()));
+                        budget.push(parts, ParagraphPart::Table(child))?;
                     }
                     "pic" | "img" | "imgRect" | "imgClip" => {
                         if let Some(reference) = image_reference(child) {
                             if !spans.is_empty() {
-                                parts.push(ParagraphPart::Text(std::mem::take(spans)));
+                                budget.push(parts, ParagraphPart::Text(std::mem::take(spans)))?;
                             }
-                            parts.push(ParagraphPart::Image(reference));
+                            budget.push(parts, ParagraphPart::Image(reference))?;
                         }
                     }
                     "footNote" | "endNote" => {
-                        append_note(child, active_style, note_formats, spans, notes)
+                        append_note(child, active_style, note_formats, spans, notes, budget)?
                     }
                     _ => collect_paragraph_parts(
                         child,
@@ -871,11 +1026,13 @@ fn collect_paragraph_parts(
                         spans,
                         notes,
                         parts,
-                    ),
+                        budget,
+                    )?,
                 }
             }
         }
     }
+    Ok(())
 }
 
 fn append_inline_content(
@@ -885,7 +1042,8 @@ fn append_inline_content(
     note_formats: &NoteNumberFormats,
     spans: &mut Vec<IrSpan>,
     notes: &mut Vec<String>,
-) {
+    budget: &mut LoweringBudget,
+) -> Result<(), KordocError> {
     let active_style = if node.name == "run" {
         styles.character_style(node).or(style)
     } else {
@@ -896,21 +1054,25 @@ fn append_inline_content(
             XmlContent::Text { start, end } => {
                 let text = &node.text[*start..*end];
                 if !text.is_empty() {
-                    spans.push(IrSpan {
-                        text: text.to_owned(),
-                        bold: active_style.and_then(|style| style.bold),
-                        italic: active_style.and_then(|style| style.italic),
-                        strike: active_style.and_then(|style| style.strike),
-                        underline: active_style.and_then(|style| style.underline),
-                        ..IrSpan::default()
-                    });
+                    let text = budget.copy_str(text)?;
+                    budget.push(
+                        spans,
+                        IrSpan {
+                            text,
+                            bold: active_style.and_then(|style| style.bold),
+                            italic: active_style.and_then(|style| style.italic),
+                            strike: active_style.and_then(|style| style.strike),
+                            underline: active_style.and_then(|style| style.underline),
+                            ..IrSpan::default()
+                        },
+                    )?;
                 }
             }
             XmlContent::Child(index) => {
                 let child = &node.children[*index];
                 match child.name.as_str() {
                     "footNote" | "endNote" => {
-                        append_note(child, active_style, note_formats, spans, notes)
+                        append_note(child, active_style, note_formats, spans, notes, budget)?
                     }
                     _ => append_inline_content(
                         child,
@@ -919,11 +1081,13 @@ fn append_inline_content(
                         note_formats,
                         spans,
                         notes,
-                    ),
+                        budget,
+                    )?,
                 }
             }
         }
     }
+    Ok(())
 }
 
 fn append_note(
@@ -932,68 +1096,116 @@ fn append_note(
     note_formats: &NoteNumberFormats,
     spans: &mut Vec<IrSpan>,
     notes: &mut Vec<String>,
-) {
-    spans.push(IrSpan {
-        text: note_reference_mark(node, note_formats),
-        bold: style.and_then(|style| style.bold),
-        italic: style.and_then(|style| style.italic),
-        strike: style.and_then(|style| style.strike),
-        underline: style.and_then(|style| style.underline),
-        ..IrSpan::default()
-    });
-    let text = node.text_content();
+    budget: &mut LoweringBudget,
+) -> Result<(), KordocError> {
+    let mark = note_reference_mark(node, note_formats, budget)?;
+    budget.push(
+        spans,
+        IrSpan {
+            text: mark,
+            bold: style.and_then(|style| style.bold),
+            italic: style.and_then(|style| style.italic),
+            strike: style.and_then(|style| style.strike),
+            underline: style.and_then(|style| style.underline),
+            ..IrSpan::default()
+        },
+    )?;
+    let text = budget.raw_xml_text(node)?;
     let text = text.trim();
     if !text.is_empty() {
-        notes.push(text.to_owned());
+        let text = budget.copy_str(text)?;
+        budget.push(notes, text)?;
     }
+    Ok(())
 }
 
-fn parse_note_number_formats(root: &XmlNode) -> NoteNumberFormats {
-    fn read(root: &XmlNode, property: &str) -> Option<NoteNumberFormat> {
-        let properties = root.descendants(property).into_iter().next()?;
-        let format = properties
+fn parse_note_number_formats(
+    root: &XmlNode,
+    budget: &mut LoweringBudget,
+) -> Result<NoteNumberFormats, KordocError> {
+    fn read(
+        root: &XmlNode,
+        property: &str,
+        budget: &mut LoweringBudget,
+    ) -> Result<Option<NoteNumberFormat>, KordocError> {
+        let Some(properties) = find_descendant(root, property, 200) else {
+            return Ok(None);
+        };
+        let Some(format) = properties
             .children
             .iter()
-            .find(|child| child.name == "autoNumFormat")?;
-        Some(NoteNumberFormat {
-            kind: format.attr("type").unwrap_or("DIGIT").to_owned(),
-            user_char: format.attr("userChar").unwrap_or_default().to_owned(),
-            prefix: format.attr("prefixChar").unwrap_or_default().to_owned(),
-            suffix: format.attr("suffixChar").unwrap_or_default().to_owned(),
-        })
+            .find(|child| child.name == "autoNumFormat")
+        else {
+            return Ok(None);
+        };
+        budget.charge_items::<NoteNumberFormat>(1)?;
+        Ok(Some(NoteNumberFormat {
+            kind: budget.copy_str(format.attr("type").unwrap_or("DIGIT"))?,
+            user_char: budget.copy_str(format.attr("userChar").unwrap_or_default())?,
+            prefix: budget.copy_str(format.attr("prefixChar").unwrap_or_default())?,
+            suffix: budget.copy_str(format.attr("suffixChar").unwrap_or_default())?,
+        }))
     }
 
-    NoteNumberFormats {
-        footnote: read(root, "footNotePr"),
-        endnote: read(root, "endNotePr"),
-    }
+    Ok(NoteNumberFormats {
+        footnote: read(root, "footNotePr", budget)?,
+        endnote: read(root, "endNotePr", budget)?,
+    })
 }
 
-fn note_reference_mark(node: &XmlNode, note_formats: &NoteNumberFormats) -> String {
-    let default = NoteNumberFormat {
-        kind: "DIGIT".to_owned(),
-        user_char: String::new(),
-        prefix: String::new(),
-        suffix: ")".to_owned(),
-    };
+fn note_reference_mark(
+    node: &XmlNode,
+    note_formats: &NoteNumberFormats,
+    budget: &mut LoweringBudget,
+) -> Result<String, KordocError> {
     let format = if node.name == "endNote" {
         note_formats.endnote.as_ref()
     } else {
         note_formats.footnote.as_ref()
-    }
-    .unwrap_or(&default);
+    };
+    let kind = format.map_or("DIGIT", |format| format.kind.as_str());
     let number = node
         .attr("number")
         .and_then(|value| value.parse::<u32>().ok())
         .unwrap_or(1);
-    let core = if format.kind == "USER_CHAR" {
-        note_decoration(node.attr("userChar")).unwrap_or_else(|| format.user_char.clone())
+    let core_decoration = if kind == "USER_CHAR" {
+        budget.charge_bytes(8)?;
+        note_decoration(node.attr("userChar"))
     } else {
-        format_note_number(number, &format.kind)
+        None
     };
-    let prefix = note_decoration(node.attr("prefixChar")).unwrap_or_else(|| format.prefix.clone());
-    let suffix = note_decoration(node.attr("suffixChar")).unwrap_or_else(|| format.suffix.clone());
-    format!("{prefix}{core}{suffix}")
+    let numeric_core = if kind == "USER_CHAR" {
+        None
+    } else {
+        budget.charge_bytes(64)?;
+        Some(format_note_number(number, kind))
+    };
+    budget.charge_bytes(8)?;
+    let prefix_decoration = note_decoration(node.attr("prefixChar"));
+    budget.charge_bytes(8)?;
+    let suffix_decoration = note_decoration(node.attr("suffixChar"));
+    let prefix = prefix_decoration
+        .as_deref()
+        .or_else(|| format.map(|format| format.prefix.as_str()))
+        .unwrap_or("");
+    let core = core_decoration
+        .as_deref()
+        .or_else(|| {
+            format
+                .filter(|_| kind == "USER_CHAR")
+                .map(|format| format.user_char.as_str())
+        })
+        .or(numeric_core.as_deref())
+        .unwrap_or("");
+    let suffix = suffix_decoration
+        .as_deref()
+        .or_else(|| format.map(|format| format.suffix.as_str()))
+        .unwrap_or(if format.is_none() { ")" } else { "" });
+    let mut mark = String::new();
+    budget.append_str(&mut mark, prefix)?;
+    budget.append_str(&mut mark, core)?;
+    budget.append_str(&mut mark, suffix)?;
+    Ok(mark)
 }
 
 fn note_decoration(value: Option<&str>) -> Option<String> {
@@ -1099,35 +1311,69 @@ fn roman_numeral(number: u32, uppercase: bool) -> String {
     output
 }
 
-fn paragraph_layout_position(node: &XmlNode) -> ParagraphLayout {
+fn paragraph_layout_position(
+    node: &XmlNode,
+    budget: &mut LoweringBudget,
+) -> Result<ParagraphLayout, KordocError> {
     let linesegarray = node
         .children
         .iter()
         .find(|child| child.name == "linesegarray");
-    let line_positions = linesegarray
-        .map(|line_segments| {
-            line_segments
+    let line_count = linesegarray
+        .map(|segments| {
+            segments
                 .children
                 .iter()
                 .filter(|line| line.name == "lineseg")
-                .map(|line| LinePosition {
-                    vertical: numeric_attribute(line, "vertpos"),
-                    horizontal: numeric_attribute(line, "horzpos"),
-                })
-                .collect()
+                .count()
         })
-        .unwrap_or_default();
-    ParagraphLayout {
+        .unwrap_or(0);
+    budget.charge_items::<LinePosition>(line_count)?;
+    budget.charge_items::<ParagraphLayout>(1)?;
+    let mut line_positions = Vec::new();
+    line_positions
+        .try_reserve_exact(line_count)
+        .map_err(|_| crate::hwpx::budget::output_limit())?;
+    if let Some(lines) = linesegarray {
+        for line in lines.children.iter().filter(|line| line.name == "lineseg") {
+            line_positions.push(LinePosition {
+                vertical: numeric_attribute(line, "vertpos"),
+                horizontal: numeric_attribute(line, "horzpos"),
+            });
+        }
+    }
+    Ok(ParagraphLayout {
         line_positions,
         explicit_page_break: node.attr("pageBreak") == Some("1"),
         has_lines: linesegarray
             .is_some_and(|array| array.children.iter().any(|child| child.name == "lineseg")),
         is_paragraph: true,
         ..ParagraphLayout::default()
-    }
+    })
 }
 
-fn table_intra_breaks(table: &XmlNode) -> usize {
+fn clone_layout_position(
+    layout: &ParagraphLayout,
+    budget: &mut LoweringBudget,
+) -> Result<ParagraphLayout, KordocError> {
+    budget.charge_items::<ParagraphLayout>(1)?;
+    budget.charge_items::<LinePosition>(layout.line_positions.len())?;
+    Ok(layout.clone())
+}
+
+fn table_intra_breaks(table: &XmlNode, budget: &mut LoweringBudget) -> Result<usize, KordocError> {
+    let cell_count = table
+        .children
+        .iter()
+        .filter(|node| node.name == "tr")
+        .map(|row| row.children.iter().filter(|node| node.name == "tc").count())
+        .sum::<usize>();
+    let row_storage = std::mem::size_of::<(usize, usize)>() + 3 * std::mem::size_of::<usize>();
+    budget.charge_bytes(
+        cell_count
+            .checked_mul(row_storage)
+            .ok_or_else(crate::hwpx::budget::output_limit)?,
+    )?;
     let mut by_row = std::collections::BTreeMap::<usize, usize>::new();
     for row in table.children.iter().filter(|node| node.name == "tr") {
         for cell in row.children.iter().filter(|node| node.name == "tc") {
@@ -1164,7 +1410,7 @@ fn table_intra_breaks(table: &XmlNode) -> usize {
                 .or_insert(resets);
         }
     }
-    by_row.values().sum()
+    Ok(by_row.values().sum())
 }
 
 fn numeric_attribute(node: &XmlNode, name: &str) -> f64 {
