@@ -9,6 +9,7 @@ rust-version.workspace = true
 fuzzing = []
 
 [dependencies]
+regex.workspace = true
 cfb.workspace = true
 kordoc-hancom = { path = "../kordoc-hancom", version = "=0.1.0" }
 kordoc-ir = { path = "../kordoc-ir", version = "=0.1.0" }

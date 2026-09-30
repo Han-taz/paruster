@@ -137,8 +137,41 @@ H2a, H1b, and H2b scoped SOL reviews and local gates passed; the H3 allocation
 follow-up passed a fresh independent private Hancom review with no Critical or
 Important issue. Fresh focused checks pass 103 library unit tests and 122
 integration-binary executions (103 repeated units and 19 distinct integration
-cases). Publication through the authenticated GitHub CLI is available; protected
+cases). Publication through the authenticated GitHub CLI is available;
 the private checkpoint merged in PR [#21](https://github.com/Han-taz/paruster/pull/21) as `c5cded899b6dd80c99aaad8de6f1145060c77717` after all protected hosted gates passed. The recovered private checkpoint includes the
 lowering meter, so unbounded note-prefix repetition from the earlier standalone
-H2a candidate is not published separately. H4 now provides the reviewed core/Python candidate in PR [#22](https://github.com/Han-taz/paruster/pull/22). Its CI, security, six native wheels and six fuzz targets passed on head `adaa106`; later heads must pass again before squash merge. Full option and representative-corpus parity remain pending. Capability and parity
+H2a candidate is not published separately. H4 now provides the reviewed core/Python candidate in PR [#22](https://github.com/Han-taz/paruster/pull/22). It merged as `e10a2df2dd57d1b69f55afeb0a07295e0c29db7f` after the final head passed CI, security, six native wheels, six fuzz targets and independent candidate review. Representative-corpus parity remains pending. Capability and parity
 stay pending in the [migration ledger](../migration/status.md).
+
+
+## Existing option restoration
+
+The [focused option plan](../migration/plans/2026-09-30-hwpx-option-parity-plan.md)
+restores `keepTrailingEmptyCols` and `includeFieldPlaceholders` during bounded
+section/table lowering. Default trimming removes only trailing all-empty
+columns; explicit preservation requires a real anchor in that column. The
+untrimmed logical grid and all retained span copies still count against the
+existing budgets.
+
+CLICK_HERE tracking uses a stack and does not emit parameter metadata as body
+text. Dirty fields and differing user-filled values remain visible. Direction
+parameters precede encoded Command fallback; Command lengths use UTF-16 code
+units, and escaped dollar signs are compared using the source convention.
+Guide text remains in flat IR text and becomes a `placeholder` span only when
+it matches. Nested already-marked guides prevent an outer raw-text match.
+Only tables with direct `pos treatAsChar="1"` use inline-table policy.
+
+Multi-column pipe and HTML cell rendering filters marked spans without losing
+IR text or nested content. The source's one-column Markdown branch intentionally
+reads flat cell text and can still display a marked guide. Empty Direction
+parameters do not fall back to a Command guide. A Command length that splits a
+UTF-16 surrogate pair is malformed: the port retains the original body text
+unmarked because Rust/public IR requires valid Unicode scalars. It does not
+synthesize an invalid half-surrogate or silently discard the text.
+
+Shared core owns the remaining `scriptTags`, `plain` and `htmlTables` transforms;
+see [normalization](normalization.md). Original H0 fixture hashes, seven complete
+ordinary/encrypted answers and protected parity accounting are unchanged.
+Malformed-section diagnostics, compressed-versus-decompressed ODF checksum
+interoperability and representative/restricted-corpus evidence remain explicit
+full-parser gaps.

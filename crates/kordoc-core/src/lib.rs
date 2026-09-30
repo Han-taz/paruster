@@ -9,6 +9,7 @@ pub mod markdown_units;
 mod options;
 mod pages;
 mod parse;
+mod postprocess;
 pub mod table;
 
 pub use chunks::blocks_to_chunks;

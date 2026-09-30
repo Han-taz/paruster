@@ -189,7 +189,14 @@ fn falls_back_to_numeric_section_order() {
 fn preserves_header_and_trailing_empty_cells() {
     let output = lower_sections(
         &[section("Contents/section0.xml", "<hp:tbl><hp:tr><hp:tc header=\"1\"><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:run><hp:t>Head</hp:t></hp:run></hp:p></hp:subList></hp:tc><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"2\"/><hp:subList/></hp:tc></hp:tr></hp:tbl>")],
-        &StyleCatalog::default(), None, &ParseOptions::default()).unwrap();
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions {
+            keep_trailing_empty_cols: Some(true),
+            ..ParseOptions::default()
+        },
+    )
+    .unwrap();
     let table = output.blocks[0].table.as_ref().unwrap();
     assert_eq!(table.cols, 3);
     assert_eq!(table.cells[0][0].is_header, Some(true));
@@ -1119,4 +1126,353 @@ fn falls_back_to_section_pages_recursively() {
             .page_number,
         Some(4)
     );
+}
+
+#[test]
+fn click_here_guide_is_hidden_by_default_and_kept_when_requested() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:run><hp:t>Label </hp:t></hp:run><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Command\">Direction:wstring:10:Enter name</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>Enter name</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p>",
+    );
+    let lower = |include_field_placeholders| {
+        lower_sections(
+            std::slice::from_ref(&input),
+            &StyleCatalog::default(),
+            None,
+            &ParseOptions {
+                include_field_placeholders,
+                ..ParseOptions::default()
+            },
+        )
+        .unwrap()
+    };
+
+    for option in [None, Some(false)] {
+        let output = lower(option);
+        assert_eq!(output.blocks[0].text.as_deref(), Some("Label Enter name"));
+        let spans = output.blocks[0]
+            .spans
+            .as_deref()
+            .expect("default output marks the guide for Markdown omission");
+        assert_eq!(spans.len(), 2);
+        assert_eq!(spans[0].text, "Label ");
+        assert_eq!(spans[0].placeholder, None);
+        assert_eq!(spans[1].text, "Enter name");
+        assert_eq!(spans[1].placeholder, Some(true));
+    }
+
+    let included = lower(Some(true));
+    assert_eq!(included.blocks[0].text.as_deref(), Some("Label Enter name"));
+    assert!(included.blocks[0].spans.is_none());
+}
+
+#[test]
+fn anchored_trailing_empty_column_is_kept_only_when_requested() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:tbl><hp:tr><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:run><hp:t>Value</hp:t></hp:run></hp:p></hp:subList></hp:tc><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"1\"/><hp:subList><hp:p><hp:run><hp:t> </hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl>",
+    );
+    let columns = |keep_trailing_empty_cols| {
+        lower_sections(
+            std::slice::from_ref(&input),
+            &StyleCatalog::default(),
+            None,
+            &ParseOptions {
+                keep_trailing_empty_cols,
+                ..ParseOptions::default()
+            },
+        )
+        .unwrap()
+        .blocks[0]
+            .table
+            .as_ref()
+            .unwrap()
+            .cols
+    };
+
+    assert_eq!(columns(None), 1);
+    assert_eq!(columns(Some(false)), 1);
+    assert_eq!(columns(Some(true)), 2);
+}
+
+#[test]
+fn field_placeholder_in_table_cell_obeys_option() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:tbl><hp:tr><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:run><hp:t>Field: </hp:t></hp:run><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">Enter name</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>Enter name</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p></hp:subList></hp:tc><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"1\"/><hp:subList><hp:p><hp:run><hp:t>Second</hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl>",
+    );
+    let cell = |include_field_placeholders| {
+        lower_sections(
+            std::slice::from_ref(&input),
+            &StyleCatalog::default(),
+            None,
+            &ParseOptions {
+                include_field_placeholders,
+                ..ParseOptions::default()
+            },
+        )
+        .unwrap()
+        .blocks[0]
+            .table
+            .as_ref()
+            .unwrap()
+            .cells[0][0]
+            .clone()
+    };
+
+    for options in [None, Some(false)] {
+        let cell = cell(options);
+        assert_eq!(cell.text, "Field: Enter name");
+        let paragraph = cell
+            .blocks
+            .as_ref()
+            .unwrap()
+            .iter()
+            .find(|block| block.kind == IrBlockType::Paragraph)
+            .unwrap();
+        assert_eq!(paragraph.spans.as_ref().unwrap()[1].placeholder, Some(true));
+    }
+    let included = cell(Some(true));
+    assert_eq!(included.text, "Field: Enter name");
+    assert!(included.blocks.is_none());
+}
+
+#[test]
+fn nested_click_here_fields_do_not_match_through_inner_placeholders_in_body() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">AB</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>A</hp:t></hp:run><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">B</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>B</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    assert_eq!(output.blocks[0].text.as_deref(), Some("AB"));
+    let spans = output.blocks[0].spans.as_ref().unwrap();
+    assert_ne!(spans[0].placeholder, Some(true));
+    assert_eq!(spans[1].placeholder, Some(true));
+}
+
+#[test]
+fn nested_click_here_fields_do_not_match_through_inner_placeholders_in_table_cell() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:tbl><hp:tr><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">AB</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>A</hp:t></hp:run><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">B</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>B</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p></hp:subList></hp:tc><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"1\"/><hp:subList><hp:p><hp:run><hp:t>Second</hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    let cell = &output.blocks[0].table.as_ref().unwrap().cells[0][0];
+    assert_eq!(cell.text, "AB");
+    let paragraph = cell.blocks.as_ref().unwrap().first().unwrap();
+    let spans = paragraph.spans.as_ref().unwrap();
+    assert_ne!(spans[0].placeholder, Some(true));
+    assert_eq!(spans[1].placeholder, Some(true));
+}
+
+#[test]
+fn command_guides_use_utf16_lengths_for_supplementary_and_bmp_characters() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Command\">Direction:wstring:2:😀한글</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>😀</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p><hp:p><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Command\">Direction:wstring:3:😀한글</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>😀한</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    for (index, expected) in [(0, "😀"), (1, "😀한")] {
+        assert_eq!(output.blocks[index].text.as_deref(), Some(expected));
+        assert_eq!(
+            output.blocks[index].spans.as_ref().unwrap()[0].placeholder,
+            Some(true)
+        );
+    }
+}
+
+#[test]
+fn command_length_cutting_a_surrogate_pair_does_not_mark_a_placeholder() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Command\">Direction:wstring:1:😀</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>😀</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    assert_eq!(output.blocks[0].text.as_deref(), Some("😀"));
+    assert!(output.blocks[0].spans.is_none());
+}
+
+#[test]
+fn empty_direction_parameter_stops_before_command_fallback() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Command\">Direction:wstring:10:Enter name</hp:stringParam><hp:stringParam name=\"Direction\"></hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>Enter name</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    assert_eq!(output.blocks[0].text.as_deref(), Some("Enter name"));
+    assert!(output.blocks[0].spans.is_none());
+}
+
+#[test]
+fn escaped_literal_dollar_matches_click_here_guide() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">$HOME</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>\\$HOME</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    assert_eq!(output.blocks[0].text.as_deref(), Some("\\$HOME"));
+    assert_eq!(
+        output.blocks[0].spans.as_ref().unwrap()[0].placeholder,
+        Some(true)
+    );
+}
+
+#[test]
+fn inline_table_paragraph_does_not_mark_fields_as_placeholders() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">Guide</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>Before</hp:t></hp:run><hp:tbl><hp:pos treatAsChar=\"1\"/><hp:tr><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:run><hp:t>Cell</hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl><hp:run><hp:t>Guide</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    assert_eq!(output.blocks[0].text.as_deref(), Some("Before"));
+    assert_eq!(output.blocks[1].kind, IrBlockType::Table);
+    assert_eq!(output.blocks[2].text.as_deref(), Some("Guide"));
+    assert!(output.blocks.iter().all(|block| {
+        block
+            .spans
+            .as_ref()
+            .is_none_or(|spans| spans.iter().all(|span| span.placeholder != Some(true)))
+    }));
+}
+
+#[test]
+fn floating_table_keeps_guide_tracking_across_span_flush() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:run><hp:t>Lead</hp:t></hp:run><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">Guide</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:tbl><hp:pos treatAsChar=\"0\"/><hp:tr><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:run><hp:t>Cell</hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl><hp:run><hp:t>Guide</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    assert_eq!(output.blocks[0].text.as_deref(), Some("Lead"));
+    assert_eq!(output.blocks[1].kind, IrBlockType::Table);
+    assert_eq!(output.blocks[2].text.as_deref(), Some("Guide"));
+    assert_eq!(
+        output.blocks[2].spans.as_ref().unwrap()[0].placeholder,
+        Some(true)
+    );
+}
+
+#[test]
+fn floating_table_guide_match_includes_text_flushed_before_the_table() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">Guide</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>Prefix</hp:t></hp:run><hp:tbl><hp:pos treatAsChar=\"0\"/><hp:tr><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:run><hp:t>Cell</hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl><hp:run><hp:t>Guide</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    assert_eq!(output.blocks[0].text.as_deref(), Some("Prefix"));
+    assert_eq!(output.blocks[1].kind, IrBlockType::Table);
+    assert_eq!(output.blocks[2].text.as_deref(), Some("Guide"));
+    assert!(output.blocks[0].spans.is_none());
+    assert!(output.blocks[2].spans.is_none());
+}
+
+#[test]
+fn floating_table_field_end_marks_matching_text_flushed_before_the_table() {
+    let input = section(
+        "Contents/section0.xml",
+        "<hp:p><hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">Guide</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>Guide</hp:t></hp:run><hp:tbl><hp:pos treatAsChar=\"0\"/><hp:tr><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:run><hp:t>Cell</hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl><hp:ctrl><hp:fieldEnd/></hp:ctrl></hp:p>",
+    );
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    assert_eq!(output.blocks[0].text.as_deref(), Some("Guide"));
+    assert_eq!(output.blocks[1].kind, IrBlockType::Table);
+    assert_eq!(
+        output.blocks[0].spans.as_ref().unwrap()[0].placeholder,
+        Some(true)
+    );
+}
+
+#[test]
+fn many_sequential_fields_after_floating_tables_keep_local_ranges() {
+    const FIELD_COUNT: usize = 512;
+    let mut xml = String::from("<hp:p>");
+    for _ in 0..FIELD_COUNT {
+        xml.push_str(
+            "<hp:ctrl><hp:fieldBegin type=\"CLICK_HERE\" dirty=\"0\"><hp:parameters><hp:stringParam name=\"Direction\">G</hp:stringParam></hp:parameters></hp:fieldBegin></hp:ctrl><hp:run><hp:t>G</hp:t></hp:run><hp:ctrl><hp:fieldEnd/></hp:ctrl><hp:tbl><hp:pos treatAsChar=\"0\"/><hp:tr><hp:tc><hp:cellAddr rowAddr=\"0\" colAddr=\"0\"/><hp:subList><hp:p><hp:run><hp:t>C</hp:t></hp:run></hp:p></hp:subList></hp:tc></hp:tr></hp:tbl>",
+        );
+    }
+    xml.push_str("</hp:p>");
+    let input = section("Contents/section0.xml", &xml);
+    let output = lower_sections(
+        &[input],
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+
+    assert_eq!(output.blocks.len(), FIELD_COUNT * 2);
+    for pair in output.blocks.chunks_exact(2) {
+        assert_eq!(pair[0].text.as_deref(), Some("G"));
+        assert_eq!(pair[0].spans.as_ref().unwrap()[0].placeholder, Some(true));
+        assert_eq!(pair[1].kind, IrBlockType::Table);
+    }
 }

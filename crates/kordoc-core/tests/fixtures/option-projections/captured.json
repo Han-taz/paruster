@@ -1,0 +1,50 @@
+{
+  "kind": "pure-helper-oracle-capture",
+  "source_sha256": {
+    "script-tags.ts": "52df626b2a329558510b55cde6cd4adf17abaab64333ebc40a6f1ebfef4718b5",
+    "plain-markdown.ts": "bb7e8edd62bcbd60144f3253ac5e1e090f5e573e6dc3baaa90f5854dc5952c17",
+    "html-tables.ts": "5cb82544e79c8ddc6a2b70ef0d361bdabf0f8ace38af09774f75ce77b5e0c56c"
+  },
+  "cases": [
+    {
+      "id": "unicode_plain",
+      "input": "H<sub>2</sub>O m<sup>2</sup> x<sup>n+1</sup> 한글<sup>四</sup> **굵게** <u>밑줄</u> [링크](https://example.test) ![image](p.png)",
+      "plain": "H_2O m^2 x^(n+1) 한글^四 굵게 밑줄 링크",
+      "html": "H<sub>2</sub>O m<sup>2</sup> x<sup>n+1</sup> 한글<sup>四</sup> **굵게** <u>밑줄</u> [링크](https://example.test) ![image](p.png)",
+      "plain_then_html": "H_2O m^2 x^(n+1) 한글^四 굵게 밑줄 링크",
+      "scripts_off_then_plain": "H2O m2 xn+1 한글四 굵게 밑줄 링크"
+    },
+    {
+      "id": "escaped_bold_link",
+      "input": "\\**keep** \\[link](https://example.test) ![x](p) <IMG src=\"p\"> <a>x</a>",
+      "plain": "\\**keep** \\link   <a>x</a>",
+      "html": "\\**keep** \\[link](https://example.test) ![x](p) <IMG src=\"p\"> <a>x</a>",
+      "plain_then_html": "\\**keep** \\link   <a>x</a>",
+      "scripts_off_then_plain": "\\**keep** \\link   <a>x</a>"
+    },
+    {
+      "id": "pipe",
+      "input": "Before\n\n| A | B |\n| --- | --- |\n| 한글 \\| 칸 | <sup>2</sup> & < |\n\nAfter",
+      "plain": "Before\n\n| A | B |\n| --- | --- |\n| 한글 \\| 칸 | ^2 & < |\n\nAfter",
+      "html": "Before\n\n<table>\n <tr>\n  <th>\n   A\n  </th>\n  <th>\n   B\n  </th>\n </tr>\n <tr>\n  <td>\n   한글 | 칸\n  </td>\n  <td>\n   <sup>2</sup> &amp; &lt;\n  </td>\n </tr>\n</table>\n\nAfter",
+      "plain_then_html": "Before\n\n<table>\n <tr>\n  <th>\n   A\n  </th>\n  <th>\n   B\n  </th>\n </tr>\n <tr>\n  <td>\n   한글 | 칸\n  </td>\n  <td>\n   ^2 &amp; &lt;\n  </td>\n </tr>\n</table>\n\nAfter",
+      "scripts_off_then_plain": "Before\n\n| A | B |\n| --- | --- |\n| 한글 \\| 칸 | 2 & < |\n\nAfter"
+    },
+    {
+      "id": "nested_html",
+      "input": "<table><tr><td>A<br><table><tr><th>B</th></tr></table></td></tr></table>",
+      "plain": "<table><tr><td>A<br><table><tr><th>B</th></tr></table></td></tr></table>",
+      "html": "<table>\n <tr>\n  <td>\n   A<br>\n   <table>\n    <tr>\n     <th>\n      B\n     </th>\n    </tr>\n   </table>\n  </td>\n </tr>\n</table>",
+      "plain_then_html": "<table>\n <tr>\n  <td>\n   A<br>\n   <table>\n    <tr>\n     <th>\n      B\n     </th>\n    </tr>\n   </table>\n  </td>\n </tr>\n</table>",
+      "scripts_off_then_plain": "<table><tr><td>A<br><table><tr><th>B</th></tr></table></td></tr></table>"
+    },
+    {
+      "id": "ordering",
+      "input": "| H<sub>2</sub>O | ![x](p) |\n| --- | --- |\n| **값** | x<sup>n+1</sup> |",
+      "plain": "| H_2O |  |\n| --- | --- |\n| 값 | x^(n+1) |",
+      "html": "<table>\n <tr>\n  <th>\n   H<sub>2</sub>O\n  </th>\n  <th>\n   ![x](p)\n  </th>\n </tr>\n <tr>\n  <td>\n   **값**\n  </td>\n  <td>\n   x<sup>n+1</sup>\n  </td>\n </tr>\n</table>",
+      "plain_then_html": "<table>\n <tr>\n  <th>\n   H_2O\n  </th>\n  <th>\n  </th>\n </tr>\n <tr>\n  <td>\n   값\n  </td>\n  <td>\n   x^(n+1)\n  </td>\n </tr>\n</table>",
+      "scripts_off_then_plain": "| H2O |  |\n| --- | --- |\n| 값 | xn+1 |"
+    }
+  ]
+}

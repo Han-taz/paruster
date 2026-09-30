@@ -209,7 +209,7 @@ pub(crate) fn assemble_success(
         parsed.images = None;
         drop_image_data(&mut parsed.blocks, 0);
     }
-    Ok(kordoc_ir::ParseSuccess {
+    let mut success = kordoc_ir::ParseSuccess {
         file_type,
         page_count,
         is_image_based: parsed.is_image_based,
@@ -223,7 +223,10 @@ pub(crate) fn assemble_success(
         pages,
         page_quality: parsed.page_quality,
         quality_summary: parsed.quality_summary,
-    })
+    };
+    crate::postprocess::apply(&mut success, options)
+        .map_err(|error| dispatch_error(file_type, error, options))?;
+    Ok(success)
 }
 
 fn drop_image_data(blocks: &mut [kordoc_ir::IrBlock], depth: usize) {

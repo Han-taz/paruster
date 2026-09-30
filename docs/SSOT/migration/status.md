@@ -126,15 +126,20 @@ section warning diagnostic remains an explicit discrepancy, and no frozen
 oracle result, scoring, or security boundary is changed to hide it. Generated
 fixture input hashes are checked against all twelve unchanged H0 pins.
 
-PR [#22](https://github.com/Han-taz/paruster/pull/22) publishes this executable candidate. Head `adaa106` passed hosted [CI](https://github.com/Han-taz/paruster/actions/runs/36701020628), [Security/CodeQL](https://github.com/Han-taz/paruster/actions/runs/36701020709), [six native wheels](https://github.com/Han-taz/paruster/actions/runs/36701020659), and [six bounded fuzz targets](https://github.com/Han-taz/paruster/actions/runs/36701020615). Independent SOL review passed for candidate publication. Later heads must pass again before protected squash merge. H4 candidate evidence
+PR [#22](https://github.com/Han-taz/paruster/pull/22) merged this executable candidate as `e10a2df2dd57d1b69f55afeb0a07295e0c29db7f` after final-head protected gates passed. Head `adaa106` passed hosted [CI](https://github.com/Han-taz/paruster/actions/runs/36701020628), [Security/CodeQL](https://github.com/Han-taz/paruster/actions/runs/36701020709), [six native wheels](https://github.com/Han-taz/paruster/actions/runs/36701020659), and [six bounded fuzz targets](https://github.com/Han-taz/paruster/actions/runs/36701020615). Independent SOL review passed for candidate publication. Final head `b5ceec2` passed the required checks before protected squash merge. H4 candidate evidence
 must not be interpreted as support for the other parsers or any MCP handler.
 Fresh H4 review found no remaining dispatch, serialization, or Python-model
 blocker for candidate publication after the `images=false` regression fix.
 That option omits image collections and recursive image payloads while retaining
 Markdown, page projections, and image placeholders. HWPX intentionally ignores
-the PDF-only `tables` option. Option parity remains pending for `plain`,
-`htmlTables`, `scriptTags`, `keepTrailingEmptyCols`, and `includeFieldPlaceholders`.
-These gaps prevent a full HWPX capability or option-parity claim.
+the PDF-only `tables` option. The focused [option follow-up](plans/2026-09-30-hwpx-option-parity-plan.md)
+implements `plain`, `htmlTables`, `scriptTags`, `keepTrailingEmptyCols`, and
+`includeFieldPlaceholders` through existing Rust/Python options. Five pinned
+helper observations and authored native/Python cases cover default/false/true,
+Unicode, nested cells/fields and ordering. Independent review identified and
+fixed transient character/column allocations and repeated suffix rescans.
+Full HWPX capability remains pending for diagnostic/checksum discrepancies and
+representative/restricted-corpus parity; the protected success numerator stays 0.
 The preceding H2a candidate had 53 unit tests and 8 integration tests, including
 deterministic synthetic fixture checks. These do not establish public parser
 registration, Python behavior, or real-document parity. HWPX capability stays

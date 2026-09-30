@@ -56,7 +56,7 @@ Native parse results serialize directly through the capped writer without an
 unbounded intermediate `serde_json::Value` copy. Native output-limit failures
 become serializable typed `try_parse` failures; `parse` raises the corresponding
 exception. Local installed-wheel tests cover these boundaries independently
-of source import. The lowering-allocation and local/hosted candidate gates have passed; full option and representative full-result parity remain open, so whole-parser capability is unpromoted.
+of source import. The lowering-allocation and local/hosted candidate gates have passed; representative full-result parity remains open, so whole-parser capability is unpromoted.
 
 ## Source-neutral projections
 
@@ -75,6 +75,29 @@ For generic `parse`, `try_parse`, and format-specific `parse_hwpx`, explicit
 `images=False` removes the result image collection and recursive block
 `imageData`, retaining placeholders and the existing Markdown/page projections.
 Omission and explicit `True` preserve the default output. HWPX ignores the
-PDF-only `tables` switch. Full option parity remains pending for `plain`,
-`htmlTables`, `scriptTags`, `keepTrailingEmptyCols`, and `includeFieldPlaceholders`;
-candidate registration does not mark those behaviors implemented.
+PDF-only `tables` switch.
+
+The five existing options now reach the Rust candidate through all three Python
+entry points:
+
+- `script_tags=False` removes literal lowercase sup/sub tags recursively from
+  IR text/spans, captions, notes and cells, and from document/page Markdown.
+  Omission and `True` preserve those tags.
+- `plain=True` transforms document/page Markdown using the captured script,
+  image/link/underline/bold and whitespace rules. It preserves IR and images.
+- `html_tables=True` converts pipe tables and pretty-prints existing nested
+  HTML tables in document/page Markdown, preserving IR. Plain runs before HTML
+  conversion when both are requested.
+- `keep_trailing_empty_cols=True` retains trailing empty columns with actual
+  cell anchors. Omission and `False` trim all-empty trailing columns; the full
+  logical grid is budgeted before trimming.
+- `include_field_placeholders=True` keeps unmodified CLICK_HERE guide text
+  visible. By default matching guides become placeholder spans while flat IR
+  text remains intact; multi-column GFM and HTML projections hide those spans.
+  The source's one-column projection uses flat cell text and retains its
+  documented guide visibility quirk.
+
+These are observable option checkpoints, supported by authored Python/native
+regressions and five exact captured helper cases. They do not promote the full
+parser or restricted-corpus parity. See the [HWPX component](../components/hwpx.md)
+and [postprocessor boundaries](../components/normalization.md).
