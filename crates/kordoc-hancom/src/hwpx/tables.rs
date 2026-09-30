@@ -10,7 +10,7 @@ pub(crate) const MAX_COLUMNS: usize = 200;
 pub(crate) const MAX_LOGICAL_CELLS: usize = 2_000_000;
 pub(crate) const MAX_LOGICAL_DEPTH: usize = 64;
 
-#[derive(Default)]
+#[derive(Clone, Copy, Default)]
 pub(crate) struct CellBudget(usize);
 
 fn limit(message: &'static str) -> KordocError {
@@ -58,7 +58,7 @@ pub(crate) fn lower_table_with_assets(
     let mut caption_blocks = Vec::new();
     for child in &node.children {
         if child.name == "caption" {
-            let value = plain_text(child).trim().to_owned();
+            let value = child.text_content().trim().to_owned();
             if !value.is_empty() {
                 caption.push(value);
             }
@@ -107,7 +107,7 @@ pub(crate) fn lower_table_with_assets(
             max_rows = max_rows.max(rows_required);
             logical_cols = logical_cols.max(end);
             let sub = tc.children.iter().find(|n| n.name == "subList");
-            let text = sub.map_or_else(String::new, plain_text);
+            let text = sub.map_or_else(String::new, XmlNode::text_content);
             let nested = if let Some(sub) = sub {
                 lower_nested(
                     sub,
@@ -338,23 +338,6 @@ fn lower_nested_paragraph(
         out.push(IrBlock::paragraph(text));
     }
     Ok(out)
-}
-
-fn plain_text(node: &XmlNode) -> String {
-    if matches!(
-        node.name.as_str(),
-        "tbl" | "pic" | "img" | "imgRect" | "imgClip"
-    ) {
-        return String::new();
-    }
-    let mut out = String::new();
-    for part in &node.content {
-        match part {
-            XmlContent::Text { start, end } => out.push_str(&node.text[*start..*end]),
-            XmlContent::Child(index) => out.push_str(&plain_text(&node.children[*index])),
-        }
-    }
-    out
 }
 
 #[cfg(test)]

@@ -165,6 +165,8 @@ fn lower_sections_impl(
     for (index, input) in inputs.iter().enumerate() {
         match parse(&input.bytes) {
             Ok(root) => {
+                let image_checkpoint = image_cache.checkpoint();
+                let mut section_cell_budget = cell_budget;
                 let mut section_images = Vec::new();
                 let mut section_warnings = Vec::new();
                 let multi_column = find_descendant(&root, "colPr", 8)
@@ -182,21 +184,36 @@ fn lower_sections_impl(
                     ..SectionDelta::default()
                 };
                 let note_formats = parse_note_number_formats(&root);
-                lower_content(
+                let lowering = lower_content(
                     &root,
                     styles,
                     &note_formats,
                     options.keep_empty_paragraphs == Some(true),
                     &mut delta,
-                    &mut cell_budget,
+                    &mut section_cell_budget,
                     package.as_deref_mut(),
                     &mut image_cache,
                     &mut section_images,
                     &mut section_warnings,
-                )?;
-                output.images.extend(section_images);
-                output.warnings.extend(section_warnings);
-                deltas.push(Some(delta));
+                );
+                match lowering {
+                    Ok(()) => {
+                        cell_budget = section_cell_budget;
+                        output.images.extend(section_images);
+                        output.warnings.extend(section_warnings);
+                        deltas.push(Some(delta));
+                    }
+                    Err(error) if error.code == ErrorCode::Corrupted => {
+                        image_cache.rollback(image_checkpoint);
+                        output.warnings.push(ParseWarning {
+                            page: u32::try_from(index + 1).ok(),
+                            message: format!("section {} could not be lowered", input.path),
+                            code: WarningCode::PartialParse,
+                        });
+                        deltas.push(None);
+                    }
+                    Err(error) => return Err(error),
+                }
             }
             Err(error) if error.is_resource_limit() => {
                 return Err(KordocError::new(

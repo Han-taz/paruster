@@ -116,6 +116,7 @@ fn keeps_nested_table_and_caption_blocks_in_order() {
         &StyleCatalog::default(), None, &ParseOptions::default()).unwrap();
     let table = output.blocks[0].table.as_ref().unwrap();
     let cell_blocks = table.cells[0][0].blocks.as_ref().unwrap();
+    assert_eq!(table.cells[0][0].text, "beforenestedafter");
     assert_eq!(cell_blocks.len(), 3);
     assert_eq!(cell_blocks[0].text.as_deref(), Some("before"));
     assert!(cell_blocks[1].table.is_some());
@@ -189,6 +190,97 @@ fn table_internal_page_split_counts_once_before_midpage_following_prose() {
         .unwrap();
     assert_eq!(table.page_number, Some(1));
     assert_eq!(output.page_evidence.len(), 2);
+}
+
+#[test]
+fn malformed_table_section_preserves_neighbor_sections_transactionally() {
+    let inputs = [
+        section(
+            "Contents/section0.xml",
+            "<hp:p><hp:run><hp:t>first</hp:t></hp:run></hp:p>",
+        ),
+        section(
+            "Contents/section1.xml",
+            "<hp:tbl><hp:tr><hp:tc><hp:cellSpan rowSpan=\"2\"/><hp:subList/></hp:tc></hp:tr></hp:tbl>",
+        ),
+        section(
+            "Contents/section2.xml",
+            "<hp:p><hp:run><hp:t>third</hp:t></hp:run></hp:p>",
+        ),
+    ];
+    let output = lower_sections(
+        &inputs,
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(
+        output
+            .blocks
+            .iter()
+            .map(|block| block.text.as_deref())
+            .collect::<Vec<_>>(),
+        [Some("first"), Some("third")]
+    );
+    assert_eq!(output.warnings.len(), 1);
+    assert_eq!(output.warnings[0].code, WarningCode::PartialParse);
+    assert_eq!(output.warnings[0].page, Some(2));
+}
+
+#[test]
+fn malformed_section_rolls_back_staged_image_assets_and_cache() {
+    use crate::hwpx::package::Package;
+    use std::io::{Cursor, Write};
+    use zip::{ZipWriter, write::SimpleFileOptions};
+    let inputs = [
+        section(
+            "Contents/section0.xml",
+            "<hp:p><hp:run><hp:t>first</hp:t></hp:run></hp:p>",
+        ),
+        section(
+            "Contents/section1.xml",
+            "<hp:tbl><hp:tr><hp:tc><hp:subList><hp:p><hp:run><hp:pic><hp:imgRect binaryItemIDRef=\"pic\"/></hp:pic></hp:run></hp:p></hp:subList></hp:tc><hp:tc><hp:cellSpan rowSpan=\"2\"/><hp:subList/></hp:tc></hp:tr></hp:tbl>",
+        ),
+        section(
+            "Contents/section2.xml",
+            "<hp:p><hp:run><hp:pic><hp:imgRect binaryItemIDRef=\"pic\"/></hp:pic></hp:run></hp:p>",
+        ),
+    ];
+    let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+    writer
+        .start_file("BinData/pic.png", SimpleFileOptions::default())
+        .unwrap();
+    writer.write_all(b"asset").unwrap();
+    let mut package = Package::open(Box::leak(
+        writer.finish().unwrap().into_inner().into_boxed_slice(),
+    ))
+    .unwrap();
+    let output = lower_sections_with_package(
+        &inputs,
+        &StyleCatalog::default(),
+        None,
+        &ParseOptions::default(),
+        &mut package,
+    )
+    .unwrap();
+    assert_eq!(output.images.len(), 1);
+    assert_eq!(
+        output
+            .blocks
+            .iter()
+            .filter(|block| block.kind == IrBlockType::Image)
+            .count(),
+        1
+    );
+    assert_eq!(
+        output
+            .warnings
+            .iter()
+            .filter(|warning| warning.code == WarningCode::PartialParse)
+            .count(),
+        1
+    );
 }
 
 #[test]
