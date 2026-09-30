@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HWPML [<!ENTITY probe SYSTEM "file:///nonexistent/paruster-hwpml-external-entity-probe.txt">]>
+<HWPML Version="2.9"><BODY><SECTION Id="0"><P><TEXT><CHAR>앞&probe;뒤</CHAR></TEXT></P></SECTION></BODY></HWPML>

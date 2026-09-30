@@ -16,6 +16,7 @@ This directory contains the current, normative description of paruster. A code c
 - [`migration/plans/2026-09-30-pdf-worker-wheel-plan.md`](migration/plans/2026-09-30-pdf-worker-wheel-plan.md): separate six-target worker-wheel stage, notice, architecture and installed-execution gate
 - [`migration/plans/2026-09-30-pdf-v8-runtime-plan.md`](migration/plans/2026-09-30-pdf-v8-runtime-plan.md): active private embedded V8/PDF.js runtime plan
 - [`migration/plans/2026-09-30-pdf-implementation-plan.md`](migration/plans/2026-09-30-pdf-implementation-plan.md): superseded P2 semantic-backend plan; retained layout/table/parity requirements
+- [`migration/plans/2026-09-30-hwpml-fixture-plan.md`](migration/plans/2026-09-30-hwpml-fixture-plan.md): fixed HWPML inputs and complete oracle observations before private Rust implementation
 - [`migration/status.md`](migration/status.md): live implementation and parity status
 - [Workspace architecture](architecture/workspace.md): current crate boundaries, data flow, and security boundaries
 - [`contracts/errors.md`](contracts/errors.md): stable shared error code inventory and status semantics
@@ -26,6 +27,7 @@ This directory contains the current, normative description of paruster. A code c
 - [`components/detection.md`](components/detection.md): bounded format detection, container preflight, and foundation dispatch rules
 - [`components/normalization.md`](components/normalization.md): bounded Markdown, page, chunk, and table-policy projection semantics
 - [`components/hwpx.md`](components/hwpx.md): bounded HWPX package, crypto, semantic lowering, Python candidate and option restoration
+- [`components/hwpml.md`](components/hwpml.md): fixed-input HWPML capture foundation and pending native implementation
 - [`components/pdf.md`](components/pdf.md): merged private V8/PDF.js runtime, security evidence and historical object-reader research
 - [`quality/parity.md`](quality/parity.md): allowed normalization and parity evaluation policy
 - [Operations guide](operations/README.md): index for the current [development](operations/development.md) and [release](operations/release.md) procedures

@@ -53,3 +53,8 @@ build that worker. Fixed trusted sibling discovery, OS memory/process-tree
 containment and measured RSS, PDF resource factories/operator/layout/IR,
 options/encryption/metadata and full corpus parity remain separate gates.
 No protected parser success numerator or production capability is promoted.
+
+The feasibility checkpoint merged in PR [#27](https://github.com/Han-taz/paruster/pull/27)
+as `8d565cc6e4a05ffd16c3686a87f4cc4449b3008f` after all six installed-worker
+targets and required protected gates passed. Production assembly/containment
+and PDF semantic qualification remain separate.
