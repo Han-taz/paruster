@@ -20,7 +20,7 @@ pyo3 = "0.29.2"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0", features = ["unbounded_depth"] }
 thiserror = "2.0.21"
-zip = { version = "8", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
 cfb = "0.15.0"
 proptest = "1.11.0"
 quick-xml = { version = "=0.42.0", default-features = false }
